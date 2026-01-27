@@ -1,0 +1,60 @@
+package com.ecommerce.userservice.entity;
+
+import com.ecommerce.userservice.enums.Gender;
+import com.ecommerce.userservice.enums.UserRole;
+import jakarta.persistence.*;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.annotations.DynamicUpdate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "users", indexes = {
+        @Index(name = "idx_email", columnList = "email"),
+        @Index(name = "idx_is_active", columnList = "isActive")
+})
+@EntityListeners(AuditingEntityListener.class)
+@Getter
+@DynamicInsert
+@DynamicUpdate
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Builder
+public class User extends BaseEntity  {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_id")
+    Long id;
+
+    @Column(nullable = false, unique = true, length = 255)
+    String email;
+
+    @Column(nullable = false, length = 255)
+    String password;
+
+    @Column(nullable = false, length = 100)
+    String name;
+
+    @Column(name = "phone_number", nullable = false, length = 20)
+    String phoneNumber;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    @Builder.Default
+    UserRole role = UserRole.USER;
+
+    @Column(name = "is_active", nullable = false)
+    Boolean isActive = true;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    Gender gender;
+
+    @Column(name = "deleted_at")
+    LocalDateTime deletedAt;
+}

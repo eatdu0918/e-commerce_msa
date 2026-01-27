@@ -1,0 +1,60 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '4.0.2'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.ecommerce'
+version = '0.0.1-SNAPSHOT'
+description = 'user-service'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    implementation 'mysql:mysql-connector-java:8.0.33'
+
+    // Flyway
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-mysql'
+
+    // Redis
+    implementation 'org.springframework.session:spring-session-data-redis'     // redis를 session으로 사용할 수 있게
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'   // redis 연결
+
+    // Spring Session과 Redis를 연동하기 위한 의존성
+    // 이 의존성을 추가하면 Redis를 세션 저장소로 사용할 수 있도록 Spring Session이 자동 구성됩니다.
+    implementation 'org.springframework.session:spring-session-data-redis'
+    // Spring Data Redis: Redis 클라이언트를 추상화하고 Spring의 데이터 접근 계층과 통합합니다.
+    // 내부적으로 Lettuce(기본) 또는 Jedis 클라이언트를 사용합니다.
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+    annotationProcessor "com.querydsl:querydsl-apt:5.0.0:jakarta"
+    annotationProcessor "jakarta.annotation:jakarta.annotation-api"
+    annotationProcessor "jakarta.persistence:jakarta.persistence-api"
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
