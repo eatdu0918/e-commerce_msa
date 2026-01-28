@@ -5,6 +5,7 @@ CREATE TABLE users
     password     VARCHAR(255) NOT NULL COMMENT '암호화된 비밀번호',
     name         VARCHAR(100) NOT NULL COMMENT '이름',
     phone_number VARCHAR(20)  NOT NULL COMMENT '휴대폰 번호',
+    gender       VARCHAR(10)  NOT NULL COMMENT '성별(MALE, FEMALE)',
     role         VARCHAR(20)  NOT NULL DEFAULT 'USER' COMMENT '권한(USER, ADMIN)',
     is_active    BOOLEAN      NOT NULL DEFAULT TRUE COMMENT '활성화 상태',
     created_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
