@@ -1,11 +1,10 @@
 package com.ecommerce.userservice.service;
 
-import com.ecommerce.userservice.dto.request.LoginRequest;
-import com.ecommerce.userservice.dto.request.SignUpRequest;
+import com.ecommerce.userservice.dto.request.*;
 import com.ecommerce.userservice.dto.response.LoginResponse;
 import com.ecommerce.userservice.dto.response.UserResponse;
 import com.ecommerce.userservice.entity.User;
-import com.ecommerce.userservice.enums.UserRole;
+import com.ecommerce.userservice.exception.UserDomainException;
 import com.ecommerce.userservice.exception.UserDomainExceptionCode;
 import com.ecommerce.userservice.repository.UserRepository;
 import com.ecommerce.userservice.security.CustomUserDetails;
@@ -37,27 +36,25 @@ public class UserService {
     public void signUp(SignUpRequest request) {
         log.info("회원가입 시도: email={}", request.getEmail());
 
-        // 이메일 중복 확인
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new UnsupportedOperationException(UserDomainExceptionCode.DuplicateEmailException.getMessage());
-        }
+        validateDuplicateEmail(request.getEmail());
 
-        // 비밀번호 암호화
         String encodedPassword = passwordEncoder.encode(request.getPassword());
-
-        // 사용자 설정
-        User user = User.builder()
-                .email(request.getEmail())
-                .password(encodedPassword)
-                .name(request.getName())
-                .phoneNumber(request.getPhoneNumber())
-                .gender(request.getGender())
-                .role(UserRole.USER)
-                .isActive(true)
-                .build();
+        User user = User.create(
+                request.getEmail(),
+                encodedPassword,
+                request.getName(),
+                request.getPhoneNumber(),
+                request.getGender()
+        );
 
         User savedUser = userRepository.save(user);
-        log.info("회원가입 완료: userId={}, email={}",  savedUser.getId(), request.getEmail());
+        log.info("회원가입 완료: userId={}, email={}", savedUser.getId(), request.getEmail());
+    }
+
+    private void validateDuplicateEmail(String email) {
+        if (userRepository.existsByEmail(email)) {
+            throw new UserDomainException(UserDomainExceptionCode.DuplicateEmailException);
+        }
     }
 
     @Transactional
@@ -83,6 +80,85 @@ public class UserService {
                 .build();
     }
 
+    public UserResponse findUserByEmail(String email) {
+        User user = getUserByEmail(email);
+        return convertToUserResponse(user);
+    }
+
+    @Transactional
+    public UserResponse updateProfile(Long userId, UpdateProfileRequest request) {
+        User user = getActiveUserById(userId);
+        user.updateProfile(request.getName(), request.getPhoneNumber(), request.getGender());
+        log.info("프로필 수정 완료: userId={}", userId);
+        return convertToUserResponse(user);
+    }
+
+    @Transactional
+    public void changePassword(Long userId, ChangePasswordRequest request) {
+        User user = getActiveUserById(userId);
+
+        // 현재 비밀번호 확인
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new UserDomainException(UserDomainExceptionCode.InvalidPasswordException);
+        }
+
+        // 새 비밀번호가 기존과 동일한지 확인
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
+            throw new UserDomainException(UserDomainExceptionCode.SamePasswordException);
+        }
+
+        String encodedNewPassword = passwordEncoder.encode(request.getNewPassword());
+        user.changePassword(encodedNewPassword);
+        log.info("비밀번호 변경 완료: userId={}", userId);
+    }
+
+    @Transactional
+    public void withdraw(Long userId, WithdrawRequest request) {
+        User user = getUserById(userId);
+
+        // 이미 탈퇴한 회원인지 확인
+        if (!user.getIsActive()) {
+            throw new UserDomainException(UserDomainExceptionCode.UserAlreadyWithdrawnException);
+        }
+
+        // 비밀번호 확인
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new UserDomainException(UserDomainExceptionCode.InvalidPasswordException);
+        }
+
+        user.withdraw();
+        log.info("회원 탈퇴 완료: userId={}", userId);
+    }
+
+    public UserResponse getMyProfile(Long userId) {
+        User user = getActiveUserById(userId);
+        return convertToUserResponse(user);
+    }
+
+    private User getActiveUserById(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserDomainException(UserDomainExceptionCode.UserNotFoundException));
+        validateActiveUser(user);
+        return user;
+    }
+
+    private User getUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new UserDomainException(UserDomainExceptionCode.UserNotFoundException));
+    }
+
+    public User getUserByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserDomainException(UserDomainExceptionCode.EmailNotFoundException));
+        validateActiveUser(user);
+        return user;
+    }
+
+    private void validateActiveUser(User user) {
+        if (!user.getIsActive()) {
+            throw new UserDomainException(UserDomainExceptionCode.UserAlreadyWithdrawnException);
+        }
+    }
 
     private UserResponse convertToUserResponse(User user) {
         return UserResponse.builder()

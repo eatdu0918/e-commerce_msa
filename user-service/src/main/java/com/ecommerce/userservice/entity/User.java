@@ -49,6 +49,7 @@ public class User extends BaseEntity  {
     UserRole role = UserRole.USER;
 
     @Column(name = "is_active", nullable = false)
+    @Builder.Default
     Boolean isActive = true;
 
     @Column(nullable = false)
@@ -57,4 +58,29 @@ public class User extends BaseEntity  {
 
     @Column(name = "deleted_at")
     LocalDateTime deletedAt;
+
+    public static User create(String email, String encodedPassword, String name, String phoneNumber, Gender gender) {
+        return User.builder()
+                .email(email)
+                .password(encodedPassword)
+                .name(name)
+                .phoneNumber(phoneNumber)
+                .gender(gender)
+                .build();
+    }
+
+    public void updateProfile(String name, String phoneNumber, Gender gender) {
+        this.name = name;
+        this.phoneNumber = phoneNumber;
+        this.gender = gender;
+    }
+
+    public void changePassword(String newPassword) {
+        this.password = newPassword;
+    }
+
+    public void withdraw() {
+        this.isActive = false;
+        this.deletedAt = LocalDateTime.now();
+    }
 }
