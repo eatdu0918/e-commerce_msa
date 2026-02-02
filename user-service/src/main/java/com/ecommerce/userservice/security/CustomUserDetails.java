@@ -1,6 +1,7 @@
 package com.ecommerce.userservice.security;
 
 import com.ecommerce.userservice.entity.User;
+import com.ecommerce.userservice.enums.UserRole;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -18,15 +19,22 @@ public class CustomUserDetails implements UserDetails, Serializable {
     private final Long userId;
     private final String email;
     private final String password;
+    private final UserRole role;
 
-    public CustomUserDetails(Long userId, String email, String password) {
+    public CustomUserDetails(Long userId, String email, String password, UserRole role) {
         this.userId = userId;
         this.email = email;
         this.password = password;
+        this.role = role;
     }
 
     public static CustomUserDetails from(User user) {
-        return new CustomUserDetails(user.getId(), user.getEmail(), user.getPassword());
+        return new CustomUserDetails(
+                user.getId(),
+                user.getEmail(),
+                user.getPassword(),
+                user.getRole()
+        );
     }
 
     @Override
@@ -36,7 +44,7 @@ public class CustomUserDetails implements UserDetails, Serializable {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singleton(new SimpleGrantedAuthority("ROLE_USER"));
+        return Collections.singleton(new SimpleGrantedAuthority(role.getKey()));
     }
 
     @Override

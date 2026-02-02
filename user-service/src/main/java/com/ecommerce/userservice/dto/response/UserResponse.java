@@ -16,5 +16,6 @@ public class UserResponse {
     String name;
     String phoneNumber;
     String role;
+    Boolean isActive;
     LocalDateTime createdAt;
 }

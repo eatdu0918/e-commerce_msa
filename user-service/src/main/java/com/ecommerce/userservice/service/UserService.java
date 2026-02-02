@@ -2,23 +2,16 @@ package com.ecommerce.userservice.service;
 
 import com.ecommerce.userservice.dto.request.*;
 import com.ecommerce.userservice.dto.response.LoginResponse;
+import com.ecommerce.userservice.dto.response.TokenResponse;
 import com.ecommerce.userservice.dto.response.UserResponse;
 import com.ecommerce.userservice.entity.User;
 import com.ecommerce.userservice.exception.UserDomainException;
 import com.ecommerce.userservice.exception.UserDomainExceptionCode;
 import com.ecommerce.userservice.repository.UserRepository;
-import com.ecommerce.userservice.security.CustomUserDetails;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import com.ecommerce.userservice.security.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,8 +22,8 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final AuthenticationManager authenticationManager;
-    private final SecurityContextRepository securityContextRepository;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final TokenService tokenService;
 
     @Transactional
     public void signUp(SignUpRequest request) {
@@ -57,26 +50,106 @@ public class UserService {
         }
     }
 
-    @Transactional
-    public LoginResponse login(LoginRequest loginRequest, HttpServletRequest request, HttpServletResponse response) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginRequest.getEmail(),
-                        loginRequest.getPassword()
-                )
+    @Transactional(readOnly = true)
+    public LoginResponse login(LoginRequest loginRequest) {
+        // 이메일로 사용자 조회
+        User user = userRepository.findByEmail(loginRequest.getEmail())
+                .orElseThrow(() -> new UserDomainException(UserDomainExceptionCode.EmailNotFoundException));
+
+        // 탈퇴 회원 확인
+        if (!user.getIsActive()) {
+            throw new UserDomainException(UserDomainExceptionCode.UserAlreadyWithdrawnException);
+        }
+
+        // 비밀번호 확인
+        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+            throw new UserDomainException(UserDomainExceptionCode.InvalidPasswordException);
+        }
+
+        // JWT 토큰 생성
+        String accessToken = jwtTokenProvider.createAccessToken(
+                user.getId(),
+                user.getEmail(),
+                user.getRole()
         );
+        String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
 
-        SecurityContext context = SecurityContextHolder.createEmptyContext();
-        context.setAuthentication(authentication);
-        SecurityContextHolder.setContext(context);
+        // Redis에 Refresh Token 저장
+        tokenService.saveRefreshToken(user.getId(), refreshToken);
 
-        securityContextRepository.saveContext(context, request, response);
-
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        log.info("로그인 성공: userId={}, email={}", user.getId(), user.getEmail());
 
         return LoginResponse.builder()
-                .userId(userDetails.getUserId())
-                .email(userDetails.getEmail())
+                .userId(user.getId())
+                .email(user.getEmail())
+                .role(user.getRole().name())
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
+    }
+
+    /**
+     * 로그아웃
+     */
+    public void logout(Long userId, String accessToken) {
+        // Access Token Blacklist에 추가
+        long expiration = jwtTokenProvider.getExpiration(accessToken);
+        tokenService.addToBlacklist(accessToken, expiration);
+
+        // Redis에서 Refresh Token 삭제
+        tokenService.deleteRefreshToken(userId);
+
+        log.info("로그아웃 완료: userId={}", userId);
+    }
+
+    /**
+     * 토큰 갱신
+     */
+    @Transactional(readOnly = true)
+    public TokenResponse refreshToken(String refreshToken) {
+        // Refresh Token 유효성 검증
+        if (!jwtTokenProvider.validateToken(refreshToken)) {
+            throw new UserDomainException(UserDomainExceptionCode.InvalidTokenException);
+        }
+
+        // Refresh Token 타입 확인
+        if (!jwtTokenProvider.isRefreshToken(refreshToken)) {
+            throw new UserDomainException(UserDomainExceptionCode.InvalidTokenException);
+        }
+
+        // 사용자 ID 추출
+        Long userId = jwtTokenProvider.getUserId(refreshToken);
+
+        // Redis에 저장된 Refresh Token과 비교
+        if (!tokenService.validateRefreshToken(userId, refreshToken)) {
+            throw new UserDomainException(UserDomainExceptionCode.RefreshTokenMismatchException);
+        }
+
+        // 사용자 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserDomainException(UserDomainExceptionCode.UserNotFoundException));
+
+        // 탈퇴 회원 확인
+        if (!user.getIsActive()) {
+            throw new UserDomainException(UserDomainExceptionCode.UserAlreadyWithdrawnException);
+        }
+
+        // 새 Access Token 생성
+        String newAccessToken = jwtTokenProvider.createAccessToken(
+                user.getId(),
+                user.getEmail(),
+                user.getRole()
+        );
+
+        // 새 Refresh Token 생성 (Refresh Token Rotation)
+        String newRefreshToken = jwtTokenProvider.createRefreshToken(user.getId());
+        tokenService.saveRefreshToken(userId, newRefreshToken);
+
+        log.info("토큰 갱신 완료: userId={}", userId);
+
+        return TokenResponse.builder()
+                .accessToken(newAccessToken)
+                .refreshToken(newRefreshToken)
                 .build();
     }
 
@@ -127,6 +200,10 @@ public class UserService {
         }
 
         user.withdraw();
+
+        // Redis에서 Refresh Token 삭제
+        tokenService.deleteRefreshToken(userId);
+
         log.info("회원 탈퇴 완료: userId={}", userId);
     }
 
@@ -167,6 +244,7 @@ public class UserService {
                 .name(user.getName())
                 .phoneNumber(user.getPhoneNumber())
                 .role(user.getRole().name())
+                .isActive(user.getIsActive())
                 .createdAt(user.getCreatedAt())
                 .build();
     }

@@ -83,4 +83,8 @@ public class User extends BaseEntity  {
         this.isActive = false;
         this.deletedAt = LocalDateTime.now();
     }
+
+    public void changeRole(UserRole role) {
+        this.role = role;
+    }
 }

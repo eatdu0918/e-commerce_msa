@@ -1,0 +1,48 @@
+package com.ecommerce.userservice.controller;
+
+import com.ecommerce.userservice.dto.response.UserResponse;
+import com.ecommerce.userservice.response.ApiResponse;
+import com.ecommerce.userservice.service.AdminService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/admin")
+@RequiredArgsConstructor
+@Slf4j
+@PreAuthorize("hasRole('ADMIN')")
+public class AdminController {
+
+    private final AdminService adminService;
+
+    @GetMapping("/users")
+    public ApiResponse<List<UserResponse>> getAllUsers() {
+        log.info("GET /api/admin/users - 전체 회원 조회");
+        return ApiResponse.success(adminService.getAllUsers());
+    }
+
+    @GetMapping("/users/{userId}")
+    public ApiResponse<UserResponse> getUserById(@PathVariable Long userId) {
+        log.info("GET /api/admin/users/{} - 회원 상세 조회", userId);
+        return ApiResponse.success(adminService.getUserById(userId));
+    }
+
+    @DeleteMapping("/users/{userId}")
+    public ApiResponse<Void> deleteUser(@PathVariable Long userId) {
+        log.info("DELETE /api/admin/users/{} - 회원 강제 탈퇴", userId);
+        adminService.deleteUser(userId);
+        return ApiResponse.ok();
+    }
+
+    @PutMapping("/users/{userId}/role")
+    public ApiResponse<UserResponse> changeUserRole(
+            @PathVariable Long userId,
+            @RequestParam String role) {
+        log.info("PUT /api/admin/users/{}/role - 회원 권한 변경: role={}", userId, role);
+        return ApiResponse.success(adminService.changeUserRole(userId, role));
+    }
+}
