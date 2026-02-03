@@ -1,0 +1,4 @@
+rootProject.name = 'sparta-msa'
+
+include 'user-service'
+include 'product-service'
