@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URBAN THREADS - 현대적 미니멀리즘</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f9f7f2;
+            color: #1a1a1a;
+            overflow-x: hidden;
+        }
+
+        .hero-bg-shape {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 40%;
+            height: 100%;
+            background: #e5e0d8;
+            clip-path: polygon(20% 0%, 100% 0%, 100% 100%, 0% 100%);
+            z-index: -1;
+            border-bottom-left-radius: 50% 20%;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* 페이지 전환 애니메이션 */
+        .page-transition {
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+
+        .hidden-page {
+            display: none;
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        .visible-page {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+
+<body class="antialiased">
+
+    <!-- 내비게이션 바 (공통) -->
+    <nav class="sticky top-0 z-[100] bg-white/80 backdrop-blur-md border-b border-stone-200">
+        <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+            <div class="text-xl font-bold tracking-tighter cursor-pointer" onclick="goHome()">URBAN THREADS</div>
+
+            <div class="hidden md:flex space-x-8 text-sm font-medium text-stone-600">
+                <a href="#" class="hover:text-black transition-colors" onclick="navigateTo('all_products')">SHOP ALL</a>
+                <a href="#" class="hover:text-black transition-colors">NEW ARRIVALS</a>
+                <a href="#" class="hover:text-black transition-colors">WOMEN</a>
+                <a href="#" class="hover:text-black transition-colors">MEN</a>
+            </div>
+
+            <div class="flex items-center space-x-1 md:space-x-4">
+                <!-- 검색 -->
+                <button class="p-2 hover:bg-stone-100 rounded-full transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8" />
+                        <path d="m21 21-4.3-4.3" />
+                    </svg>
+                </button>
+
+                <!-- 회원 (마이페이지 토글) -->
+                <div class="relative">
+                    <button id="userBtn"
+                        class="p-2 hover:bg-stone-100 rounded-full transition-colors flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                            <circle cx="12" cy="7" r="4" />
+                        </svg>
+                    </button>
+
+                    <div id="userDropdown"
+                        class="hidden absolute right-0 mt-3 w-80 bg-white border border-stone-200 rounded-2xl shadow-xl overflow-hidden">
+                        <div class="p-6 bg-stone-50 border-b border-stone-100">
+                            <div class="flex items-center space-x-3">
+                                <div
+                                    class="w-12 h-12 bg-stone-200 rounded-full flex items-center justify-center text-stone-500 font-bold">
+                                    JD</div>
+                                <div>
+                                    <p class="font-bold text-sm">홍길동 님</p>
+                                    <p class="text-xs text-stone-400">platinum 멤버십</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="max-h-[400px] overflow-y-auto no-scrollbar">
+                            <!-- MY 쇼핑 -->
+                            <div class="p-4 border-b border-stone-50">
+                                <h4 class="text-[11px] font-bold text-stone-400 uppercase tracking-widest mb-3">MY 쇼핑
+                                </h4>
+                                <ul class="space-y-3 text-sm text-stone-600">
+                                    <li class="flex justify-between items-center cursor-pointer hover:text-blue-600 transition-colors"
+                                        onclick="navigateTo('order')">
+                                        <span>주문목록/배송조회</span>
+                                        <span
+                                            class="text-xs bg-stone-100 px-2 py-0.5 rounded text-stone-500 font-medium">3건</span>
+                                    </li>
+                                    <li class="cursor-pointer hover:text-black">취소/반품/환불 내역</li>
+                                    <li class="cursor-pointer hover:text-black">와우 멤버십</li>
+                                    <li class="cursor-pointer hover:text-black">영수증 조회/출력</li>
+                                </ul>
+                            </div>
+                            <!-- MY 혜택 -->
+                            <div class="p-4 border-b border-stone-50">
+                                <h4 class="text-[11px] font-bold text-stone-400 uppercase tracking-widest mb-3">MY 혜택
+                                </h4>
+                                <ul class="space-y-3 text-sm text-stone-600">
+                                    <li class="flex justify-between items-center cursor-pointer hover:text-blue-600 transition-colors"
+                                        onclick="navigateTo('benefit')">
+                                        <span>쿠폰 · 이용권</span>
+                                        <span class="text-xs font-bold text-red-500">2장</span>
+                                    </li>
+                                    <li class="cursor-pointer hover:text-black">쿠팡캐시/기프트카드</li>
+                                </ul>
+                            </div>
+                            <!-- MY 활동 -->
+                            <div class="p-4 border-b border-stone-50">
+                                <h4 class="text-[11px] font-bold text-stone-400 uppercase tracking-widest mb-3">MY 활동
+                                </h4>
+                                <ul class="space-y-3 text-sm text-stone-600">
+                                    <li class="cursor-pointer hover:text-black">문의하기</li>
+                                    <li class="flex justify-between items-center cursor-pointer hover:text-blue-600 transition-colors"
+                                        onclick="navigateTo('activity')">
+                                        <span>리뷰관리</span>
+                                        <span
+                                            class="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-bold">NEW</span>
+                                    </li>
+                                    <li class="cursor-pointer hover:text-black">찜 리스트</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <button
+                            class="w-full py-4 bg-stone-900 text-white text-xs font-bold hover:bg-black transition-colors">로그아웃</button>
+                    </div>
+                </div>
+
+                <!-- 알림 -->
+                <button class="p-2 hover:bg-stone-100 rounded-full transition-colors relative">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+                        <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+                    </svg>
+                    <span class="absolute top-2 right-2 w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                </button>
+
+                <!-- 장바구니 -->
+                <div class="relative">
+                    <button class="p-2 hover:bg-stone-100 rounded-full transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+                            <path d="M3 6h18" />
+                            <path d="M16 10a4 4 0 0 1-8 0" />
+                        </svg>
+                        <span id="cartCount"
+                            class="absolute top-1 right-1 bg-red-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold">2</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 홈 페이지 콘텐츠 -->
+    <div id="homePage" class="page-transition visible-page">
+        <!-- 히어로 섹션 -->
+        <header class="relative overflow-hidden min-h-[600px] flex items-center">
+            <div class="hero-bg-shape"></div>
+            <div class="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center w-full">
+                <div class="z-10">
+                    <h1 class="text-5xl md:text-7xl font-light tracking-tight leading-tight mb-6">
+                        Effortless Style for the <br>
+                        <span class="font-medium text-stone-800">Modern Minimalist</span>
+                    </h1>
+                    <p class="text-stone-500 text-lg mb-8 max-w-md">절제된 세련미와 최상의 품질로 완성하는 당신의 일상.</p>
+                    <button
+                        class="bg-white border border-stone-300 px-8 py-3 rounded-full text-sm font-medium hover:bg-black hover:text-white hover:border-black transition-all duration-300"
+                        onclick="navigateTo('all_products')">
+                        SHOP THE COLLECTION
+                    </button>
+                </div>
+                <div class="relative h-[500px] hidden md:block">
+                    <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&q=80&w=800"
+                        alt="Hero"
+                        class="absolute right-0 top-1/2 -translate-y-1/2 w-[90%] h-full object-cover rounded-3xl shadow-2xl shadow-stone-300/50">
+                </div>
+            </div>
+        </header>
+
+        <!-- 카테고리 그리드 -->
+        <section class="max-w-7xl mx-auto px-6 py-20">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="group cursor-pointer" onclick="navigateTo('all_products')">
+                    <div
+                        class="aspect-square bg-[#ece8e2] rounded-2xl p-8 mb-4 transition-transform duration-500 group-hover:scale-[1.02]">
+                        <img src="https://images.unsplash.com/photo-1576188034543-795859908358?auto=format&fit=crop&q=80&w=400"
+                            alt="Knitwear" class="w-full h-full object-contain mix-blend-multiply opacity-80">
+                    </div>
+                    <h3 class="font-medium text-center">Cozy Knitwear</h3>
+                </div>
+                <div class="group cursor-pointer" onclick="navigateTo('all_products')">
+                    <div
+                        class="aspect-square bg-[#ece8e2] rounded-2xl p-8 mb-4 transition-transform duration-500 group-hover:scale-[1.02]">
+                        <img src="https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&q=80&w=400"
+                            alt="Denim" class="w-full h-full object-contain mix-blend-multiply opacity-80">
+                    </div>
+                    <h3 class="font-medium text-center">Essential Denim</h3>
+                </div>
+                <div class="group cursor-pointer" onclick="navigateTo('all_products')">
+                    <div
+                        class="aspect-square bg-[#ece8e2] rounded-2xl p-8 mb-4 transition-transform duration-500 group-hover:scale-[1.02]">
+                        <img src="https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&q=80&w=400"
+                            alt="Decor" class="w-full h-full object-contain mix-blend-multiply opacity-80">
+                    </div>
+                    <h3 class="font-medium text-center">Curated Decor</h3>
+                </div>
+                <div class="group cursor-pointer" onclick="navigateTo('all_products')">
+                    <div
+                        class="aspect-square bg-[#ece8e2] rounded-2xl p-8 mb-4 transition-transform duration-500 group-hover:scale-[1.02]">
+                        <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80&w=400"
+                            alt="Active" class="w-full h-full object-contain mix-blend-multiply opacity-80">
+                    </div>
+                    <h3 class="font-medium text-center">Active Lifestyle</h3>
+                </div>
+            </div>
+        </section>
+
+        <!-- DAILY DROPS -->
+        <section class="max-w-7xl mx-auto px-6 py-20 border-t border-stone-200">
+            <div class="flex justify-between items-end mb-10">
+                <h2 class="text-2xl font-bold tracking-tight">DAILY DROPS</h2>
+                <button onclick="navigateTo('all_products')"
+                    class="text-sm font-medium border-b border-black pb-1 hover:text-stone-500 transition-colors">전체
+                    보기</button>
+            </div>
+            <div id="dailyDropsGrid" class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- JS에서 렌더링 -->
+            </div>
+        </section>
+    </div>
+
+    <!-- 상품 목록 페이지 (전체 보기) -->
+    <div id="productListPage" class="page-transition hidden-page min-h-screen py-20">
+        <div class="max-w-7xl mx-auto px-6">
+            <header class="mb-16">
+                <h2 class="text-5xl font-bold tracking-tight mb-4">SHOP ALL</h2>
+                <p class="text-stone-400">당신을 위해 큐레이션된 미니멀리즘 아이템들을 만나보세요.</p>
+            </header>
+
+            <!-- 필터 및 정렬 바 -->
+            <div
+                class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-12 border-b border-stone-200 pb-8">
+                <div class="flex space-x-4 overflow-x-auto no-scrollbar pb-2 md:pb-0 w-full md:w-auto">
+                    <button class="px-6 py-2 bg-black text-white rounded-full text-sm font-medium whitespace-nowrap"
+                        onclick="filterProducts('all', this)">전체</button>
+                    <button
+                        class="px-6 py-2 bg-stone-100 text-stone-600 rounded-full text-sm font-medium whitespace-nowrap hover:bg-stone-200 transition-colors"
+                        onclick="filterProducts('Apparel', this)">의류</button>
+                    <button
+                        class="px-6 py-2 bg-stone-100 text-stone-600 rounded-full text-sm font-medium whitespace-nowrap hover:bg-stone-200 transition-colors"
+                        onclick="filterProducts('Home Goods', this)">홈 굿즈</button>
+                    <button
+                        class="px-6 py-2 bg-stone-100 text-stone-600 rounded-full text-sm font-medium whitespace-nowrap hover:bg-stone-200 transition-colors"
+                        onclick="filterProducts('Footwear', this)">신발</button>
+                </div>
+                <div class="flex items-center space-x-6 w-full md:w-auto justify-between">
+                    <span class="text-xs text-stone-400"><span id="productCount">0</span> Products</span>
+                    <select onchange="sortProducts(this.value)"
+                        class="bg-transparent text-sm font-medium border-none focus:ring-0 cursor-pointer">
+                        <option value="new">신상품순</option>
+                        <option value="low">낮은 가격순</option>
+                        <option value="high">높은 가격순</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 상품 그리드 -->
+            <div id="productGrid" class="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-12">
+                <!-- 상품 데이터가 여기에 렌더링됨 -->
+            </div>
+
+            <!-- 페이징 -->
+            <div class="mt-20 flex justify-center space-x-2">
+                <button
+                    class="w-10 h-10 flex items-center justify-center rounded-full border border-stone-200 text-stone-400 hover:border-black hover:text-black transition-colors"><svg
+                        xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m15 18-6-6 6-6" />
+                    </svg></button>
+                <button
+                    class="w-10 h-10 flex items-center justify-center rounded-full bg-black text-white text-sm font-bold">1</button>
+                <button
+                    class="w-10 h-10 flex items-center justify-center rounded-full border border-stone-200 text-stone-600 text-sm hover:border-black transition-colors">2</button>
+                <button
+                    class="w-10 h-10 flex items-center justify-center rounded-full border border-stone-200 text-stone-400 hover:border-black hover:text-black transition-colors"><svg
+                        xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="m9 18 6-6-6-6" />
+                    </svg></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 상품 상세 페이지 -->
+    <div id="productDetailPage" class="page-transition hidden-page min-h-screen py-16">
+        <div class="max-w-7xl mx-auto px-6">
+            <button onclick="window.history.back()"
+                class="flex items-center text-stone-400 hover:text-black transition-colors mb-12">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                    <path d="m15 18-6-6 6-6" />
+                </svg>
+                <span class="text-sm font-medium">돌아가기</span>
+            </button>
+            <div id="productDetailContent" class="grid md:grid-cols-2 gap-16">
+                <!-- 상세 내용 렌더링 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 마이페이지 상세 (주문목록 등) -->
+    <div id="detailPage" class="page-transition hidden-page min-h-screen pt-12 pb-24">
+        <div class="max-w-3xl mx-auto px-6">
+            <button onclick="goHome()"
+                class="flex items-center text-stone-400 hover:text-black transition-colors mb-12">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2">
+                    <path d="m15 18-6-6 6-6" />
+                </svg>
+                <span class="text-sm font-medium">홈으로 돌아가기</span>
+            </button>
+            <h2 id="detailTitle" class="text-4xl font-bold tracking-tight mb-12 text-stone-900">제목</h2>
+            <div id="detailContent" class="space-y-8 bg-white p-10 rounded-[40px] shadow-sm border border-stone-100">
+                <!-- 마이페이지별 상세 내용 -->
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-white border-t border-stone-200 pt-20 pb-10 mt-20">
+        <div class="max-w-7xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-12 mb-20 text-stone-500 text-sm">
+            <div class="col-span-2 md:col-span-1">
+                <div class="text-xl font-bold tracking-tighter mb-6 text-black">URBAN THREADS</div>
+                <p>단순함의 미학을 추구합니다.</p>
+            </div>
+            <div>
+                <h5 class="font-bold text-black mb-6">SHOP</h5>
+                <ul class="space-y-4">
+                    <li><a href="#" onclick="navigateTo('all_products')">All Products</a></li>
+                    <li><a href="#">New Arrivals</a></li>
+                </ul>
+            </div>
+            <div>
+                <h5 class="font-bold text-black mb-6">SUPPORT</h5>
+                <ul class="space-y-4">
+                    <li><a href="#">Shipping</a></li>
+                    <li><a href="#">Returns</a></li>
+                </ul>
+            </div>
+            <div>
+                <h5 class="font-bold text-black mb-6">CONNECT</h5>
+                <div class="flex">
+                    <input type="email" placeholder="Email"
+                        class="bg-stone-50 border border-stone-200 px-4 py-2 w-full rounded-l-md outline-none">
+                    <button class="bg-black text-white px-4 rounded-r-md">Join</button>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const allProducts = [
+            { id: 1, name: "Organic Ceramic Vase", category: "Home Goods", price: 54000, date: "2024-12-10", desc: "공간의 분위기를 바꿔주는 핸드메이드 화병.", img: "https://images.unsplash.com/photo-1614859324967-bdf219d45598?auto=format&fit=crop&q=80&w=800" },
+            { id: 2, name: "Oversized Sand Hoodie", category: "Apparel", price: 72000, date: "2024-12-08", desc: "편안한 핏의 프리미엄 코튼 후디.", img: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&q=80&w=800" },
+            { id: 3, name: "Urban Tech Runner v.1", category: "Footwear", price: 129000, date: "2024-12-05", desc: "기능성과 스타일을 동시에 잡은 러닝슈즈.", img: "https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&q=80&w=800" },
+            { id: 4, name: "Minimalist Linen Shirt", category: "Apparel", price: 89000, date: "2024-11-28", desc: "여름철 필수적인 린넨 소재의 베이직 셔츠.", img: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?auto=format&fit=crop&q=80&w=800" },
+            { id: 5, name: "Stone Coaster Set", category: "Home Goods", price: 24000, date: "2024-11-20", desc: "천연석으로 제작된 고급스러운 코스터 세트.", img: "https://images.unsplash.com/photo-1616627686039-382a88636440?auto=format&fit=crop&q=80&w=800" },
+            { id: 6, name: "Classic Cotton Tote", category: "Home Goods", price: 15000, date: "2024-11-15", desc: "가볍고 튼튼한 캔버스 토트백.", img: "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&q=80&w=800" }
+        ];
+
+        let cartCountNum = 2;
+        let currentFilter = 'all';
+        let currentSort = 'new';
+
+        // 공통 페이지 이동 함수
+        function hideAllPages() {
+            document.querySelectorAll('.page-transition').forEach(p => {
+                p.classList.remove('visible-page');
+                p.classList.add('hidden-page');
+            });
+            window.scrollTo(0, 0);
+        }
+
+        function navigateTo(type) {
+            hideAllPages();
+            document.getElementById('userDropdown').classList.add('hidden');
+
+            if (type === 'all_products') {
+                document.getElementById('productListPage').classList.replace('hidden-page', 'visible-page');
+                applyFiltersAndSort();
+            } else if (['order', 'benefit', 'activity'].includes(type)) {
+                document.getElementById('detailPage').classList.replace('hidden-page', 'visible-page');
+                renderMyPageDetail(type);
+            }
+        }
+
+        function goHome() {
+            hideAllPages();
+            document.getElementById('homePage').classList.replace('hidden-page', 'visible-page');
+        }
+
+        // 상품 상세 열기
+        function openProductDetail(id) {
+            const product = allProducts.find(p => p.id === id);
+            if (!product) return;
+            hideAllPages();
+            const detailPage = document.getElementById('productDetailPage');
+            detailPage.classList.replace('hidden-page', 'visible-page');
+
+            document.getElementById('productDetailContent').innerHTML = `
+                <div class="aspect-[4/5] bg-stone-100 rounded-[40px] overflow-hidden">
+                    <img src="${product.img}" class="w-full h-full object-cover">
+                </div>
+                <div>
+                    <p class="text-xs text-stone-400 uppercase tracking-widest mb-2 font-bold">${product.category}</p>
+                    <h2 class="text-4xl font-bold mb-4 tracking-tight">${product.name}</h2>
+                    <p class="text-2xl font-light mb-8">₩${product.price.toLocaleString()}</p>
+                    <p class="text-stone-500 mb-12 leading-relaxed">${product.desc}</p>
+                    <div class="space-y-8 mb-12">
+                        <div>
+                            <p class="text-xs font-bold mb-4">SIZE</p>
+                            <div class="flex space-x-3">
+                                <button class="size-btn w-12 h-12 border border-black rounded-full text-xs font-bold bg-black text-white" onclick="selectSize(this)">S</button>
+                                <button class="size-btn w-12 h-12 border border-stone-200 rounded-full text-xs font-medium hover:border-black" onclick="selectSize(this)">M</button>
+                                <button class="size-btn w-12 h-12 border border-stone-200 rounded-full text-xs font-medium hover:border-black" onclick="selectSize(this)">L</button>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-xs font-bold mb-4">QUANTITY</p>
+                            <div class="flex items-center space-x-4 border border-stone-200 w-fit rounded-full px-4 py-2">
+                                <button onclick="changeQty(-1)" class="text-stone-400 hover:text-black">-</button>
+                                <span id="pQty" class="text-sm font-bold w-4 text-center">1</span>
+                                <button onclick="changeQty(1)" class="text-stone-400 hover:text-black">+</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex space-x-4">
+                        <button onclick="addToCart()" class="flex-1 bg-stone-100 py-5 rounded-2xl font-bold hover:bg-stone-200 transition-colors">ADD TO CART</button>
+                        <button class="flex-1 bg-black text-white py-5 rounded-2xl font-bold hover:bg-stone-800 transition-all">BUY NOW</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 전체 상품 필터/정렬
+        function filterProducts(category, btn) {
+            currentFilter = category;
+            const buttons = btn.parentElement.querySelectorAll('button');
+            buttons.forEach(b => {
+                b.classList.replace('bg-black', 'bg-stone-100');
+                b.classList.replace('text-white', 'text-stone-600');
+            });
+            btn.classList.replace('bg-stone-100', 'bg-black');
+            btn.classList.replace('text-stone-600', 'text-white');
+            applyFiltersAndSort();
+        }
+
+        function sortProducts(val) {
+            currentSort = val;
+            applyFiltersAndSort();
+        }
+
+        function applyFiltersAndSort() {
+            let filtered = allProducts;
+            if (currentFilter !== 'all') filtered = allProducts.filter(p => p.category === currentFilter);
+            if (currentSort === 'low') filtered.sort((a, b) => a.price - b.price);
+            else if (currentSort === 'high') filtered.sort((a, b) => b.price - a.price);
+            else filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+            renderGrid('productGrid', filtered);
+            document.getElementById('productCount').textContent = filtered.length;
+        }
+
+        function renderGrid(targetId, products) {
+            const grid = document.getElementById(targetId);
+            grid.innerHTML = products.map(p => `
+                <div class="group cursor-pointer" onclick="openProductDetail(${p.id})">
+                    <div class="aspect-[3/4] bg-stone-100 rounded-3xl overflow-hidden mb-6 relative">
+                        <img src="${p.img}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                    </div>
+                    <p class="text-[10px] text-stone-400 uppercase tracking-widest mb-1">${p.category}</p>
+                    <h4 class="font-medium text-sm mb-1 group-hover:text-stone-600">${p.name}</h4>
+                    <p class="font-bold text-sm">₩${p.price.toLocaleString()}</p>
+                </div>
+            `).join('');
+        }
+
+        // 마이페이지 상세 내용
+        function renderMyPageDetail(type) {
+            const title = document.getElementById('detailTitle');
+            const content = document.getElementById('detailContent');
+            if (type === 'order') {
+                title.textContent = "주문 내역";
+                content.innerHTML = `<div class="flex items-center space-x-4 border-b pb-4"><div class="w-16 h-16 bg-stone-100 rounded-lg"></div><div><p class="text-xs text-blue-600 font-bold">배송중</p><p class="font-bold">Urban Tech Runner v.1</p></div></div>`;
+            } else if (type === 'benefit') {
+                title.textContent = "나의 혜택";
+                content.innerHTML = `<div class="bg-red-50 p-6 rounded-2xl"><h3 class="text-2xl font-bold text-red-600">쿠폰 2장</h3><p class="text-xs text-red-400">이번 달 만료 쿠폰이 있습니다.</p></div>`;
+            } else if (type === 'activity') {
+                title.textContent = "리뷰 관리";
+                content.innerHTML = `<div class="text-center py-10"><p class="text-stone-400">작성 가능한 리뷰가 1건 있습니다.</p></div>`;
+            }
+        }
+
+        // 상호작용 로직
+        function selectSize(btn) {
+            document.querySelectorAll('.size-btn').forEach(b => {
+                b.classList.remove('bg-black', 'text-white');
+                b.classList.add('border-stone-200', 'text-stone-600');
+            });
+            btn.classList.add('bg-black', 'text-white');
+        }
+
+        function changeQty(n) {
+            const qty = document.getElementById('pQty');
+            let val = parseInt(qty.innerText) + n;
+            if (val < 1) val = 1;
+            qty.innerText = val;
+        }
+
+        function addToCart() {
+            cartCountNum += parseInt(document.getElementById('pQty').innerText);
+            document.getElementById('cartCount').innerText = cartCountNum;
+            alert('장바구니에 상품을 담았습니다.');
+        }
+
+        // 초기화
+        window.onload = () => {
+            renderGrid('dailyDropsGrid', allProducts.slice(0, 3));
+
+            document.getElementById('userBtn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                document.getElementById('userDropdown').classList.toggle('hidden');
+            });
+            document.addEventListener('click', () => document.getElementById('userDropdown').classList.add('hidden'));
+
+            // 타이머
+            let timer = 24 * 60 * 60;
+            setInterval(() => {
+                let h = parseInt(timer / 3600, 10).toString().padStart(2, '0');
+                let m = parseInt((timer % 3600) / 60, 10).toString().padStart(2, '0');
+                let s = parseInt(timer % 60, 10).toString().padStart(2, '0');
+                document.querySelectorAll('.countdown').forEach(el => el.textContent = `${h}:${m}:${s}`);
+                if (--timer < 0) timer = 24 * 60 * 60;
+            }, 1000);
+        };
+    </script>
+</body>
+
+</html>
