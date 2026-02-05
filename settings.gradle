@@ -2,3 +2,8 @@ rootProject.name = 'sparta-msa'
 
 include 'user-service'
 include 'product-service'
+include 'order-service'
+include 'discount-service'
+include 'payment-service'
+include 'cancel-service'
+include 'refund-service'
