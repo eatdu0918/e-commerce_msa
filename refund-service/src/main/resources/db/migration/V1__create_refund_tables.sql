@@ -1,0 +1,23 @@
+CREATE TABLE refunds (
+    refund_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    order_id BIGINT NOT NULL,
+    cancel_id BIGINT NOT NULL,
+    payment_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    refund_number VARCHAR(32) NOT NULL UNIQUE,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    refund_reason VARCHAR(20) NOT NULL,
+    refund_detail VARCHAR(500),
+    amount DECIMAL(12,2) NOT NULL,
+    completed_at DATETIME,
+    failed_at DATETIME,
+    failure_reason VARCHAR(500),
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
+    INDEX idx_user_id (user_id),
+    INDEX idx_order_id (order_id),
+    INDEX idx_cancel_id (cancel_id),
+    INDEX idx_payment_id (payment_id),
+    INDEX idx_status (status),
+    INDEX idx_refund_number (refund_number)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
