@@ -17,6 +17,7 @@ public class ProductResponse {
     Long id;
     String name;
     String description;
+    String imageUrl;
     BigDecimal price;
     Integer stockQuantity;
     Long categoryId;
@@ -30,6 +31,7 @@ public class ProductResponse {
                 .id(product.getId())
                 .name(product.getName())
                 .description(product.getDescription())
+                .imageUrl(product.getImageUrl())
                 .price(product.getPrice())
                 .stockQuantity(product.getStockQuantity())
                 .categoryId(product.getCategory() != null ? product.getCategory().getId() : null)

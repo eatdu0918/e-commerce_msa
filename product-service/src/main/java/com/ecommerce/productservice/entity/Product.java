@@ -41,6 +41,9 @@ public class Product extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     String description;
 
+    @Column(name = "image_url")
+    String imageUrl;
+
     @Column(nullable = false, precision = 12, scale = 2)
     BigDecimal price;
 
@@ -55,22 +58,26 @@ public class Product extends BaseEntity {
     @Column(name = "deleted_at")
     LocalDateTime deletedAt;
 
-    public static Product create(String name, String description, BigDecimal price, Integer stockQuantity, Category category) {
+    public static Product create(String name, String description, BigDecimal price, Integer stockQuantity,
+            Category category, String imageUrl) {
         return Product.builder()
                 .name(name)
                 .description(description)
                 .price(price)
                 .stockQuantity(stockQuantity)
                 .category(category)
+                .imageUrl(imageUrl)
                 .build();
     }
 
-    public void update(String name, String description, BigDecimal price, Integer stockQuantity, Category category) {
+    public void update(String name, String description, BigDecimal price, Integer stockQuantity, Category category,
+            String imageUrl) {
         this.name = name;
         this.description = description;
         this.price = price;
         this.stockQuantity = stockQuantity;
         this.category = category;
+        this.imageUrl = imageUrl;
     }
 
     public void delete() {

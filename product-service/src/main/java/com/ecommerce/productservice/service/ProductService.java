@@ -36,7 +36,8 @@ public class ProductService {
         Category category = null;
         if (request.getCategoryId() != null) {
             category = categoryRepository.findByIdAndIsActiveTrue(request.getCategoryId())
-                    .orElseThrow(() -> new ProductDomainException(ProductDomainExceptionCode.CategoryNotFoundException));
+                    .orElseThrow(
+                            () -> new ProductDomainException(ProductDomainExceptionCode.CategoryNotFoundException));
         }
 
         Product product = Product.create(
@@ -44,8 +45,8 @@ public class ProductService {
                 request.getDescription(),
                 request.getPrice(),
                 request.getStockQuantity(),
-                category
-        );
+                category,
+                request.getImageUrl());
 
         Product savedProduct = productRepository.save(product);
         log.info("상품 등록 완료: productId={}, name={}", savedProduct.getId(), savedProduct.getName());
@@ -64,7 +65,8 @@ public class ProductService {
         Page<Product> products;
 
         if (categoryId != null && keyword != null && !keyword.isBlank()) {
-            products = productRepository.findAllByIsActiveTrueAndCategoryIdAndNameContaining(categoryId, keyword, pageable);
+            products = productRepository.findAllByIsActiveTrueAndCategoryIdAndNameContaining(categoryId, keyword,
+                    pageable);
         } else if (categoryId != null) {
             products = productRepository.findAllByIsActiveTrueAndCategoryId(categoryId, pageable);
         } else if (keyword != null && !keyword.isBlank()) {
@@ -91,7 +93,8 @@ public class ProductService {
         Category category = null;
         if (request.getCategoryId() != null) {
             category = categoryRepository.findByIdAndIsActiveTrue(request.getCategoryId())
-                    .orElseThrow(() -> new ProductDomainException(ProductDomainExceptionCode.CategoryNotFoundException));
+                    .orElseThrow(
+                            () -> new ProductDomainException(ProductDomainExceptionCode.CategoryNotFoundException));
         }
 
         product.update(
@@ -99,8 +102,8 @@ public class ProductService {
                 request.getDescription(),
                 request.getPrice(),
                 request.getStockQuantity(),
-                category
-        );
+                category,
+                request.getImageUrl());
 
         log.info("상품 수정 완료: productId={}", productId);
         return ProductResponse.from(product);
