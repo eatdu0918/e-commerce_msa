@@ -1,17 +1,32 @@
 import { useState } from 'react';
 import { ChevronLeft, Minus, Plus } from 'lucide-react';
 import type { Product } from '../../types/product';
+import OrderModal from '../order/OrderModal';
+import { useQuery } from '@tanstack/react-query';
+import { getMyProfile } from '../../api/services/user';
 
 interface ProductDetailPageProps {
     product: Product;
     onBack: () => void;
+    onLoginRequest: () => void;
 }
 
-export default function ProductDetailPage({ product, onBack }: ProductDetailPageProps) {
+export default function ProductDetailPage({ product, onBack, onLoginRequest }: ProductDetailPageProps) {
     const [selectedSize, setSelectedSize] = useState('S');
     const [quantity, setQuantity] = useState(1);
+    const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+
+    const { data: user } = useQuery({ queryKey: ['user'], queryFn: getMyProfile, retry: false });
 
     const sizes = ['S', 'M', 'L'];
+
+    const handleBuyClick = () => {
+        if (!user) {
+            onLoginRequest();
+            return;
+        }
+        setIsOrderModalOpen(true);
+    };
 
     return (
         <div className="min-h-screen py-16 bg-[#f9f7f2]">
@@ -44,8 +59,8 @@ export default function ProductDetailPage({ product, onBack }: ProductDetailPage
                                             key={size}
                                             onClick={() => setSelectedSize(size)}
                                             className={`w-12 h-12 rounded-full text-xs font-bold border transition-all ${selectedSize === size
-                                                    ? 'bg-black text-white border-black'
-                                                    : 'border-stone-200 text-stone-600 hover:border-black'
+                                                ? 'bg-black text-white border-black'
+                                                : 'border-stone-200 text-stone-600 hover:border-black'
                                                 }`}
                                         >
                                             {size}
@@ -78,11 +93,51 @@ export default function ProductDetailPage({ product, onBack }: ProductDetailPage
                             <button className="flex-1 bg-stone-100 py-5 rounded-2xl font-bold hover:bg-stone-200 transition-colors text-stone-900">
                                 ADD TO CART
                             </button>
-                            <button className="flex-1 bg-black text-white py-5 rounded-2xl font-bold hover:bg-stone-800 transition-all shadow-lg shadow-black/10">
+                            <button
+                                onClick={handleBuyClick}
+                                className="flex-1 bg-black text-white py-5 rounded-2xl font-bold hover:bg-stone-800 transition-all shadow-lg shadow-black/10"
+                            >
                                 BUY NOW
                             </button>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            {user && (
+                <OrderModal
+                    isOpen={isOrderModalOpen}
+                    onClose={() => setIsOrderModalOpen(false)}
+                    product={product}
+                    quantity={quantity}
+                    user={user}
+                    onOrderSuccess={() => {
+                        alert('결제가 완료되었습니다. 주문 상세 페이지로 이동합니다.');
+                        onBack();
+                        // In a real app, maybe navigate to order history
+                    }}
+                />
+            )}
+
+            <div className="max-w-7xl mx-auto px-6 mt-20 border-t border-stone-200 pt-16">
+                <h3 className="text-2xl font-bold mb-8 text-left">Reviews ({product.reviews})</h3>
+                <div className="space-y-8">
+                    {/* Mock Reviews - Deterministic based on ID */}
+                    {Array.from({ length: 3 }).map((_, i) => (
+                        <div key={i} className="bg-white p-8 rounded-3xl shadow-sm border border-stone-100 text-left">
+                            <div className="flex items-center space-x-2 mb-4">
+                                <span className="font-bold">User {1000 + product.id + i}</span>
+                                <span className="text-xs text-stone-400">2024.12.{10 + i}</span>
+                            </div>
+                            <div className="flex text-yellow-400 mb-4">
+                                {'★'.repeat(5)}
+                            </div>
+                            <p className="text-stone-600">
+                                This product is amazing! The quality exceeded my expectations.
+                                Highly recommended for anyone looking for {product.category.toLowerCase()} items.
+                            </p>
+                        </div>
+                    ))}
                 </div>
             </div>
         </div>

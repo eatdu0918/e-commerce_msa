@@ -1,5 +1,8 @@
-import { Search, ShoppingBag, Menu, X, User, Bell } from 'lucide-react';
+import { Search, ShoppingBag, Menu, X, User as UserIcon, Bell } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
+import type { UserResponse } from '../../api/services/user';
+import LanguageSwitcher from '../LanguageSwitcher';
+import { useTranslation } from 'react-i18next';
 
 interface HeaderProps {
     category: string;
@@ -7,9 +10,13 @@ interface HeaderProps {
     categories: string[];
     onNavigate: (view: string) => void;
     view?: string;
+    user?: UserResponse;
+    onLoginClick: () => void;
+    onLogoutClick: () => void;
 }
 
-export default function Header({ category, setCategory, categories, onNavigate, view }: HeaderProps) {
+export default function Header({ category, setCategory, categories, onNavigate, view, user, onLoginClick, onLogoutClick }: HeaderProps) {
+    const { t } = useTranslation();
 
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [userDropdownOpen, setUserDropdownOpen] = useState(false);
@@ -31,7 +38,7 @@ export default function Header({ category, setCategory, categories, onNavigate, 
                 <div
                     className="text-xl font-bold tracking-tighter cursor-pointer"
                     onClick={() => {
-                        setCategory('전체');
+                        setCategory(t('common.category_all'));
                         onNavigate('home');
                     }}
                 >
@@ -62,99 +69,77 @@ export default function Header({ category, setCategory, categories, onNavigate, 
 
 
                 <div className="flex items-center space-x-1 md:space-x-4">
+                    <LanguageSwitcher />
                     <button className="p-2 hover:bg-stone-100 rounded-full transition-colors">
                         <Search size={20} strokeWidth={2} />
                     </button>
 
                     {/* User Dropdown */}
                     <div className="relative" ref={dropdownRef}>
-                        <button
-                            className="p-2 hover:bg-stone-100 rounded-full transition-colors flex items-center"
-                            onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                        >
-                            <User size={20} strokeWidth={2} />
-                        </button>
-
-                        {userDropdownOpen && (
-                            <div className="absolute right-0 mt-3 w-80 bg-white border border-stone-200 rounded-2xl shadow-xl overflow-hidden z-[110]">
-                                <div className="p-6 bg-stone-50 border-b border-stone-100">
-                                    <div className="flex items-center space-x-3">
-                                        <div className="w-12 h-12 bg-stone-200 rounded-full flex items-center justify-center text-stone-500 font-bold">JD</div>
-                                        <div className="text-left">
-                                            <p className="font-bold text-sm">홍길동 님</p>
-                                            <p className="text-xs text-stone-400">platinum 멤버십</p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className="max-h-[400px] overflow-y-auto no-scrollbar">
-                                    <div className="p-4 border-b border-stone-50">
-                                        <h4 className="text-[11px] font-bold text-stone-400 uppercase tracking-widest mb-3 text-left">MY 쇼핑</h4>
-                                        <ul className="space-y-3 text-sm text-left">
-                                            <li
-                                                className="flex justify-between items-center cursor-pointer hover:text-blue-600 transition-colors"
-                                                onClick={() => {
-                                                    onNavigate('order');
-                                                    setUserDropdownOpen(false);
-                                                }}
-                                            >
-                                                <span>주문목록/배송조회</span>
-                                                <span className="text-xs bg-stone-100 px-2 py-0.5 rounded text-stone-500 font-medium">3건</span>
-                                            </li>
-                                            <li className="cursor-pointer hover:text-black transition-colors">취소/반품/환불 내역</li>
-                                            <li className="flex items-center justify-between cursor-pointer hover:text-black transition-colors">
-                                                <span>와우 멤버십</span>
-                                                <span className="w-2 h-2 bg-red-500 rounded-full"></span>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                    <div className="p-4 border-b border-stone-50">
-                                        <h4 className="text-[11px] font-bold text-stone-400 uppercase tracking-widest mb-3 text-left">MY 혜택</h4>
-                                        <ul className="space-y-3 text-sm text-left">
-                                            <li
-                                                className="flex justify-between items-center cursor-pointer hover:text-blue-600 transition-colors"
-                                                onClick={() => {
-                                                    onNavigate('benefit');
-                                                    setUserDropdownOpen(false);
-                                                }}
-                                            >
-                                                <span>쿠폰 · 이용권</span>
-                                                <span className="text-xs font-bold text-red-500">2장</span>
-                                            </li>
-                                            <li className="flex justify-between items-center cursor-pointer hover:text-black transition-colors">
-                                                <span>쿠팡캐시/기프트카드</span>
-                                                <span className="text-xs">1,200원</span>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                    <div className="p-4 border-b border-stone-50">
-                                        <h4 className="text-[11px] font-bold text-stone-400 uppercase tracking-widest mb-3 text-left">MY 활동</h4>
-                                        <ul className="space-y-3 text-sm text-left">
-                                            <li className="cursor-pointer hover:text-black transition-colors">문의하기</li>
-                                            <li
-                                                className="flex justify-between items-center cursor-pointer hover:text-blue-600 transition-colors"
-                                                onClick={() => {
-                                                    onNavigate('activity');
-                                                    setUserDropdownOpen(false);
-                                                }}
-                                            >
-                                                <span>리뷰관리</span>
-                                                <span className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-bold">NEW</span>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                    <div className="p-4">
-                                        <h4 className="text-[11px] font-bold text-stone-400 uppercase tracking-widest mb-3 text-left">MY 정보</h4>
-                                        <ul className="space-y-3 text-sm text-left">
-                                            <li className="cursor-pointer hover:text-black transition-colors">개인정보확인/수정</li>
-                                            <li className="cursor-pointer hover:text-black transition-colors">배송지 관리</li>
-                                            <li className="text-stone-300 cursor-pointer hover:text-red-400 transition-colors text-xs pt-2">회원 탈퇴</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                                <button className="w-full py-4 bg-stone-900 text-white text-xs font-bold hover:bg-black transition-colors">
-                                    로그아웃
+                        {user ? (
+                            <>
+                                <button
+                                    className="p-2 hover:bg-stone-100 rounded-full transition-colors flex items-center"
+                                    onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                                >
+                                    <UserIcon size={20} strokeWidth={2} />
                                 </button>
-                            </div>
+
+                                {userDropdownOpen && (
+                                    <div className="absolute right-0 mt-3 w-80 bg-white border border-stone-200 rounded-2xl shadow-xl overflow-hidden z-[110]">
+                                        <div className="p-6 bg-stone-50 border-b border-stone-100">
+                                            <div className="flex items-center space-x-3">
+                                                <div className="w-12 h-12 bg-stone-200 rounded-full flex items-center justify-center text-stone-500 font-bold">
+                                                    {user.username.substring(0, 2).toUpperCase()}
+                                                </div>
+                                                <div className="text-left">
+                                                    <p className="font-bold text-sm">{user.username} 님</p>
+                                                    <p className="text-xs text-stone-400">{user.role}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="max-h-[400px] overflow-y-auto no-scrollbar">
+                                            <div className="p-4 border-b border-stone-50">
+                                                <h4 className="text-[11px] font-bold text-stone-400 uppercase tracking-widest mb-3 text-left">{t('common.my_shopping')}</h4>
+                                                <ul className="space-y-3 text-sm text-left">
+                                                    <li
+                                                        className="flex justify-between items-center cursor-pointer hover:text-blue-600 transition-colors"
+                                                        onClick={() => {
+                                                            onNavigate('order');
+                                                            setUserDropdownOpen(false);
+                                                        }}
+                                                    >
+                                                        <span>{t('common.order_tracking')}</span>
+                                                        <span className="text-xs bg-stone-100 px-2 py-0.5 rounded text-stone-500 font-medium">3건</span>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                            <div className="p-4 text-left">
+                                                <h4 className="text-[11px] font-bold text-stone-400 uppercase tracking-widest mb-3">{t('common.my_info')}</h4>
+                                                <ul className="space-y-3 text-sm">
+                                                    <li className="cursor-pointer hover:text-black transition-colors">{t('common.edit_profile')}</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => {
+                                                onLogoutClick();
+                                                setUserDropdownOpen(false);
+                                            }}
+                                            className="w-full py-4 bg-stone-900 text-white text-xs font-bold hover:bg-black transition-colors"
+                                        >
+                                            {t('common.logout')}
+                                        </button>
+                                    </div>
+                                )}
+                            </>
+                        ) : (
+                            <button
+                                onClick={onLoginClick}
+                                className="text-sm font-bold hover:text-stone-500 transition-colors"
+                            >
+                                {t('common.login')}
+                            </button>
                         )}
                     </div>
 

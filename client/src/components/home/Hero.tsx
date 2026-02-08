@@ -3,6 +3,7 @@ interface HeroProps {
 }
 
 export default function Hero({ onShopClick }: HeroProps) {
+
     return (
         <header className="relative overflow-hidden min-h-[600px] flex items-center">
             {/* Background shape from demo.html */}
@@ -15,7 +16,7 @@ export default function Hero({ onShopClick }: HeroProps) {
                         <span className="font-medium text-stone-800">Modern Minimalist</span>
                     </h1>
                     <p className="text-stone-500 text-lg mb-8 max-w-md">
-                        절제된 세련미와 최상의 품질로 완성하는 당신의 일상.
+                        Your daily life completed with understated sophistication and highest quality.
                     </p>
                     <button
                         onClick={onShopClick}
@@ -23,6 +24,7 @@ export default function Hero({ onShopClick }: HeroProps) {
                     >
                         SHOP THE COLLECTION
                     </button>
+
                 </div>
 
                 <div className="relative h-[500px] hidden md:block text-left">

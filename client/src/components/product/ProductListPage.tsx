@@ -1,81 +1,151 @@
 import { useState } from 'react';
 import type { Product } from '../../types/product';
 import ProductCard from './ProductCard';
+import { useQuery } from '@tanstack/react-query';
+import { fetchProducts } from '../../api/services/product';
 
-interface ProductListPageProps {
-    products: Product[];
-    onProductClick: (product: Product) => void;
-}
 
-export default function ProductListPage({ products, onProductClick }: ProductListPageProps) {
+
+import { useTranslation } from 'react-i18next';
+
+export default function ProductListPage({ onProductClick }: { onProductClick: (product: Product) => void }) {
+    const { t } = useTranslation();
     const [currentFilter, setCurrentFilter] = useState('all');
     const [currentSort, setCurrentSort] = useState('new');
+    const [page, setPage] = useState(0);
+    const pageSize = 12;
 
-    const filteredProducts = products
-        .filter(p => currentFilter === 'all' || p.category === currentFilter)
-        .sort((a, b) => {
-            if (currentSort === 'low') return a.price - b.price;
-            if (currentSort === 'high') return b.price - a.price;
-            return new Date(b.date).getTime() - new Date(a.date).getTime();
-        });
+    // Reset page when filter changes
+    const handleFilterChange = (category: string) => {
+        setCurrentFilter(category);
+        setPage(0);
+    };
+
+    // Reset page when sort changes
+    const handleSortChange = (sort: string) => {
+        setCurrentSort(sort);
+        setPage(0);
+    };
+
+    // Map frontend sort to backend sort
+    const getBackendSort = (sort: string) => {
+        switch (sort) {
+            case 'low': return 'price,asc';
+            case 'high': return 'price,desc';
+            case 'new': return 'createdAt,desc';
+            default: return 'createdAt,desc';
+        }
+    };
+
+    // Map frontend category to backend ID (Hardcoded for now based on V7/V5 data)
+    // In a real app, we should fetch categories from API
+    const getCategoryId = (filter: string) => {
+        if (filter === 'all') return undefined;
+        // This mapping must match the database IDs or we need to fetch categories first
+        // Assuming: 1: Electronics, 2: Clothing, 3: Accessories
+        // But names in DB are 'Electronics', 'Clothing', 'Accessories'
+        // And frontend uses 'Apparel', 'Home Goods', 'Footwear' which are NOT in DB?
+        // Let's check App.tsx categories: ['NEW ARRIVALS', 'WOMEN', 'MEN', 'HOME GOODS']
+        // The previous ProductListPage had hardcoded filters: ['all', 'Apparel', 'Home Goods', 'Footwear']
+        // Backend categories: 'Electronics', 'Clothing', 'Accessories'
+        // We should probably align these. Let's align frontend to backend for now.
+        switch (filter) {
+            case 'Electronics': return 1;
+            case 'Clothing': return 2;
+            case 'Accessories': return 3;
+            default: return undefined;
+        }
+    };
+
+    const { data: productsPage, isLoading } = useQuery({
+        queryKey: ['products', page, currentFilter, currentSort],
+        queryFn: () => fetchProducts(page, pageSize, getCategoryId(currentFilter), getBackendSort(currentSort)),
+    });
+
+    const products = productsPage?.content || [];
+    const totalPages = productsPage?.totalPages || 0;
 
     return (
         <div className="min-h-screen py-20 bg-[#f9f7f2]">
             <div className="max-w-7xl mx-auto px-6">
                 <header className="mb-16 text-left">
-                    <h2 className="text-5xl font-bold tracking-tight mb-4">SHOP ALL</h2>
-                    <p className="text-stone-400">당신을 위해 큐레이션된 미니멀리즘 아이템들을 만나보세요.</p>
+                    <h2 className="text-5xl font-bold tracking-tight mb-4">{t('common.shop_all')}</h2>
+                    <p className="text-stone-400">{t('common.shop_subtitle')}</p>
                 </header>
 
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-12 border-b border-stone-200 pb-8">
                     <div className="flex space-x-4 overflow-x-auto no-scrollbar pb-2 md:pb-0 w-full md:w-auto">
-                        {['all', 'Apparel', 'Home Goods', 'Footwear'].map((cat) => (
+                        {['all', 'Electronics', 'Clothing', 'Accessories'].map((cat) => (
                             <button
                                 key={cat}
-                                onClick={() => setCurrentFilter(cat)}
+                                onClick={() => handleFilterChange(cat)}
                                 className={`px-6 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${currentFilter === cat
-                                        ? 'bg-black text-white'
-                                        : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
+                                    ? 'bg-black text-white'
+                                    : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
                                     }`}
                             >
-                                {cat === 'all' ? '전체' : cat === 'Apparel' ? '의류' : cat === 'Home Goods' ? '홈 굿즈' : '신발'}
+                                {cat === 'all' ? t('common.category_all') : cat === 'Electronics' ? t('common.category_electronics') : cat === 'Clothing' ? t('common.category_clothing') : t('common.category_accessories')}
                             </button>
                         ))}
                     </div>
                     <div className="flex items-center space-x-6 w-full md:w-auto justify-between">
                         <span className="text-xs text-stone-400">
-                            <span className="font-medium text-stone-600">{filteredProducts.length}</span> Products
+                            <span className="font-medium text-stone-600">{productsPage?.totalElements || 0}</span> {t('common.products_count', { count: productsPage?.totalElements || 0 }).replace(/[0-9]+\s/, '')}
                         </span>
                         <select
                             value={currentSort}
-                            onChange={(e) => setCurrentSort(e.target.value)}
+                            onChange={(e) => handleSortChange(e.target.value)}
                             className="bg-transparent text-sm font-medium border-none focus:ring-0 cursor-pointer outline-none"
                         >
-                            <option value="new">신상품순</option>
-                            <option value="low">낮은 가격순</option>
-                            <option value="high">높은 가격순</option>
+                            <option value="new">{t('common.sort_newest')}</option>
+                            <option value="low">{t('common.sort_price_low')}</option>
+                            <option value="high">{t('common.sort_price_high')}</option>
                         </select>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-12">
-                    {filteredProducts.map(product => (
-                        <div key={product.id} onClick={() => onProductClick(product)} className="cursor-pointer">
-                            <ProductCard product={product} />
+                {isLoading ? (
+                    <div className="flex justify-center items-center h-64">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+                    </div>
+                ) : (
+                    <>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-12">
+                            {products.map(product => (
+                                <div key={product.id} onClick={() => onProductClick(product)} className="cursor-pointer">
+                                    <ProductCard product={product} />
+                                </div>
+                            ))}
                         </div>
-                    ))}
-                </div>
+                        {products.length === 0 && (
+                            <div className="text-center py-20 text-stone-500">
+                                {t('common.no_products')}
+                            </div>
+                        )}
+                    </>
+                )}
 
+                {/* Pagination Controls */}
                 <div className="mt-20 flex justify-center space-x-2">
-                    <button className="w-10 h-10 flex items-center justify-center rounded-full border border-stone-200 text-stone-400 hover:border-black hover:text-black transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <button
+                        onClick={() => setPage(p => Math.max(0, p - 1))}
+                        disabled={page === 0}
+                        className="w-10 h-10 flex items-center justify-center rounded-full border border-stone-200 text-stone-400 hover:border-black hover:text-black transition-colors disabled:opacity-30 disabled:hover:border-stone-200 disabled:hover:text-stone-400"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="m15 18-6-6 6-6" />
                         </svg>
                     </button>
-                    <button className="w-10 h-10 flex items-center justify-center rounded-full bg-black text-white text-sm font-bold">1</button>
-                    <button className="w-10 h-10 flex items-center justify-center rounded-full border border-stone-200 text-stone-600 text-sm hover:border-black transition-colors">2</button>
-                    <button className="w-10 h-10 flex items-center justify-center rounded-full border border-stone-200 text-stone-400 hover:border-black hover:text-black transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    {/* Simple Pagination: Show current page and total pages */}
+                    <div className="flex items-center space-x-2 px-4">
+                        <span className="text-sm font-medium">{page + 1} / {totalPages === 0 ? 1 : totalPages}</span>
+                    </div>
+                    <button
+                        onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                        disabled={page >= totalPages - 1}
+                        className="w-10 h-10 flex items-center justify-center rounded-full border border-stone-200 text-stone-400 hover:border-black hover:text-black transition-colors disabled:opacity-30 disabled:hover:border-stone-200 disabled:hover:text-stone-400"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="m9 18 6-6-6-6" />
                         </svg>
                     </button>

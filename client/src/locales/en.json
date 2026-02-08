@@ -1,0 +1,71 @@
+{
+    "common": {
+        "welcome": "Welcome",
+        "search_placeholder": "Search products...",
+        "category_all": "All",
+        "sort_featured": "Featured",
+        "sort_price_low": "Price: Low to High",
+        "sort_price_high": "Price: High to Low",
+        "sort_newest": "Newest",
+        "add_to_cart": "Add to Cart",
+        "shop_all": "SHOP ALL",
+        "shop_subtitle": "Discover minimalist items curated for you.",
+        "login": "Login",
+        "logout": "Logout",
+        "my_shopping": "MY SHOPPING",
+        "my_info": "MY INFO",
+        "order_tracking": "Order History / Tracking",
+        "edit_profile": "Edit Profile",
+        "products_count_one": "{{count}} Product",
+        "products_count_other": "{{count}} Products",
+        "no_products": "No products found.",
+        "category_electronics": "Electronics",
+        "category_clothing": "Clothing",
+        "category_accessories": "Accessories"
+    },
+    "nav": {
+        "home": "Home",
+        "products": "Products",
+        "about": "About",
+        "contact": "Contact"
+    },
+    "hero": {
+        "title_1": "Effortless Style",
+        "title_2": "for the",
+        "title_3": "Modern Minimalist",
+        "subtitle": "Your daily life completed with understated sophistication and highest quality.",
+        "shop_collection": "SHOP THE COLLECTION"
+    },
+    "home": {
+        "daily_drops": "DAILY DROPS",
+        "daily_drops_desc": "Special opportunities arriving every day at noon.",
+        "view_all": "View All"
+    },
+    "order": {
+        "no_history": "No order history.",
+        "go_shopping": "Go Shopping",
+        "order_number": "Order No.",
+        "status": "Status",
+        "shipping_detail": "Shipping Details",
+        "arrival_date": "Estimated Arrival: {{date}}",
+        "total": "Total",
+        "items_etc": "Item {{id}} etc...",
+        "back_home": "Back to Home",
+        "title": "Order History"
+    },
+    "benefit": {
+        "title": "My Benefits",
+        "cash_available": "Available Cash",
+        "charge": "Charge",
+        "coupons": "Coupons",
+        "coupon_available": "Available Coupons",
+        "coupon_expiring": "1 coupon expiring this month."
+    },
+    "activity": {
+        "title": "Review Management",
+        "review_available": "Reviews Available",
+        "review_desc": "Your reviews help others.",
+        "write_review": "Write Review",
+        "delivery_complete": "Delivered"
+    }
+}

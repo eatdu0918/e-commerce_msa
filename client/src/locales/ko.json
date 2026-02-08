@@ -1,0 +1,70 @@
+{
+    "common": {
+        "welcome": "환영합니다",
+        "search_placeholder": "상품 검색...",
+        "category_all": "전체",
+        "sort_featured": "추천순",
+        "sort_price_low": "가격 낮은순",
+        "sort_price_high": "가격 높은순",
+        "sort_newest": "신상품순",
+        "add_to_cart": "장바구니 담기",
+        "shop_all": "SHOP ALL",
+        "shop_subtitle": "당신을 위해 큐레이션된 미니멀리즘 아이템들을 만나보세요.",
+        "login": "로그인",
+        "logout": "로그아웃",
+        "my_shopping": "MY 쇼핑",
+        "my_info": "MY 정보",
+        "order_tracking": "주문목록/배송조회",
+        "edit_profile": "개인정보확인/수정",
+        "products_count": "{{count}} Products",
+        "no_products": "상품이 없습니다.",
+        "category_electronics": "전자제품",
+        "category_clothing": "의류",
+        "category_accessories": "악세서리"
+    },
+    "nav": {
+        "home": "홈",
+        "products": "상품",
+        "about": "소개",
+        "contact": "문의"
+    },
+    "hero": {
+        "title_1": "여유로운 스타일",
+        "title_2": "그 이상의",
+        "title_3": "현대적 미니멀리즘",
+        "subtitle": "절제된 세련미와 최상의 품질로 완성하는 당신의 일상.",
+        "shop_collection": "컬렉션 보기"
+    },
+    "home": {
+        "daily_drops": "DAILY DROPS",
+        "daily_drops_desc": "한정 수량으로 매일 정오에 찾아오는 특별한 기회.",
+        "view_all": "전체 보기"
+    },
+    "order": {
+        "no_history": "주문 내역이 없습니다.",
+        "go_shopping": "쇼핑하러 가기",
+        "order_number": "주문번호",
+        "status": "상태",
+        "shipping_detail": "배송 상세 보기",
+        "arrival_date": "도착 예정일: {{date}}",
+        "total": "총",
+        "items_etc": "상품 {{id}} 외...",
+        "back_home": "홈으로 돌아가기",
+        "title": "주문 내역"
+    },
+    "benefit": {
+        "title": "나의 혜택",
+        "cash_available": "가용 쿠팡캐시",
+        "charge": "충전하기",
+        "coupons": "보유 쿠폰",
+        "coupon_available": "사용 가능한 쿠폰 목록",
+        "coupon_expiring": "이번 달 만료 쿠폰이 1장 있습니다."
+    },
+    "activity": {
+        "title": "리뷰 관리",
+        "review_available": "작성 가능한 리뷰가 있습니다.",
+        "review_desc": "당신의 소중한 후기는 다른 분들께 큰 도움이 됩니다.",
+        "write_review": "후기 작성하기",
+        "delivery_complete": "배송완료"
+    }
+}
