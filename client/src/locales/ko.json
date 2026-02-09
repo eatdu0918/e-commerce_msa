@@ -12,6 +12,7 @@
         "shop_subtitle": "당신을 위해 큐레이션된 미니멀리즘 아이템들을 만나보세요.",
         "login": "로그인",
         "logout": "로그아웃",
+        "my_page": "마이페이지",
         "my_shopping": "MY 쇼핑",
         "my_info": "MY 정보",
         "order_tracking": "주문목록/배송조회",
@@ -20,7 +21,19 @@
         "no_products": "상품이 없습니다.",
         "category_electronics": "전자제품",
         "category_clothing": "의류",
-        "category_accessories": "악세서리"
+        "category_accessories": "악세서리",
+        "cart": "장바구니",
+        "adding": "추가 중...",
+        "buy_now": "바로 구매"
+    },
+    "cart": {
+        "empty_msg": "장바구니가 비어 있습니다.",
+        "continue_shopping": "쇼핑 계속하기",
+        "total_amount": "합계 금액",
+        "checkout": "주문하기",
+        "shipping_info_notice": "배송비 및 쿠폰 할인은 주문 단계에서 적용됩니다.",
+        "currency": "원",
+        "wish_to_cart_success": "상품이 장바구니에 담겼습니다."
     },
     "nav": {
         "home": "홈",
@@ -66,5 +79,23 @@
         "review_desc": "당신의 소중한 후기는 다른 분들께 큰 도움이 됩니다.",
         "write_review": "후기 작성하기",
         "delivery_complete": "배송완료"
+    },
+    "profile": {
+        "title": "개인정보 수정",
+        "name": "이름",
+        "email": "이메일",
+        "phone": "전화번호",
+        "gender": "성별",
+        "male": "남성",
+        "female": "여성",
+        "save": "변경 사항 저장",
+        "cancel": "취소",
+        "success": "프로필이 성공적으로 업데이트되었습니다.",
+        "error": "프로필 업데이트에 실패했습니다."
+    },
+    "notification": {
+        "title": "알림",
+        "empty": "새로운 알림이 없습니다.",
+        "view_all": "전체 보기"
     }
 }

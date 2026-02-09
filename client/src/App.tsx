@@ -15,17 +15,24 @@ import { getMyOrders } from './api/services/order';
 import LoginModal from './components/auth/LoginModal';
 import SignupModal from './components/auth/SignupModal';
 import SignupPage from './components/auth/SignupPage';
+import CartModal from './components/cart/CartModal';
+import WishlistView from './components/profile/WishlistView';
+import MyPageView from './components/profile/MyPageView';
+import EditProfileView from './components/profile/EditProfileView';
 import { useTranslation } from 'react-i18next';
+import { getCart } from './api/services/cart';
+import { getProduct } from './api/services/product';
 
 
 function App() {
   const { t } = useTranslation();
   const [category, setCategory] = useState(t('common.category_all'));
-  const [view, setView] = useState('home'); // 'home' | 'order' | 'benefit' | 'activity' | 'all_products' | 'product_detail' | 'signup'
+  const [view, setView] = useState('home'); // 'home' | 'order' | 'benefit' | 'activity' | 'all_products' | 'product_detail' | 'signup' | 'mypage' | 'wishlist'
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [timeLeft, setTimeLeft] = useState(24 * 60 * 60);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isSignupOpen, setIsSignupOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -41,11 +48,13 @@ function App() {
     },
   });
 
-  const { data: orders } = useQuery({
+  const { data: ordersPage } = useQuery({
     queryKey: ['orders'],
-    queryFn: getMyOrders,
+    queryFn: () => getMyOrders(0, 20),
     enabled: !!user,
   });
+
+  const orders = ordersPage?.content || [];
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -126,11 +135,15 @@ function App() {
             product={selectedProduct}
             onBack={() => setView('all_products')}
             onLoginRequest={() => setIsLoginOpen(true)}
+            onCartOpenRequest={() => setIsCartOpen(true)}
           />
         ) : null;
       case 'order':
       case 'benefit':
       case 'activity':
+      case 'wishlist':
+      case 'mypage':
+      case 'edit_profile':
         return (
           <div className="min-h-screen pt-12 pb-24 bg-[#f9f7f2]">
             <div className="max-w-3xl mx-auto px-6">
@@ -168,7 +181,7 @@ function App() {
   const renderDetailContent = () => {
     switch (view) {
       case 'order':
-        if (!orders || orders.length === 0) {
+        if (orders.length === 0) {
           return (
             <div className="text-center py-20 text-stone-500">
               <p className="mb-4">{t('order.no_history')}</p>
@@ -178,7 +191,7 @@ function App() {
         }
         return (
           <div className="space-y-12 text-left">
-            {orders.map((order) => (
+            {orders.map((order: any) => (
               <div key={order.id} className="border-b border-stone-100 pb-12 last:border-0 last:pb-0">
                 <div className="flex items-center justify-between mb-6">
                   <span className="text-xs font-bold text-stone-400 uppercase tracking-widest">{t('order.order_number')} {order.orderNumber}</span>
@@ -250,6 +263,29 @@ function App() {
             </div>
           </div>
         );
+      case 'wishlist':
+        return (
+          <WishlistView
+            onProductClick={async (productId) => {
+              const product = await getProduct(productId);
+              handleProductClick(product);
+            }}
+          />
+        );
+      case 'mypage':
+        return user ? (
+          <MyPageView
+            user={user}
+            onNavigate={setView}
+          />
+        ) : null;
+      case 'edit_profile':
+        return user ? (
+          <EditProfileView
+            user={user}
+            onBack={() => setView('mypage')}
+          />
+        ) : null;
       default:
         return null;
     }
@@ -260,9 +296,18 @@ function App() {
       case 'order': return t('order.title');
       case 'benefit': return t('benefit.title');
       case 'activity': return t('activity.title');
+      case 'wishlist': return t('common.wishlist') || '찜 목록';
+      case 'mypage': return t('common.my_page') || '마이페이지';
+      case 'edit_profile': return t('profile.title') || '개인정보 수정';
       default: return '';
     }
   };
+
+  const { data: cart } = useQuery({
+    queryKey: ['cart'],
+    queryFn: getCart,
+    enabled: !!user,
+  });
 
   return (
     <div className="antialiased">
@@ -279,6 +324,17 @@ function App() {
           sessionStorage.removeItem('user');
           queryClient.setQueryData(['user'], null);
           window.location.reload(); // Simple logout
+        }}
+        onCartClick={() => setIsCartOpen(true)}
+        cartCount={cart?.totalItemCount || 0}
+      />
+
+      <CartModal
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        onCheckout={() => {
+          setIsCartOpen(false);
+          setView('order'); // Or redirect to checkout page if exists
         }}
       />
 

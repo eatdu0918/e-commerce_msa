@@ -1,4 +1,4 @@
-import { Search, ShoppingBag, Menu, X, User as UserIcon, Bell } from 'lucide-react';
+import { Search, ShoppingBag, Menu, X, User as UserIcon, Bell, ChevronRight } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import type { UserResponse } from '../../api/services/user';
 import LanguageSwitcher from '../LanguageSwitcher';
@@ -13,19 +13,26 @@ interface HeaderProps {
     user?: UserResponse;
     onLoginClick: () => void;
     onLogoutClick: () => void;
+    onCartClick: () => void;
+    cartCount?: number;
 }
 
-export default function Header({ category, setCategory, categories, onNavigate, view, user, onLoginClick, onLogoutClick }: HeaderProps) {
+export default function Header({ category, setCategory, categories, onNavigate, view, user, onLoginClick, onLogoutClick, onCartClick, cartCount = 0 }: HeaderProps) {
     const { t } = useTranslation();
 
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+    const [notificationOpen, setNotificationOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const notificationRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
                 setUserDropdownOpen(false);
+            }
+            if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+                setNotificationOpen(false);
             }
         }
         document.addEventListener('mousedown', handleClickOutside);
@@ -90,7 +97,7 @@ export default function Header({ category, setCategory, categories, onNavigate, 
                                         <div className="p-6 bg-stone-50 border-b border-stone-100">
                                             <div className="flex items-center space-x-3">
                                                 <div className="w-12 h-12 bg-stone-200 rounded-full flex items-center justify-center text-stone-500 font-bold">
-                                                    {user.username.substring(0, 2).toUpperCase()}
+                                                    {user.username?.substring(0, 2).toUpperCase() || '??'}
                                                 </div>
                                                 <div className="text-left">
                                                     <p className="font-bold text-sm">{user.username} 님</p>
@@ -103,6 +110,16 @@ export default function Header({ category, setCategory, categories, onNavigate, 
                                                 <h4 className="text-[11px] font-bold text-stone-400 uppercase tracking-widest mb-3 text-left">{t('common.my_shopping')}</h4>
                                                 <ul className="space-y-3 text-sm text-left">
                                                     <li
+                                                        className="flex justify-between items-center cursor-pointer hover:text-black transition-colors"
+                                                        onClick={() => {
+                                                            onNavigate('mypage');
+                                                            setUserDropdownOpen(false);
+                                                        }}
+                                                    >
+                                                        <span className="font-bold text-blue-600">{t('common.my_page')}</span>
+                                                        <ChevronRight size={14} className="text-stone-300" />
+                                                    </li>
+                                                    <li
                                                         className="flex justify-between items-center cursor-pointer hover:text-blue-600 transition-colors"
                                                         onClick={() => {
                                                             onNavigate('order');
@@ -112,12 +129,30 @@ export default function Header({ category, setCategory, categories, onNavigate, 
                                                         <span>{t('common.order_tracking')}</span>
                                                         <span className="text-xs bg-stone-100 px-2 py-0.5 rounded text-stone-500 font-medium">3건</span>
                                                     </li>
+                                                    <li
+                                                        className="flex justify-between items-center cursor-pointer hover:text-red-600 transition-colors"
+                                                        onClick={() => {
+                                                            onNavigate('wishlist');
+                                                            setUserDropdownOpen(false);
+                                                        }}
+                                                    >
+                                                        <span>{t('common.wishlist') || '찜한 상품'}</span>
+                                                        <span className="text-xs bg-stone-100 px-2 py-0.5 rounded text-stone-500 font-medium">{cartCount > 0 ? '●' : ''}</span>
+                                                    </li>
                                                 </ul>
                                             </div>
                                             <div className="p-4 text-left">
                                                 <h4 className="text-[11px] font-bold text-stone-400 uppercase tracking-widest mb-3">{t('common.my_info')}</h4>
                                                 <ul className="space-y-3 text-sm">
-                                                    <li className="cursor-pointer hover:text-black transition-colors">{t('common.edit_profile')}</li>
+                                                    <li
+                                                        className="cursor-pointer hover:text-black transition-colors"
+                                                        onClick={() => {
+                                                            onNavigate('edit_profile');
+                                                            setUserDropdownOpen(false);
+                                                        }}
+                                                    >
+                                                        {t('common.edit_profile')}
+                                                    </li>
                                                 </ul>
                                             </div>
                                         </div>
@@ -143,17 +178,44 @@ export default function Header({ category, setCategory, categories, onNavigate, 
                         )}
                     </div>
 
-                    <button className="p-2 hover:bg-stone-100 rounded-full transition-colors relative">
-                        <Bell size={20} strokeWidth={2} />
-                        <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-red-500 rounded-full"></span>
-                    </button>
+                    <div className="relative" ref={notificationRef}>
+                        <button
+                            onClick={() => setNotificationOpen(!notificationOpen)}
+                            className="p-2 hover:bg-stone-100 rounded-full transition-colors relative"
+                        >
+                            <Bell size={20} strokeWidth={2} />
+                            <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                        </button>
+
+                        {notificationOpen && (
+                            <div className="absolute right-0 mt-3 w-80 bg-white border border-stone-200 rounded-2xl shadow-xl overflow-hidden z-[110]">
+                                <div className="p-5 border-b border-stone-100 bg-stone-50/50 flex justify-between items-center">
+                                    <h3 className="font-bold text-sm tracking-tight">{t('notification.title')}</h3>
+                                    <button className="text-[10px] font-bold text-stone-400 hover:text-black transition-colors">
+                                        {t('notification.view_all')}
+                                    </button>
+                                </div>
+                                <div className="p-10 text-center">
+                                    <div className="w-12 h-12 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-4 text-stone-200">
+                                        <Bell size={24} />
+                                    </div>
+                                    <p className="text-xs text-stone-400 font-medium">{t('notification.empty')}</p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
 
                     <div className="relative">
-                        <button className="p-2 hover:bg-stone-100 rounded-full transition-colors relative">
+                        <button
+                            onClick={onCartClick}
+                            className="p-2 hover:bg-stone-100 rounded-full transition-colors relative"
+                        >
                             <ShoppingBag size={20} strokeWidth={2} />
-                            <span className="absolute top-1 right-1 bg-red-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold">
-                                2
-                            </span>
+                            {cartCount > 0 && (
+                                <span className="absolute top-1 right-1 bg-red-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full font-bold">
+                                    {cartCount}
+                                </span>
+                            )}
                         </button>
                     </div>
 

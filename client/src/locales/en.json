@@ -12,6 +12,7 @@
         "shop_subtitle": "Discover minimalist items curated for you.",
         "login": "Login",
         "logout": "Logout",
+        "my_page": "My Page",
         "my_shopping": "MY SHOPPING",
         "my_info": "MY INFO",
         "order_tracking": "Order History / Tracking",
@@ -21,7 +22,19 @@
         "no_products": "No products found.",
         "category_electronics": "Electronics",
         "category_clothing": "Clothing",
-        "category_accessories": "Accessories"
+        "category_accessories": "Accessories",
+        "cart": "Cart",
+        "adding": "Adding...",
+        "buy_now": "Buy Now"
+    },
+    "cart": {
+        "empty_msg": "Your cart is empty.",
+        "continue_shopping": "Continue Shopping",
+        "total_amount": "Total Amount",
+        "checkout": "Checkout",
+        "shipping_info_notice": "Shipping costs and coupon discounts are applied at checkout.",
+        "currency": "KRW",
+        "wish_to_cart_success": "Product has been added to the cart."
     },
     "nav": {
         "home": "Home",
@@ -67,5 +80,23 @@
         "review_desc": "Your reviews help others.",
         "write_review": "Write Review",
         "delivery_complete": "Delivered"
+    },
+    "profile": {
+        "title": "Edit Profile",
+        "name": "Name",
+        "email": "Email",
+        "phone": "Phone Number",
+        "gender": "Gender",
+        "male": "Male",
+        "female": "Female",
+        "save": "Save Changes",
+        "cancel": "Cancel",
+        "success": "Profile updated successfully!",
+        "error": "Failed to update profile."
+    },
+    "notification": {
+        "title": "Notifications",
+        "empty": "No new notifications.",
+        "view_all": "View All"
     }
 }
