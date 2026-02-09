@@ -1,24 +1,74 @@
 import { useState } from 'react';
-import { ChevronLeft, Minus, Plus } from 'lucide-react';
+import { ChevronLeft, Minus, Plus, Heart } from 'lucide-react';
 import type { Product } from '../../types/product';
 import OrderModal from '../order/OrderModal';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getMyProfile } from '../../api/services/user';
+import { addToCart } from '../../api/services/cart';
+import { addToWishlist, removeFromWishlist, isInWishlist } from '../../api/services/wishlist';
+import { useTranslation } from 'react-i18next';
 
 interface ProductDetailPageProps {
     product: Product;
     onBack: () => void;
     onLoginRequest: () => void;
+    onCartOpenRequest: () => void;
 }
 
-export default function ProductDetailPage({ product, onBack, onLoginRequest }: ProductDetailPageProps) {
+export default function ProductDetailPage({ product, onBack, onLoginRequest, onCartOpenRequest }: ProductDetailPageProps) {
+    const { t } = useTranslation();
     const [selectedSize, setSelectedSize] = useState('S');
     const [quantity, setQuantity] = useState(1);
     const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+    const queryClient = useQueryClient();
 
     const { data: user } = useQuery({ queryKey: ['user'], queryFn: getMyProfile, retry: false });
 
+    const { data: isFavorite } = useQuery({
+        queryKey: ['wishlist-check', product.id],
+        queryFn: () => isInWishlist(product.id),
+        enabled: !!user,
+    });
+
+    const addCartMutation = useMutation({
+        mutationFn: () => addToCart({ productId: product.id, quantity }),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['cart'] });
+            onCartOpenRequest();
+        },
+    });
+
+    const wishlistMutation = useMutation({
+        mutationFn: async () => {
+            if (isFavorite) {
+                await removeFromWishlist(product.id);
+            } else {
+                await addToWishlist({ productId: product.id });
+            }
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['wishlist-check', product.id] });
+            queryClient.invalidateQueries({ queryKey: ['wishlist'] });
+        },
+    });
+
     const sizes = ['S', 'M', 'L'];
+
+    const handleAddToCart = () => {
+        if (!user) {
+            onLoginRequest();
+            return;
+        }
+        addCartMutation.mutate();
+    };
+
+    const handleWishlistToggle = () => {
+        if (!user) {
+            onLoginRequest();
+            return;
+        }
+        wishlistMutation.mutate();
+    };
 
     const handleBuyClick = () => {
         if (!user) {
@@ -73,14 +123,14 @@ export default function ProductDetailPage({ product, onBack, onLoginRequest }: P
                                 <p className="text-xs font-bold mb-4 uppercase tracking-wider text-stone-400">QUANTITY</p>
                                 <div className="flex items-center space-x-4 border border-stone-200 w-fit rounded-full px-4 py-2 bg-white">
                                     <button
-                                        onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
+                                        onClick={() => setQuantity((prev: number) => Math.max(1, prev - 1))}
                                         className="text-stone-400 hover:text-black transition-colors"
                                     >
                                         <Minus size={16} />
                                     </button>
                                     <span className="text-sm font-bold w-6 text-center">{quantity}</span>
                                     <button
-                                        onClick={() => setQuantity(prev => prev + 1)}
+                                        onClick={() => setQuantity((prev: number) => prev + 1)}
                                         className="text-stone-400 hover:text-black transition-colors"
                                     >
                                         <Plus size={16} />
@@ -90,14 +140,25 @@ export default function ProductDetailPage({ product, onBack, onLoginRequest }: P
                         </div>
 
                         <div className="flex space-x-4">
-                            <button className="flex-1 bg-stone-100 py-5 rounded-2xl font-bold hover:bg-stone-200 transition-colors text-stone-900">
-                                ADD TO CART
+                            <button
+                                onClick={handleWishlistToggle}
+                                className={`w-16 flex items-center justify-center rounded-2xl border transition-all ${isFavorite ? 'bg-red-50 border-red-100 text-red-500' : 'bg-stone-50 border-stone-100 text-stone-300 hover:text-stone-500'}`}
+                            >
+                                <Heart size={24} fill={isFavorite ? 'currentColor' : 'none'} />
+                            </button>
+                            <button
+                                onClick={handleAddToCart}
+                                disabled={addCartMutation.isPending}
+                                className="flex-1 bg-stone-100 py-5 rounded-2xl font-bold hover:bg-stone-200 transition-colors text-stone-900 flex items-center justify-center space-x-2"
+                            >
+                                {addCartMutation.isPending && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black mr-2"></div>}
+                                <span>{addCartMutation.isPending ? t('common.adding') || 'ADDING...' : t('common.add_to_cart')}</span>
                             </button>
                             <button
                                 onClick={handleBuyClick}
                                 className="flex-1 bg-black text-white py-5 rounded-2xl font-bold hover:bg-stone-800 transition-all shadow-lg shadow-black/10"
                             >
-                                BUY NOW
+                                {t('common.buy_now') || 'BUY NOW'}
                             </button>
                         </div>
                     </div>
