@@ -29,6 +29,12 @@ export interface UserResponse {
     role: string;
 }
 
+export interface UpdateProfileRequest {
+    username?: string;
+    phoneNumber?: string;
+    gender?: 'MALE' | 'FEMALE';
+}
+
 export const login = async (data: LoginRequest): Promise<LoginResponse> => {
     const response = await api.post<{ data: LoginResponse }>('/api/auth/login', data);
     return response.data.data;
@@ -40,5 +46,10 @@ export const signup = async (data: SignupRequest): Promise<void> => {
 
 export const getMyProfile = async (): Promise<UserResponse> => {
     const response = await api.get<{ data: UserResponse }>('/api/auth/me');
+    return response.data.data;
+};
+
+export const updateProfile = async (data: UpdateProfileRequest): Promise<UserResponse> => {
+    const response = await api.put<{ data: UserResponse }>('/api/auth/me', data);
     return response.data.data;
 };
