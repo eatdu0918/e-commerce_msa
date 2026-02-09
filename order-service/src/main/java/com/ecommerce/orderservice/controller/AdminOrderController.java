@@ -1,10 +1,12 @@
 package com.ecommerce.orderservice.controller;
 
 import com.ecommerce.orderservice.dto.request.UpdateOrderStatusRequest;
+import com.ecommerce.orderservice.dto.response.OrderDetailResponse;
 import com.ecommerce.orderservice.dto.response.OrderResponse;
 import com.ecommerce.orderservice.dto.response.PageResponse;
 import com.ecommerce.orderservice.enums.OrderStatus;
 import com.ecommerce.orderservice.response.ApiResponse;
+import com.ecommerce.orderservice.service.OrderAggregationService;
 import com.ecommerce.orderservice.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 public class AdminOrderController {
 
     private final OrderService orderService;
+    private final OrderAggregationService orderAggregationService;
 
     @Operation(summary = "전체 주문 목록 조회")
     @GetMapping
@@ -42,6 +45,13 @@ public class AdminOrderController {
     @GetMapping("/{orderId}")
     public ResponseEntity<ApiResponse<OrderResponse>> getOrder(@PathVariable Long orderId) {
         OrderResponse response = orderService.getOrderById(orderId);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @Operation(summary = "주문 상세 통합 조회 (상품/결제 정보 포함)")
+    @GetMapping("/{orderId}/detail")
+    public ResponseEntity<ApiResponse<OrderDetailResponse>> getOrderDetail(@PathVariable Long orderId) {
+        OrderDetailResponse response = orderAggregationService.getOrderDetailAdmin(orderId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

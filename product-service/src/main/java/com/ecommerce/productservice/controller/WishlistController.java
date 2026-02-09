@@ -1,7 +1,6 @@
 package com.ecommerce.productservice.controller;
 
 import com.ecommerce.productservice.dto.request.AddWishlistRequest;
-import com.ecommerce.productservice.dto.response.PageResponse;
 import com.ecommerce.productservice.dto.response.WishlistItemResponse;
 import com.ecommerce.productservice.response.ApiResponse;
 import com.ecommerce.productservice.security.CustomUserDetails;
@@ -9,12 +8,11 @@ import com.ecommerce.productservice.service.WishlistService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/wishlist")
@@ -26,11 +24,10 @@ public class WishlistController {
 
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public ApiResponse<PageResponse<WishlistItemResponse>> getWishlist(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+    public ApiResponse<List<WishlistItemResponse>> getWishlist(
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
         log.info("GET /api/wishlist - 찜 목록 조회: userId={}", userDetails.getUserId());
-        PageResponse<WishlistItemResponse> response = wishlistService.getWishlist(userDetails.getUserId(), pageable);
+        List<WishlistItemResponse> response = wishlistService.getWishlist(userDetails.getUserId());
         return ApiResponse.success(response);
     }
 
@@ -44,23 +41,13 @@ public class WishlistController {
         return ApiResponse.success(response);
     }
 
-    @DeleteMapping("/{wishlistItemId}")
+    @DeleteMapping("/{productId}")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<Void> removeFromWishlist(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long wishlistItemId) {
-        log.info("DELETE /api/wishlist/{} - 찜 삭제: userId={}", wishlistItemId, userDetails.getUserId());
-        wishlistService.removeFromWishlist(userDetails.getUserId(), wishlistItemId);
-        return ApiResponse.ok();
-    }
-
-    @DeleteMapping("/product/{productId}")
-    @PreAuthorize("isAuthenticated()")
-    public ApiResponse<Void> removeFromWishlistByProductId(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long productId) {
-        log.info("DELETE /api/wishlist/product/{} - 찜 삭제 (상품ID): userId={}", productId, userDetails.getUserId());
-        wishlistService.removeFromWishlistByProductId(userDetails.getUserId(), productId);
+        log.info("DELETE /api/wishlist/{} - 찜 삭제: userId={}", productId, userDetails.getUserId());
+        wishlistService.removeFromWishlist(userDetails.getUserId(), productId);
         return ApiResponse.ok();
     }
 

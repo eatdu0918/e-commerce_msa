@@ -12,6 +12,9 @@ import com.ecommerce.productservice.repository.CategoryRepository;
 import com.ecommerce.productservice.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -26,6 +29,7 @@ public class ProductService {
     private final CategoryRepository categoryRepository;
 
     @Transactional
+    @CacheEvict(value = "products", allEntries = true)
     public ProductResponse createProduct(CreateProductRequest request) {
         log.info("상품 등록 시도: name={}", request.getName());
 
@@ -55,6 +59,7 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "product", key = "#productId")
     public ProductResponse getProduct(Long productId) {
         Product product = getActiveProduct(productId);
         return ProductResponse.from(product);
@@ -80,6 +85,10 @@ public class ProductService {
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "product", key = "#productId"),
+            @CacheEvict(value = "products", allEntries = true)
+    })
     public ProductResponse updateProduct(Long productId, UpdateProductRequest request) {
         log.info("상품 수정 시도: productId={}", productId);
 
@@ -110,6 +119,10 @@ public class ProductService {
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "product", key = "#productId"),
+            @CacheEvict(value = "products", allEntries = true)
+    })
     public void deleteProduct(Long productId) {
         log.info("상품 삭제 시도: productId={}", productId);
 

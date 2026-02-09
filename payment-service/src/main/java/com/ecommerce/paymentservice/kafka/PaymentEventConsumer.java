@@ -1,11 +1,13 @@
 package com.ecommerce.paymentservice.kafka;
 
 import com.ecommerce.paymentservice.entity.Payment;
+import com.ecommerce.paymentservice.entity.ProcessedEvent;
 import com.ecommerce.paymentservice.event.CouponUsedEvent;
 import com.ecommerce.paymentservice.event.OrderCancelledEvent;
 import com.ecommerce.paymentservice.event.PaymentCompletedEvent;
 import com.ecommerce.paymentservice.event.PaymentFailedEvent;
 import com.ecommerce.paymentservice.repository.PaymentRepository;
+import com.ecommerce.paymentservice.repository.ProcessedEventRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -21,10 +23,13 @@ public class PaymentEventConsumer {
 
     private final PaymentRepository paymentRepository;
     private final PaymentEventProducer paymentEventProducer;
+    private final ProcessedEventRepository processedEventRepository;
 
     @KafkaListener(topics = "coupon-used", groupId = "payment-service")
     @Transactional
     public void handleCouponUsed(CouponUsedEvent event) {
+        if (isDuplicate(event.getEventId(), "coupon-used")) return;
+
         log.info("Received coupon-used event: orderId={}", event.getOrderId());
 
         paymentRepository.findByOrderId(event.getOrderId()).ifPresent(payment -> {
@@ -44,6 +49,8 @@ public class PaymentEventConsumer {
                         .build();
 
                 paymentEventProducer.sendPaymentCompletedEvent(completedEvent);
+
+                markProcessed(event.getEventId(), "coupon-used");
             } catch (Exception e) {
                 log.error("Payment processing failed: paymentId={}", payment.getId(), e);
                 payment.fail(e.getMessage());
@@ -67,11 +74,29 @@ public class PaymentEventConsumer {
     @KafkaListener(topics = "order-cancelled", groupId = "payment-service")
     @Transactional
     public void handleOrderCancelled(OrderCancelledEvent event) {
+        if (isDuplicate(event.getEventId(), "order-cancelled")) return;
+
         log.info("Received order-cancelled event: orderId={}", event.getOrderId());
 
         paymentRepository.findByOrderId(event.getOrderId()).ifPresent(payment -> {
             payment.cancel();
             log.info("Payment cancelled: paymentId={}", payment.getId());
+
+            markProcessed(event.getEventId(), "order-cancelled");
         });
+    }
+
+    private boolean isDuplicate(String eventId, String eventType) {
+        if (eventId != null && processedEventRepository.existsByEventId(eventId)) {
+            log.warn("중복 이벤트 무시: eventId={}, eventType={}", eventId, eventType);
+            return true;
+        }
+        return false;
+    }
+
+    private void markProcessed(String eventId, String eventType) {
+        if (eventId != null) {
+            processedEventRepository.save(ProcessedEvent.create(eventId, eventType));
+        }
     }
 }

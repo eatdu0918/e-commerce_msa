@@ -1,89 +1,107 @@
 package com.ecommerce.productservice.service;
 
 import com.ecommerce.productservice.dto.request.AddWishlistRequest;
-import com.ecommerce.productservice.dto.response.PageResponse;
 import com.ecommerce.productservice.dto.response.WishlistItemResponse;
 import com.ecommerce.productservice.entity.Product;
-import com.ecommerce.productservice.entity.WishlistItem;
 import com.ecommerce.productservice.exception.ProductDomainException;
 import com.ecommerce.productservice.exception.ProductDomainExceptionCode;
-import com.ecommerce.productservice.repository.WishlistItemRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class WishlistService {
 
-    private final WishlistItemRepository wishlistItemRepository;
+    private final RedisTemplate<String, String> redisTemplate;
     private final ProductService productService;
 
-    @Transactional(readOnly = true)
-    public PageResponse<WishlistItemResponse> getWishlist(Long userId, Pageable pageable) {
-        Page<WishlistItem> wishlistItems = wishlistItemRepository.findAllByUserIdWithProduct(userId, pageable);
-        Page<WishlistItemResponse> responsePage = wishlistItems.map(WishlistItemResponse::from);
-        return PageResponse.from(responsePage);
+    private static final String WISHLIST_KEY_PREFIX = "wishlist:";
+
+    public List<WishlistItemResponse> getWishlist(Long userId) {
+        String key = WISHLIST_KEY_PREFIX + userId;
+        Set<String> members = redisTemplate.opsForSet().members(key);
+
+        List<WishlistItemResponse> items = new ArrayList<>();
+        if (members != null) {
+            for (String productIdStr : members) {
+                Long productId = Long.parseLong(productIdStr);
+                try {
+                    Product product = productService.getActiveProduct(productId);
+                    items.add(buildWishlistItemResponse(product));
+                } catch (Exception e) {
+                    log.warn("찜 상품 조회 실패 (삭제된 상품 제거): productId={}", productId);
+                    redisTemplate.opsForSet().remove(key, productIdStr);
+                }
+            }
+        }
+
+        return items;
     }
 
-    @Transactional
     public WishlistItemResponse addToWishlist(Long userId, AddWishlistRequest request) {
         log.info("찜 추가 시도: userId={}, productId={}", userId, request.getProductId());
 
-        // 이미 찜한 상품인지 확인
-        if (wishlistItemRepository.existsByUserIdAndProductId(userId, request.getProductId())) {
+        String key = WISHLIST_KEY_PREFIX + userId;
+        String productIdStr = request.getProductId().toString();
+
+        if (Boolean.TRUE.equals(redisTemplate.opsForSet().isMember(key, productIdStr))) {
             throw new ProductDomainException(ProductDomainExceptionCode.WishlistItemAlreadyExistsException);
         }
 
         Product product = productService.getActiveProduct(request.getProductId());
+        redisTemplate.opsForSet().add(key, productIdStr);
 
-        WishlistItem wishlistItem = WishlistItem.create(userId, product);
-        WishlistItem savedItem = wishlistItemRepository.save(wishlistItem);
-
-        log.info("찜 추가 완료: wishlistItemId={}", savedItem.getId());
-        return WishlistItemResponse.from(savedItem);
+        log.info("찜 추가 완료: productId={}", request.getProductId());
+        return buildWishlistItemResponse(product);
     }
 
-    @Transactional
-    public void removeFromWishlist(Long userId, Long wishlistItemId) {
-        log.info("찜 삭제 시도: userId={}, wishlistItemId={}", userId, wishlistItemId);
+    public void removeFromWishlist(Long userId, Long productId) {
+        log.info("찜 삭제 시도: userId={}, productId={}", userId, productId);
 
-        WishlistItem wishlistItem = wishlistItemRepository.findByIdAndUserId(wishlistItemId, userId)
-                .orElseThrow(() -> new ProductDomainException(ProductDomainExceptionCode.WishlistItemNotFoundException));
+        String key = WISHLIST_KEY_PREFIX + userId;
+        String productIdStr = productId.toString();
 
-        wishlistItemRepository.delete(wishlistItem);
-        log.info("찜 삭제 완료: wishlistItemId={}", wishlistItemId);
-    }
+        if (!Boolean.TRUE.equals(redisTemplate.opsForSet().isMember(key, productIdStr))) {
+            throw new ProductDomainException(ProductDomainExceptionCode.WishlistItemNotFoundException);
+        }
 
-    @Transactional
-    public void removeFromWishlistByProductId(Long userId, Long productId) {
-        log.info("찜 삭제 시도 (상품ID): userId={}, productId={}", userId, productId);
-
-        WishlistItem wishlistItem = wishlistItemRepository.findByUserIdAndProductId(userId, productId)
-                .orElseThrow(() -> new ProductDomainException(ProductDomainExceptionCode.WishlistItemNotFoundException));
-
-        wishlistItemRepository.delete(wishlistItem);
+        redisTemplate.opsForSet().remove(key, productIdStr);
         log.info("찜 삭제 완료: productId={}", productId);
     }
 
-    @Transactional(readOnly = true)
     public boolean isInWishlist(Long userId, Long productId) {
-        return wishlistItemRepository.existsByUserIdAndProductId(userId, productId);
+        String key = WISHLIST_KEY_PREFIX + userId;
+        return Boolean.TRUE.equals(redisTemplate.opsForSet().isMember(key, productId.toString()));
     }
 
-    @Transactional(readOnly = true)
     public int getWishlistCount(Long userId) {
-        return wishlistItemRepository.countByUserId(userId);
+        Long size = redisTemplate.opsForSet().size(WISHLIST_KEY_PREFIX + userId);
+        return size != null ? size.intValue() : 0;
     }
 
-    @Transactional
     public void clearWishlist(Long userId) {
         log.info("찜 목록 비우기: userId={}", userId);
-        wishlistItemRepository.deleteAllByUserId(userId);
+        redisTemplate.delete(WISHLIST_KEY_PREFIX + userId);
         log.info("찜 목록 비우기 완료: userId={}", userId);
+    }
+
+    private WishlistItemResponse buildWishlistItemResponse(Product product) {
+        return WishlistItemResponse.builder()
+                .wishlistItemId(product.getId())
+                .productId(product.getId())
+                .productName(product.getName())
+                .productDescription(product.getDescription())
+                .imageUrl(product.getImageUrl())
+                .price(product.getPrice())
+                .stockQuantity(product.getStockQuantity())
+                .isAvailable(product.getStockQuantity() > 0)
+                .build();
     }
 }

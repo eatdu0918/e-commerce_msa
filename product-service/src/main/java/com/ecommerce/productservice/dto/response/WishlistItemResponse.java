@@ -20,6 +20,7 @@ public class WishlistItemResponse {
     String productDescription;
     BigDecimal price;
     Integer stockQuantity;
+    String imageUrl;
     Boolean isAvailable;
     LocalDateTime createdAt;
 
@@ -29,6 +30,7 @@ public class WishlistItemResponse {
                 .productId(wishlistItem.getProduct().getId())
                 .productName(wishlistItem.getProduct().getName())
                 .productDescription(wishlistItem.getProduct().getDescription())
+                .imageUrl(wishlistItem.getProduct().getImageUrl())
                 .price(wishlistItem.getProduct().getPrice())
                 .stockQuantity(wishlistItem.getProduct().getStockQuantity())
                 .isAvailable(wishlistItem.getProduct().getStockQuantity() > 0)

@@ -27,11 +27,11 @@ spring:
     baseline-on-migrate: true
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
+      host: "${REDIS_HOST:localhost}"
       port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
+      password: "${REDIS_PASSWORD:}"
   kafka:
-    bootstrap-servers: ${KAFKA_SERVERS:localhost:9092}
+    bootstrap-servers: "${KAFKA_SERVERS:localhost:9092}"
     consumer:
       group-id: order-service
       auto-offset-reset: earliest
@@ -44,7 +44,7 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
 jwt:
-  secret: ${JWT_SECRET:your-256-bit-secret-key-here-minimum-32-characters-required}
+  secret: "${JWT_SECRET:your-256-bit-secret-key-here-minimum-32-characters-required}"
 
 server:
   port: 8082
@@ -60,6 +60,17 @@ springdoc:
   default-produces-media-type: application/json
   paths-to-match: /**
   packages-to-scan: com.ecommerce.orderservice
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+    product-service:
+       url: "${PRODUCT_SERVICE_URL:http://localhost:8081}"
+    payment-service:
+       url: "${PAYMENT_SERVICE_URL:http://localhost:8084}"
 
 logging:
   level:

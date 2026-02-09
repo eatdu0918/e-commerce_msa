@@ -40,24 +40,24 @@ public class CartController {
         return ApiResponse.success(response);
     }
 
-    @PutMapping("/{cartItemId}")
+    @PutMapping("/{productId}")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<CartItemResponse> updateCartItem(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long cartItemId,
+            @PathVariable Long productId,
             @Valid @RequestBody UpdateCartItemRequest request) {
-        log.info("PUT /api/cart/{} - 장바구니 수량 수정: userId={}", cartItemId, userDetails.getUserId());
-        CartItemResponse response = cartService.updateCartItem(userDetails.getUserId(), cartItemId, request);
+        log.info("PUT /api/cart/{} - 장바구니 수량 수정: userId={}", productId, userDetails.getUserId());
+        CartItemResponse response = cartService.updateCartItem(userDetails.getUserId(), productId, request);
         return ApiResponse.success(response);
     }
 
-    @DeleteMapping("/{cartItemId}")
+    @DeleteMapping("/{productId}")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<Void> removeFromCart(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long cartItemId) {
-        log.info("DELETE /api/cart/{} - 장바구니 항목 삭제: userId={}", cartItemId, userDetails.getUserId());
-        cartService.removeFromCart(userDetails.getUserId(), cartItemId);
+            @PathVariable Long productId) {
+        log.info("DELETE /api/cart/{} - 장바구니 항목 삭제: userId={}", productId, userDetails.getUserId());
+        cartService.removeFromCart(userDetails.getUserId(), productId);
         return ApiResponse.ok();
     }
 

@@ -4,6 +4,10 @@ server:
 spring:
   application:
     name: gateway-service
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
   cloud:
     gateway:
       routes:
@@ -14,19 +18,19 @@ spring:
         - id: product-service
           uri: ${PRODUCT_SERVICE_URL:http://localhost:8081}
           predicates:
-            - Path=/api/products/**
+            - Path=/api/products/**, /api/categories/**, /api/cart/**, /api/wishlist/**
         - id: order-service
           uri: ${ORDER_SERVICE_URL:http://localhost:8082}
           predicates:
             - Path=/api/orders/**
+        - id: discount-service
+          uri: ${DISCOUNT_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/discounts/**, /api/coupons/**
         - id: payment-service
           uri: ${PAYMENT_SERVICE_URL:http://localhost:8084}
           predicates:
             - Path=/api/payments/**
-        - id: discount-service
-          uri: ${DISCOUNT_SERVICE_URL:http://localhost:8083}
-          predicates:
-            - Path=/api/discounts/**
         - id: cancel-service
           uri: ${CANCEL_SERVICE_URL:http://localhost:8085}
           predicates:
@@ -38,7 +42,7 @@ spring:
       globalcors:
         cors-configurations:
           '[/**]':
-            allowedOrigins: 
+            allowedOrigins:
               - "http://localhost:3000"
               - "http://localhost:5173"
             allowedMethods:
@@ -49,9 +53,16 @@ spring:
               - PATCH
               - OPTIONS
             allowedHeaders: "*"
+            exposedHeaders:
+              - "X-Correlation-Id"
             allowCredentials: true
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_FIRST
+
+jwt:
+  secret: ${JWT_SECRET:your-256-bit-secret-key-here-minimum-32-characters-required}
 
 logging:
   level:
-    org.springframework.cloud.gateway: DEBUG
-    reactor.netty: DEBUG
+    com.ecommerce.gatewayservice: INFO
+    org.springframework.cloud.gateway: INFO

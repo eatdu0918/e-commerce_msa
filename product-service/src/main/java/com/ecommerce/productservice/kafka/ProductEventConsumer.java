@@ -1,8 +1,10 @@
 package com.ecommerce.productservice.kafka;
 
 import com.ecommerce.productservice.entity.Product;
+import com.ecommerce.productservice.entity.ProcessedEvent;
 import com.ecommerce.productservice.event.*;
 import com.ecommerce.productservice.repository.ProductRepository;
+import com.ecommerce.productservice.repository.ProcessedEventRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -21,12 +23,17 @@ public class ProductEventConsumer {
 
     private final ProductRepository productRepository;
     private final ProductEventProducer productEventProducer;
+    private final ProcessedEventRepository processedEventRepository;
 
     @KafkaListener(topics = "order-created", groupId = "product-service")
     @Transactional
     public void handleOrderCreated(OrderCreatedEvent event) {
         log.info("Received order-created event: orderId={}, items={}",
                 event.getOrderId(), event.getItems().size());
+
+        if (isDuplicate(event.getEventId(), "order-created")) {
+            return;
+        }
 
         List<StockDecreasedEvent.StockItemEvent> decreasedItems = new ArrayList<>();
         List<Product> productsToRestore = new ArrayList<>();
@@ -73,6 +80,8 @@ public class ProductEventConsumer {
             productEventProducer.sendStockDecreasedEvent(successEvent);
             log.info("Stock decreased successfully for order: orderId={}", event.getOrderId());
 
+            markProcessed(event.getEventId(), "order-created");
+
         } catch (Exception e) {
             log.error("Error processing order-created event: orderId={}", event.getOrderId(), e);
             rollbackStock(productsToRestore, decreasedItems);
@@ -107,6 +116,10 @@ public class ProductEventConsumer {
     public void handleOrderCancelled(OrderCancelledEvent event) {
         log.info("Received order-cancelled event: orderId={}", event.getOrderId());
 
+        if (isDuplicate(event.getEventId(), "order-cancelled")) {
+            return;
+        }
+
         for (OrderCancelledEvent.OrderItemEvent item : event.getItems()) {
             productRepository.findByIdAndIsActiveTrue(item.getProductId())
                     .ifPresent(product -> {
@@ -117,5 +130,21 @@ public class ProductEventConsumer {
         }
 
         log.info("Stock restoration completed for order: orderId={}", event.getOrderId());
+
+        markProcessed(event.getEventId(), "order-cancelled");
+    }
+
+    private boolean isDuplicate(String eventId, String eventType) {
+        boolean exists = processedEventRepository.existsByEventId(eventId);
+        if (exists) {
+            log.warn("중복 이벤트 무시: eventId={}, eventType={}", eventId, eventType);
+        }
+        return exists;
+    }
+
+    private void markProcessed(String eventId, String eventType) {
+        ProcessedEvent processedEvent = ProcessedEvent.create(eventId, eventType);
+        processedEventRepository.save(processedEvent);
+        log.info("이벤트 처리 완료 기록: eventId={}, eventType={}", eventId, eventType);
     }
 }

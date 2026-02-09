@@ -1,10 +1,12 @@
 package com.ecommerce.orderservice.controller;
 
 import com.ecommerce.orderservice.dto.request.CreateOrderRequest;
+import com.ecommerce.orderservice.dto.response.OrderDetailResponse;
 import com.ecommerce.orderservice.dto.response.OrderResponse;
 import com.ecommerce.orderservice.dto.response.PageResponse;
 import com.ecommerce.orderservice.response.ApiResponse;
 import com.ecommerce.orderservice.security.CustomUserDetails;
+import com.ecommerce.orderservice.service.OrderAggregationService;
 import com.ecommerce.orderservice.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 public class OrderController {
 
     private final OrderService orderService;
+    private final OrderAggregationService orderAggregationService;
 
     @Operation(summary = "주문 생성")
     @PostMapping
@@ -49,6 +52,15 @@ public class OrderController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long orderId) {
         OrderResponse response = orderService.getOrder(orderId, userDetails.getUserId());
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    @Operation(summary = "주문 상세 통합 조회 (상품/결제 정보 포함)")
+    @GetMapping("/{orderId}/detail")
+    public ResponseEntity<ApiResponse<OrderDetailResponse>> getOrderDetail(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long orderId) {
+        OrderDetailResponse response = orderAggregationService.getOrderDetail(orderId, userDetails.getUserId());
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

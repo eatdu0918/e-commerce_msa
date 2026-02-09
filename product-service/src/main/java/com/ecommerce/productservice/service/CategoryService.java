@@ -9,6 +9,8 @@ import com.ecommerce.productservice.exception.ProductDomainExceptionCode;
 import com.ecommerce.productservice.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +25,7 @@ public class CategoryService {
     private final CategoryRepository categoryRepository;
 
     @Transactional
+    @CacheEvict(value = "categories", allEntries = true)
     public CategoryResponse createCategory(CreateCategoryRequest request) {
         log.info("카테고리 등록 시도: name={}", request.getName());
 
@@ -63,6 +66,7 @@ public class CategoryService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "categories", key = "'root'")
     public List<CategoryResponse> getRootCategories() {
         return categoryRepository.findAllRootCategories()
                 .stream()
@@ -79,6 +83,7 @@ public class CategoryService {
     }
 
     @Transactional
+    @CacheEvict(value = "categories", allEntries = true)
     public CategoryResponse updateCategory(Long categoryId, UpdateCategoryRequest request) {
         log.info("카테고리 수정 시도: categoryId={}", categoryId);
 
@@ -108,6 +113,7 @@ public class CategoryService {
     }
 
     @Transactional
+    @CacheEvict(value = "categories", allEntries = true)
     public void deleteCategory(Long categoryId) {
         log.info("카테고리 삭제 시도: categoryId={}", categoryId);
 

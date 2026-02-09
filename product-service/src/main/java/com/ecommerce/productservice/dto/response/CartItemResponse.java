@@ -22,6 +22,7 @@ public class CartItemResponse {
     Integer quantity;
     BigDecimal totalPrice;
     Integer stockQuantity;
+    String imageUrl;
     Boolean isAvailable;
     LocalDateTime createdAt;
 
@@ -35,6 +36,7 @@ public class CartItemResponse {
                 .productId(cartItem.getProduct().getId())
                 .productName(cartItem.getProduct().getName())
                 .productDescription(cartItem.getProduct().getDescription())
+                .imageUrl(cartItem.getProduct().getImageUrl())
                 .price(price)
                 .quantity(quantity)
                 .totalPrice(price.multiply(BigDecimal.valueOf(quantity)))

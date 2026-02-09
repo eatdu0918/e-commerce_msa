@@ -1,7 +1,9 @@
 package com.ecommerce.discountservice.kafka;
 
+import com.ecommerce.discountservice.entity.ProcessedEvent;
 import com.ecommerce.discountservice.entity.UserCoupon;
 import com.ecommerce.discountservice.event.*;
+import com.ecommerce.discountservice.repository.ProcessedEventRepository;
 import com.ecommerce.discountservice.repository.UserCouponRepository;
 import com.ecommerce.discountservice.service.CouponService;
 import lombok.RequiredArgsConstructor;
@@ -19,9 +21,12 @@ public class DiscountEventConsumer {
     private final CouponService couponService;
     private final UserCouponRepository userCouponRepository;
     private final DiscountEventProducer discountEventProducer;
+    private final ProcessedEventRepository processedEventRepository;
 
     @KafkaListener(topics = "stock-decreased", groupId = "discount-service")
     public void handleStockDecreased(StockDecreasedEvent event) {
+        if (isDuplicate(event.getEventId(), "stock-decreased")) return;
+
         log.info("Received stock-decreased event: orderId={}, userCouponId={}",
                 event.getOrderId(), event.getUserCouponId());
 
@@ -37,6 +42,7 @@ public class DiscountEventConsumer {
                     .discountAmount(null)
                     .build();
             discountEventProducer.sendCouponUsedEvent(couponUsedEvent);
+            markProcessed(event.getEventId(), "stock-decreased");
             return;
         }
 
@@ -66,6 +72,8 @@ public class DiscountEventConsumer {
             log.info("Coupon used successfully: orderId={}, discountAmount={}",
                     event.getOrderId(), discountAmount);
 
+            markProcessed(event.getEventId(), "stock-decreased");
+
         } catch (Exception e) {
             log.error("Failed to use coupon: orderId={}, error={}",
                     event.getOrderId(), e.getMessage());
@@ -85,11 +93,14 @@ public class DiscountEventConsumer {
 
     @KafkaListener(topics = "order-cancelled", groupId = "discount-service")
     public void handleOrderCancelled(OrderCancelledEvent event) {
+        if (isDuplicate(event.getEventId(), "order-cancelled")) return;
+
         log.info("Received order-cancelled event: orderId={}, userCouponId={}",
                 event.getOrderId(), event.getUserCouponId());
 
         if (event.getUserCouponId() == null) {
             log.info("No coupon to restore for order: orderId={}", event.getOrderId());
+            markProcessed(event.getEventId(), "order-cancelled");
             return;
         }
 
@@ -107,9 +118,25 @@ public class DiscountEventConsumer {
             discountEventProducer.sendCouponRestoredEvent(restoredEvent);
             log.info("Coupon restored successfully: orderId={}", event.getOrderId());
 
+            markProcessed(event.getEventId(), "order-cancelled");
+
         } catch (Exception e) {
             log.error("Failed to restore coupon: orderId={}, error={}",
                     event.getOrderId(), e.getMessage());
+        }
+    }
+
+    private boolean isDuplicate(String eventId, String eventType) {
+        if (eventId != null && processedEventRepository.existsByEventId(eventId)) {
+            log.warn("중복 이벤트 무시: eventId={}, eventType={}", eventId, eventType);
+            return true;
+        }
+        return false;
+    }
+
+    private void markProcessed(String eventId, String eventType) {
+        if (eventId != null) {
+            processedEventRepository.save(ProcessedEvent.create(eventId, eventType));
         }
     }
 }

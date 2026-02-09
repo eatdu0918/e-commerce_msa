@@ -1,0 +1,77 @@
+package com.ecommerce.orderservice.service;
+
+import com.ecommerce.orderservice.client.PaymentServiceClient;
+import com.ecommerce.orderservice.client.ProductServiceClient;
+import com.ecommerce.orderservice.client.dto.PaymentInfo;
+import com.ecommerce.orderservice.client.dto.ProductInfo;
+import com.ecommerce.orderservice.dto.response.*;
+import com.ecommerce.orderservice.response.ApiResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class OrderAggregationService {
+
+    private final OrderService orderService;
+    private final ProductServiceClient productServiceClient;
+    private final PaymentServiceClient paymentServiceClient;
+
+    public OrderDetailResponse getOrderDetail(Long orderId, Long userId) {
+        log.info("주문 상세 통합 조회: orderId={}, userId={}", orderId, userId);
+
+        OrderResponse order = orderService.getOrder(orderId, userId);
+        List<OrderItemDetailResponse> enrichedItems = enrichOrderItems(order.getItems());
+        PaymentInfo paymentInfo = fetchPaymentInfo(orderId);
+
+        return OrderDetailResponse.from(order, enrichedItems, paymentInfo);
+    }
+
+    public OrderDetailResponse getOrderDetailAdmin(Long orderId) {
+        log.info("관리자 주문 상세 통합 조회: orderId={}", orderId);
+
+        OrderResponse order = orderService.getOrderById(orderId);
+        List<OrderItemDetailResponse> enrichedItems = enrichOrderItems(order.getItems());
+        PaymentInfo paymentInfo = fetchPaymentInfo(orderId);
+
+        return OrderDetailResponse.from(order, enrichedItems, paymentInfo);
+    }
+
+    private List<OrderItemDetailResponse> enrichOrderItems(List<OrderItemResponse> items) {
+        List<OrderItemDetailResponse> enrichedItems = new ArrayList<>();
+
+        if (items == null) return enrichedItems;
+
+        for (OrderItemResponse item : items) {
+            ProductInfo productInfo = fetchProductInfo(item.getProductId());
+            enrichedItems.add(OrderItemDetailResponse.from(item, productInfo));
+        }
+
+        return enrichedItems;
+    }
+
+    private ProductInfo fetchProductInfo(Long productId) {
+        try {
+            ApiResponse<ProductInfo> response = productServiceClient.getProduct(productId);
+            return response != null && response.isSuccess() ? response.getData() : null;
+        } catch (Exception e) {
+            log.warn("상품 정보 조회 실패: productId={}, error={}", productId, e.getMessage());
+            return null;
+        }
+    }
+
+    private PaymentInfo fetchPaymentInfo(Long orderId) {
+        try {
+            ApiResponse<PaymentInfo> response = paymentServiceClient.getPaymentByOrderId(orderId);
+            return response != null && response.isSuccess() ? response.getData() : null;
+        } catch (Exception e) {
+            log.warn("결제 정보 조회 실패: orderId={}, error={}", orderId, e.getMessage());
+            return null;
+        }
+    }
+}
