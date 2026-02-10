@@ -39,9 +39,18 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.trusted.packages: "*"
+        spring.json.type.mapping: >-
+          CouponUsedEvent:com.ecommerce.paymentservice.event.CouponUsedEvent,
+          OrderCancelledEvent:com.ecommerce.paymentservice.event.OrderCancelledEvent,
+          PaymentCompletedEvent:com.ecommerce.paymentservice.event.PaymentCompletedEvent,
+          PaymentFailedEvent:com.ecommerce.paymentservice.event.PaymentFailedEvent
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.type.mapping: >-
+          PaymentCompletedEvent:com.ecommerce.paymentservice.event.PaymentCompletedEvent,
+          PaymentFailedEvent:com.ecommerce.paymentservice.event.PaymentFailedEvent
 
 jwt:
   secret: ${JWT_SECRET:your-256-bit-secret-key-here-minimum-32-characters-required}

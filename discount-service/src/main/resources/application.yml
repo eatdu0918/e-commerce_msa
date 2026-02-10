@@ -39,9 +39,20 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.trusted.packages: "*"
+        spring.json.type.mapping: >-
+          StockDecreasedEvent:com.ecommerce.discountservice.event.StockDecreasedEvent,
+          OrderCancelledEvent:com.ecommerce.discountservice.event.OrderCancelledEvent,
+          CouponUsedEvent:com.ecommerce.discountservice.event.CouponUsedEvent,
+          CouponUseFailedEvent:com.ecommerce.discountservice.event.CouponUseFailedEvent,
+          CouponRestoredEvent:com.ecommerce.discountservice.event.CouponRestoredEvent
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.type.mapping: >-
+          CouponUsedEvent:com.ecommerce.discountservice.event.CouponUsedEvent,
+          CouponUseFailedEvent:com.ecommerce.discountservice.event.CouponUseFailedEvent,
+          CouponRestoredEvent:com.ecommerce.discountservice.event.CouponRestoredEvent
 
 jwt:
   secret: ${JWT_SECRET:your-256-bit-secret-key-here-minimum-32-characters-required}
