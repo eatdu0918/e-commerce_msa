@@ -66,6 +66,7 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "products", key = "#pageable.pageNumber + '-' + #pageable.pageSize + '-' + #pageable.sort + '-' + #keyword + '-' + #categoryId")
     public PageResponse<ProductResponse> getProducts(Pageable pageable, String keyword, Long categoryId) {
         Page<Product> products;
 
