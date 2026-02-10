@@ -11,7 +11,6 @@ export interface SignupRequest {
     name: string;
     phoneNumber: string;
     gender: 'MALE' | 'FEMALE';
-    role?: 'CUSTOMER' | 'SELLER';
 }
 
 export interface LoginResponse {
@@ -23,16 +22,19 @@ export interface LoginResponse {
 }
 
 export interface UserResponse {
-    userId: number;
+    id: number;
     email: string;
-    username: string;
+    name: string;
+    phoneNumber: string;
     role: string;
+    isActive: boolean;
+    createdAt: string;
 }
 
 export interface UpdateProfileRequest {
-    username?: string;
-    phoneNumber?: string;
-    gender?: 'MALE' | 'FEMALE';
+    name: string;
+    phoneNumber: string;
+    gender: 'MALE' | 'FEMALE';
 }
 
 export const login = async (data: LoginRequest): Promise<LoginResponse> => {
@@ -50,6 +52,27 @@ export const getMyProfile = async (): Promise<UserResponse> => {
 };
 
 export const updateProfile = async (data: UpdateProfileRequest): Promise<UserResponse> => {
-    const response = await api.put<{ data: UserResponse }>('/api/auth/me', data);
+    const response = await api.put<{ data: UserResponse }>('/api/auth/profile', data);
     return response.data.data;
+};
+
+export interface ChangePasswordRequest {
+    currentPassword: string;
+    newPassword: string;
+}
+
+export interface WithdrawRequest {
+    password: string;
+}
+
+export const changePassword = async (data: ChangePasswordRequest): Promise<void> => {
+    await api.put('/api/auth/changePassword', data);
+};
+
+export const withdraw = async (data: WithdrawRequest): Promise<void> => {
+    await api.delete('/api/auth/withdraw', { data });
+};
+
+export const logout = async (): Promise<void> => {
+    await api.post('/api/auth/logout');
 };

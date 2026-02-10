@@ -97,10 +97,10 @@ export default function Header({ category, setCategory, categories, onNavigate, 
                                         <div className="p-6 bg-stone-50 border-b border-stone-100">
                                             <div className="flex items-center space-x-3">
                                                 <div className="w-12 h-12 bg-stone-200 rounded-full flex items-center justify-center text-stone-500 font-bold">
-                                                    {user.username?.substring(0, 2).toUpperCase() || '??'}
+                                                    {user.name?.substring(0, 2).toUpperCase() || '??'}
                                                 </div>
                                                 <div className="text-left">
-                                                    <p className="font-bold text-sm">{user.username} 님</p>
+                                                    <p className="font-bold text-sm">{user.name} 님</p>
                                                     <p className="text-xs text-stone-400">{user.role}</p>
                                                 </div>
                                             </div>

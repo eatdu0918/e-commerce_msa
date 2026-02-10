@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { ShoppingBag, Heart, Gift, MessageSquare, ChevronRight, User } from 'lucide-react';
+import { ShoppingBag, Heart, Gift, MessageSquare, ChevronRight, User, XCircle, CreditCard } from 'lucide-react';
 import type { UserResponse } from '../../api/services/user';
 
 interface MyPageViewProps {
@@ -27,7 +27,19 @@ export default function MyPageView({ user, onNavigate }: MyPageViewProps) {
             title: t('benefit.title') || '나의 혜택',
             icon: <Gift className="text-purple-500" size={24} />,
             view: 'benefit',
-            desc: '쿠폰 및 적립급 혜택을 확인하세요.'
+            desc: '쿠폰 및 적립금 혜택을 확인하세요.'
+        },
+        {
+            title: '취소/환불 내역',
+            icon: <XCircle className="text-orange-500" size={24} />,
+            view: 'cancel_refund',
+            desc: '주문 취소 및 환불 처리 현황을 확인하세요.'
+        },
+        {
+            title: '결제 내역',
+            icon: <CreditCard className="text-indigo-500" size={24} />,
+            view: 'payment_history',
+            desc: '결제 이력과 상세 정보를 확인하세요.'
         },
         {
             title: t('activity.title') || '리뷰 관리',
@@ -46,7 +58,7 @@ export default function MyPageView({ user, onNavigate }: MyPageViewProps) {
                 </div>
                 <div className="flex-1 text-center md:text-left">
                     <div className="flex flex-col md:flex-row md:items-center md:space-x-3 mb-2">
-                        <h3 className="text-2xl font-bold">{user.username} 님</h3>
+                        <h3 className="text-2xl font-bold">{user.name} 님</h3>
                         <span className="inline-block px-3 py-1 bg-black text-white text-[10px] font-bold rounded-full w-fit mx-auto md:mx-0">
                             {user.role}
                         </span>

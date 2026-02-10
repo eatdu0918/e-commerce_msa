@@ -19,6 +19,12 @@ import CartModal from './components/cart/CartModal';
 import WishlistView from './components/profile/WishlistView';
 import MyPageView from './components/profile/MyPageView';
 import EditProfileView from './components/profile/EditProfileView';
+import CheckoutPage from './components/checkout/CheckoutPage';
+import OrderCompletePage from './components/checkout/OrderCompletePage';
+import OrderDetailView from './components/order/OrderDetailView';
+import CouponView from './components/profile/CouponView';
+import CancelRefundView from './components/profile/CancelRefundView';
+import PaymentHistoryView from './components/profile/PaymentHistoryView';
 import { useTranslation } from 'react-i18next';
 import { getCart } from './api/services/cart';
 import { getProduct } from './api/services/product';
@@ -27,8 +33,10 @@ import { getProduct } from './api/services/product';
 function App() {
   const { t } = useTranslation();
   const [category, setCategory] = useState(t('common.category_all'));
-  const [view, setView] = useState('home'); // 'home' | 'order' | 'benefit' | 'activity' | 'all_products' | 'product_detail' | 'signup' | 'mypage' | 'wishlist'
+  const [view, setView] = useState('home');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+  const [completedOrderId, setCompletedOrderId] = useState<number | null>(null);
   const [timeLeft, setTimeLeft] = useState(24 * 60 * 60);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isSignupOpen, setIsSignupOpen] = useState(false);
@@ -77,7 +85,7 @@ function App() {
 
   const products: Product[] = productsPage?.content || [];
 
-  const categories = ['NEW ARRIVALS', 'WOMEN', 'MEN', 'HOME GOODS'];
+  const categories = ['NEW ARRIVALS', 'HOME GOODS'];
 
   const handleProductClick = (product: Product) => {
     setSelectedProduct(product);
@@ -126,8 +134,6 @@ function App() {
           </>
         );
       case 'all_products':
-        // if (isLoading) return <div className="min-h-screen flex justify-center items-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div></div>;
-        // ProductListPage now handles its own data fetching
         return <ProductListPage onProductClick={handleProductClick} />;
       case 'product_detail':
         return selectedProduct ? (
@@ -138,12 +144,36 @@ function App() {
             onCartOpenRequest={() => setIsCartOpen(true)}
           />
         ) : null;
+      case 'checkout':
+        return (
+          <CheckoutPage
+            onBack={() => setView('home')}
+            onOrderComplete={(orderId) => {
+              setCompletedOrderId(orderId);
+              setView('order_complete');
+            }}
+          />
+        );
+      case 'order_complete':
+        return completedOrderId ? (
+          <OrderCompletePage
+            orderId={completedOrderId}
+            onGoHome={() => setView('home')}
+            onViewOrder={(orderId) => {
+              setSelectedOrderId(orderId);
+              setView('order_detail');
+            }}
+          />
+        ) : null;
       case 'order':
       case 'benefit':
       case 'activity':
       case 'wishlist':
       case 'mypage':
       case 'edit_profile':
+      case 'order_detail':
+      case 'cancel_refund':
+      case 'payment_history':
         return (
           <div className="min-h-screen pt-12 pb-24 bg-[#f9f7f2]">
             <div className="max-w-3xl mx-auto px-6">
@@ -192,14 +222,20 @@ function App() {
         return (
           <div className="space-y-12 text-left">
             {orders.map((order: any) => (
-              <div key={order.id} className="border-b border-stone-100 pb-12 last:border-0 last:pb-0">
+              <div
+                key={order.id}
+                className="border-b border-stone-100 pb-12 last:border-0 last:pb-0 cursor-pointer hover:bg-stone-50/50 -mx-4 px-4 py-2 rounded-2xl transition-colors"
+                onClick={() => {
+                  setSelectedOrderId(order.id);
+                  setView('order_detail');
+                }}
+              >
                 <div className="flex items-center justify-between mb-6">
                   <span className="text-xs font-bold text-stone-400 uppercase tracking-widest">{t('order.order_number')} {order.orderNumber}</span>
                   <span className="text-xs bg-blue-50 text-blue-600 px-3 py-1 rounded-full font-bold">{order.status}</span>
                 </div>
                 <div className="flex space-x-8 items-center">
                   <div className="w-32 h-32 bg-stone-100 rounded-3xl overflow-hidden flex items-center justify-center text-stone-300">
-                    {/* Placeholder or fetch product image if available in order details */}
                     <ShoppingBag size={32} />
                   </div>
                   <div>
@@ -209,41 +245,14 @@ function App() {
                 </div>
                 <div className="pt-8 flex justify-between items-center text-sm">
                   <span className="text-stone-500">{t('order.arrival_date', { date: '12월 14일' })}</span>
-                  <button className="text-stone-900 font-bold border-b border-black">{t('order.shipping_detail')}</button>
+                  <span className="text-stone-900 font-bold border-b border-black">{t('order.shipping_detail')}</span>
                 </div>
               </div>
             ))}
           </div>
         );
       case 'benefit':
-        return (
-          <div className="grid gap-6 text-left">
-            <div className="p-8 rounded-3xl bg-stone-50 border border-stone-100">
-              <p className="text-xs text-stone-400 font-bold uppercase mb-2">가용 쿠팡캐시</p>
-              <div className="flex justify-between items-end">
-                <h3 className="text-3xl font-bold">1,200원</h3>
-                <button className="bg-black text-white px-6 py-2 rounded-full text-xs font-bold">충전하기</button>
-              </div>
-            </div>
-            <div className="p-8 rounded-3xl border border-red-100 bg-red-50/30">
-              <p className="text-xs text-red-400 font-bold uppercase mb-2">보유 쿠폰</p>
-              <div className="flex justify-between items-end">
-                <h3 className="text-3xl font-bold text-red-600">2장</h3>
-                <p className="text-xs text-red-400 font-medium italic">이번 달 만료 쿠폰이 1장 있습니다.</p>
-              </div>
-            </div>
-            <div className="pt-4">
-              <h4 className="font-bold text-sm mb-4 uppercase text-stone-300 tracking-widest">사용 가능한 쿠폰 목록</h4>
-              <div className="bg-white border border-stone-100 p-6 rounded-2xl flex justify-between items-center shadow-sm">
-                <div>
-                  <p className="font-bold">첫 구매 10% 할인 쿠폰</p>
-                  <p className="text-xs text-stone-400 mt-1">~ 2024.12.31 까지 사용 가능</p>
-                </div>
-                <span className="text-red-500 font-bold">D-19</span>
-              </div>
-            </div>
-          </div>
-        );
+        return <CouponView />;
       case 'activity':
         return (
           <div className="text-center py-12">
@@ -286,6 +295,17 @@ function App() {
             onBack={() => setView('mypage')}
           />
         ) : null;
+      case 'order_detail':
+        return selectedOrderId ? (
+          <OrderDetailView
+            orderId={selectedOrderId}
+            onBack={() => setView('order')}
+          />
+        ) : null;
+      case 'cancel_refund':
+        return <CancelRefundView />;
+      case 'payment_history':
+        return <PaymentHistoryView />;
       default:
         return null;
     }
@@ -299,6 +319,9 @@ function App() {
       case 'wishlist': return t('common.wishlist') || '찜 목록';
       case 'mypage': return t('common.my_page') || '마이페이지';
       case 'edit_profile': return t('profile.title') || '개인정보 수정';
+      case 'order_detail': return '주문 상세';
+      case 'cancel_refund': return '취소/환불 내역';
+      case 'payment_history': return '결제 내역';
       default: return '';
     }
   };
@@ -334,7 +357,7 @@ function App() {
         onClose={() => setIsCartOpen(false)}
         onCheckout={() => {
           setIsCartOpen(false);
-          setView('order'); // Or redirect to checkout page if exists
+          setView('checkout');
         }}
       />
 

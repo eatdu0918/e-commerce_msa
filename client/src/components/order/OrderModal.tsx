@@ -15,6 +15,8 @@ interface OrderModalProps {
 
 export default function OrderModal({ isOpen, onClose, product, quantity, user, onOrderSuccess }: OrderModalProps) {
     const [address, setAddress] = useState('');
+    const [recipientName, setRecipientName] = useState(user.name || '');
+    const [recipientPhone, setRecipientPhone] = useState(user.phoneNumber || '');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -29,10 +31,15 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
 
         try {
             await createOrder({
-                userId: user.userId,
-                productId: product.id,
-                quantity: quantity,
-                shippingAddress: address
+                items: [{
+                    productId: product.id,
+                    productName: product.name,
+                    unitPrice: product.price,
+                    quantity: quantity,
+                }],
+                shippingAddress: address,
+                recipientName,
+                recipientPhone,
             });
             alert('주문이 완료되었습니다!');
             onOrderSuccess();
@@ -65,7 +72,29 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
                     </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-5">
+                    <div>
+                        <label className="block text-sm font-bold text-stone-700 mb-2">수령인 이름</label>
+                        <input
+                            type="text"
+                            value={recipientName}
+                            onChange={(e) => setRecipientName(e.target.value)}
+                            className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-black transition-all"
+                            placeholder="홍길동"
+                            required
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-bold text-stone-700 mb-2">수령인 전화번호</label>
+                        <input
+                            type="tel"
+                            value={recipientPhone}
+                            onChange={(e) => setRecipientPhone(e.target.value)}
+                            className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-black transition-all"
+                            placeholder="010-0000-0000"
+                            required
+                        />
+                    </div>
                     <div>
                         <label className="block text-sm font-bold text-stone-700 mb-2">배송지 주소</label>
                         <input

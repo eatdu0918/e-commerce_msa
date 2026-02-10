@@ -59,7 +59,7 @@ export default function SignupPage({ onNavigate, onLoginClick }: SignupPageProps
 
         setLoading(true);
         try {
-            await signup({ email, password, name, phoneNumber, gender, role: 'CUSTOMER' });
+            await signup({ email, password, name, phoneNumber, gender });
             alert(t('auth.signup_success', '회원가입이 완료되었습니다. 로그인해주세요.'));
             onLoginClick();
         } catch (err: any) {

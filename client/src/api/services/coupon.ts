@@ -34,3 +34,21 @@ export const claimCoupon = async (code: string): Promise<UserCouponResponse> => 
     const response = await api.post<{ data: UserCouponResponse }>(`/api/coupons/claim/${code}`);
     return response.data.data;
 };
+
+export interface CalculateDiscountRequest {
+    userCouponId: number;
+    totalAmount: number;
+}
+
+export interface DiscountCalculationResponse {
+    originalAmount: number;
+    discountAmount: number;
+    finalAmount: number;
+    couponName: string;
+    couponType: string;
+}
+
+export const calculateDiscount = async (data: CalculateDiscountRequest): Promise<DiscountCalculationResponse> => {
+    const response = await api.post<{ data: DiscountCalculationResponse }>('/api/coupons/calculate', data);
+    return response.data.data;
+};

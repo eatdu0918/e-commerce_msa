@@ -1,10 +1,18 @@
 import api from '../axios';
 
-export interface CreateOrderRequest {
-    userId: number;
+export interface OrderItemRequest {
     productId: number;
+    productName: string;
+    unitPrice: number;
     quantity: number;
+}
+
+export interface CreateOrderRequest {
+    items: OrderItemRequest[];
+    userCouponId?: number;
     shippingAddress: string;
+    recipientName: string;
+    recipientPhone: string;
 }
 
 export interface OrderItemResponse {

@@ -11,7 +11,9 @@ interface SignupModalProps {
 export default function SignupModal({ isOpen, onClose, onSwitchToLogin }: SignupModalProps) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [username, setUsername] = useState('');
+    const [name, setName] = useState('');
+    const [phoneNumber, setPhoneNumber] = useState('');
+    const [gender, setGender] = useState<'MALE' | 'FEMALE'>('MALE');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -22,7 +24,7 @@ export default function SignupModal({ isOpen, onClose, onSwitchToLogin }: Signup
         setError('');
         setLoading(true);
         try {
-            await signup({ email, password, username, role: 'CUSTOMER' });
+            await signup({ email, password, name, phoneNumber, gender });
             alert('회원가입이 완료되었습니다. 로그인해주세요.');
             onSwitchToLogin();
         } catch (err: any) {
@@ -46,15 +48,15 @@ export default function SignupModal({ isOpen, onClose, onSwitchToLogin }: Signup
                 <h2 className="text-3xl font-bold mb-2">Join Us</h2>
                 <p className="text-stone-500 mb-8">URBAN THREADS의 멤버가 되어보세요.</p>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-5">
                     <div>
-                        <label className="block text-sm font-bold text-stone-700 mb-2">Username</label>
+                        <label className="block text-sm font-bold text-stone-700 mb-2">이름</label>
                         <input
                             type="text"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
                             className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-black transition-all"
-                            placeholder="Your Name"
+                            placeholder="홍길동"
                             required
                         />
                     </div>
@@ -76,9 +78,45 @@ export default function SignupModal({ isOpen, onClose, onSwitchToLogin }: Signup
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-black transition-all"
-                            placeholder="••••••••"
+                            placeholder="영문+숫자+특수문자 8자 이상"
                             required
                         />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-bold text-stone-700 mb-2">휴대폰 번호</label>
+                        <input
+                            type="tel"
+                            value={phoneNumber}
+                            onChange={(e) => setPhoneNumber(e.target.value)}
+                            className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-black transition-all"
+                            placeholder="010-0000-0000"
+                            required
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-bold text-stone-700 mb-2">성별</label>
+                        <div className="grid grid-cols-2 gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setGender('MALE')}
+                                className={`py-3 rounded-xl border text-sm font-medium transition-all ${gender === 'MALE'
+                                    ? 'bg-black text-white border-black'
+                                    : 'bg-white text-stone-400 border-stone-200 hover:border-stone-400'
+                                }`}
+                            >
+                                남성
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setGender('FEMALE')}
+                                className={`py-3 rounded-xl border text-sm font-medium transition-all ${gender === 'FEMALE'
+                                    ? 'bg-black text-white border-black'
+                                    : 'bg-white text-stone-400 border-stone-200 hover:border-stone-400'
+                                }`}
+                            >
+                                여성
+                            </button>
+                        </div>
                     </div>
 
                     {error && <p className="text-red-500 text-sm font-medium">{error}</p>}

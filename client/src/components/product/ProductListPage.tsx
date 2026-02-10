@@ -45,7 +45,7 @@ export default function ProductListPage({ onProductClick }: { onProductClick: (p
         // Assuming: 1: Electronics, 2: Clothing, 3: Accessories
         // But names in DB are 'Electronics', 'Clothing', 'Accessories'
         // And frontend uses 'Apparel', 'Home Goods', 'Footwear' which are NOT in DB?
-        // Let's check App.tsx categories: ['NEW ARRIVALS', 'WOMEN', 'MEN', 'HOME GOODS']
+        // Let's check App.tsx categories: ['NEW ARRIVALS', 'HOME GOODS']
         // The previous ProductListPage had hardcoded filters: ['all', 'Apparel', 'Home Goods', 'Footwear']
         // Backend categories: 'Electronics', 'Clothing', 'Accessories'
         // We should probably align these. Let's align frontend to backend for now.

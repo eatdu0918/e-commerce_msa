@@ -222,7 +222,8 @@ services:
     deploy:
       resources:
         limits:
-          memory: 768M
+          memory: 1024M
+    restart: unless-stopped
     depends_on:
       zookeeper:
         condition: service_healthy

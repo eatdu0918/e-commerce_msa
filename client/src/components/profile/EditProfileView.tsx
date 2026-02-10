@@ -15,8 +15,8 @@ export default function EditProfileView({ user, onBack }: EditProfileViewProps) 
     const queryClient = useQueryClient();
 
     const [form, setForm] = useState<UpdateProfileRequest>({
-        username: user.username,
-        phoneNumber: '', // Back-end should probably provide this, assuming empty for now or mock
+        name: user.name,
+        phoneNumber: user.phoneNumber || '',
         gender: 'MALE'
     });
 
@@ -75,8 +75,8 @@ export default function EditProfileView({ user, onBack }: EditProfileViewProps) 
                         <User className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-300" size={18} />
                         <input
                             type="text"
-                            value={form.username}
-                            onChange={(e) => setForm({ ...form, username: e.target.value })}
+                            value={form.name}
+                            onChange={(e) => setForm({ ...form, name: e.target.value })}
                             className="w-full bg-white border border-stone-200 rounded-2xl py-4 pl-12 pr-4 text-sm focus:ring-2 focus:ring-black/5 focus:border-black transition-all outline-none"
                             placeholder={t('profile.name')}
                             required
