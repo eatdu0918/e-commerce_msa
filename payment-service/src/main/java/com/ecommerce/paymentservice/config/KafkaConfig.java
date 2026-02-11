@@ -10,6 +10,7 @@ public class KafkaConfig {
 
     public static final String TOPIC_PAYMENT_COMPLETED = "payment-completed";
     public static final String TOPIC_PAYMENT_FAILED = "payment-failed";
+    public static final String TOPIC_PAYMENT_CANCELLED = "payment-cancelled";
 
     @Bean
     public NewTopic paymentCompletedTopic() {
@@ -22,6 +23,14 @@ public class KafkaConfig {
     @Bean
     public NewTopic paymentFailedTopic() {
         return TopicBuilder.name(TOPIC_PAYMENT_FAILED)
+                .partitions(3)
+                .replicas(1)
+                .build();
+    }
+
+    @Bean
+    public NewTopic paymentCancelledTopic() {
+        return TopicBuilder.name(TOPIC_PAYMENT_CANCELLED)
                 .partitions(3)
                 .replicas(1)
                 .build();

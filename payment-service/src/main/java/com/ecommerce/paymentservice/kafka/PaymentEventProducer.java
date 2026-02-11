@@ -1,6 +1,7 @@
 package com.ecommerce.paymentservice.kafka;
 
 import com.ecommerce.paymentservice.config.KafkaConfig;
+import com.ecommerce.paymentservice.event.PaymentCancelledEvent;
 import com.ecommerce.paymentservice.event.PaymentCompletedEvent;
 import com.ecommerce.paymentservice.event.PaymentFailedEvent;
 import lombok.RequiredArgsConstructor;
@@ -25,5 +26,11 @@ public class PaymentEventProducer {
         log.info("Publishing payment-failed event: paymentId={}, orderNumber={}",
                 event.getPaymentId(), event.getOrderNumber());
         kafkaTemplate.send(KafkaConfig.TOPIC_PAYMENT_FAILED, event.getPaymentNumber(), event);
+    }
+
+    public void sendPaymentCancelledEvent(PaymentCancelledEvent event) {
+        log.info("Publishing payment-cancelled event: paymentId={}, orderNumber={}",
+                event.getPaymentId(), event.getOrderNumber());
+        kafkaTemplate.send(KafkaConfig.TOPIC_PAYMENT_CANCELLED, event.getPaymentNumber(), event);
     }
 }

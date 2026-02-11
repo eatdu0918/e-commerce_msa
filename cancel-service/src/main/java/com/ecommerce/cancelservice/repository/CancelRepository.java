@@ -23,4 +23,6 @@ public interface CancelRepository extends JpaRepository<Cancel, Long> {
 
     @Query("SELECT c FROM Cancel c LEFT JOIN FETCH c.cancelItems WHERE c.id = :id AND c.userId = :userId")
     Optional<Cancel> findByIdAndUserIdWithItems(@Param("id") Long id, @Param("userId") Long userId);
+
+    Optional<Cancel> findByOrderId(Long orderId);
 }

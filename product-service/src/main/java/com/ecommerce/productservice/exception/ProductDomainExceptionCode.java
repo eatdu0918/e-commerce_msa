@@ -32,6 +32,10 @@ public enum ProductDomainExceptionCode {
     WishlistItemNotFoundException(HttpStatus.NOT_FOUND, "찜 목록에서 상품을 찾을 수 없습니다."),
     WishlistItemAlreadyExistsException(HttpStatus.CONFLICT, "이미 찜한 상품입니다."),
 
+    // Review 관련 예외
+    ReviewNotFoundException(HttpStatus.NOT_FOUND, "리뷰를 찾을 수 없습니다."),
+    DuplicateReviewException(HttpStatus.CONFLICT, "이미 해당 상품에 리뷰를 작성하였습니다."),
+
     // JWT 관련 예외
     InvalidTokenException(HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다."),
     ExpiredTokenException(HttpStatus.UNAUTHORIZED, "만료된 토큰입니다."),

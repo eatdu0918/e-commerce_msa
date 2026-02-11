@@ -43,14 +43,16 @@ spring:
           CouponUsedEvent:com.ecommerce.paymentservice.event.CouponUsedEvent,
           OrderCancelledEvent:com.ecommerce.paymentservice.event.OrderCancelledEvent,
           PaymentCompletedEvent:com.ecommerce.paymentservice.event.PaymentCompletedEvent,
-          PaymentFailedEvent:com.ecommerce.paymentservice.event.PaymentFailedEvent
+          PaymentFailedEvent:com.ecommerce.paymentservice.event.PaymentFailedEvent,
+          PaymentCancelledEvent:com.ecommerce.paymentservice.event.PaymentCancelledEvent
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
         spring.json.type.mapping: >-
           PaymentCompletedEvent:com.ecommerce.paymentservice.event.PaymentCompletedEvent,
-          PaymentFailedEvent:com.ecommerce.paymentservice.event.PaymentFailedEvent
+          PaymentFailedEvent:com.ecommerce.paymentservice.event.PaymentFailedEvent,
+          PaymentCancelledEvent:com.ecommerce.paymentservice.event.PaymentCancelledEvent
 
 jwt:
   secret: ${JWT_SECRET:your-256-bit-secret-key-here-minimum-32-characters-required}

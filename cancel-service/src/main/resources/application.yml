@@ -43,7 +43,9 @@ spring:
           CancelRequestedEvent:com.ecommerce.cancelservice.event.CancelRequestedEvent,
           CancelApprovedEvent:com.ecommerce.cancelservice.event.CancelApprovedEvent,
           CancelRejectedEvent:com.ecommerce.cancelservice.event.CancelRejectedEvent,
-          PaymentCancelledEvent:com.ecommerce.cancelservice.event.PaymentCancelledEvent
+          PaymentCancelledEvent:com.ecommerce.cancelservice.event.PaymentCancelledEvent,
+          RefundCompletedEvent:com.ecommerce.cancelservice.event.RefundCompletedEvent,
+          RefundFailedEvent:com.ecommerce.cancelservice.event.RefundFailedEvent
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer

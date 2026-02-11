@@ -4,6 +4,7 @@ import com.ecommerce.paymentservice.entity.Payment;
 import com.ecommerce.paymentservice.entity.ProcessedEvent;
 import com.ecommerce.paymentservice.event.CouponUsedEvent;
 import com.ecommerce.paymentservice.event.OrderCancelledEvent;
+import com.ecommerce.paymentservice.event.PaymentCancelledEvent;
 import com.ecommerce.paymentservice.event.PaymentCompletedEvent;
 import com.ecommerce.paymentservice.event.PaymentFailedEvent;
 import com.ecommerce.paymentservice.repository.PaymentRepository;
@@ -28,7 +29,8 @@ public class PaymentEventConsumer {
     @KafkaListener(topics = "coupon-used", groupId = "payment-service")
     @Transactional
     public void handleCouponUsed(CouponUsedEvent event) {
-        if (isDuplicate(event.getEventId(), "coupon-used")) return;
+        if (isDuplicate(event.getEventId(), "coupon-used"))
+            return;
 
         log.info("Received coupon-used event: orderId={}", event.getOrderId());
 
@@ -74,13 +76,26 @@ public class PaymentEventConsumer {
     @KafkaListener(topics = "order-cancelled", groupId = "payment-service")
     @Transactional
     public void handleOrderCancelled(OrderCancelledEvent event) {
-        if (isDuplicate(event.getEventId(), "order-cancelled")) return;
+        if (isDuplicate(event.getEventId(), "order-cancelled"))
+            return;
 
         log.info("Received order-cancelled event: orderId={}", event.getOrderId());
 
         paymentRepository.findByOrderId(event.getOrderId()).ifPresent(payment -> {
             payment.cancel();
             log.info("Payment cancelled: paymentId={}", payment.getId());
+
+            PaymentCancelledEvent cancelledEvent = PaymentCancelledEvent.builder()
+                    .eventId(UUID.randomUUID().toString())
+                    .paymentId(payment.getId())
+                    .paymentNumber(payment.getPaymentNumber())
+                    .orderId(payment.getOrderId())
+                    .orderNumber(payment.getOrderNumber())
+                    .userId(payment.getUserId())
+                    .amount(payment.getAmount())
+                    .build();
+
+            paymentEventProducer.sendPaymentCancelledEvent(cancelledEvent);
 
             markProcessed(event.getEventId(), "order-cancelled");
         });

@@ -45,7 +45,9 @@ spring:
           StockDecreasedEvent:com.ecommerce.orderservice.event.StockDecreasedEvent,
           StockDecreaseFailedEvent:com.ecommerce.orderservice.event.StockDecreaseFailedEvent,
           CouponUsedEvent:com.ecommerce.orderservice.event.CouponUsedEvent,
-          CouponUseFailedEvent:com.ecommerce.orderservice.event.CouponUseFailedEvent
+          CouponUseFailedEvent:com.ecommerce.orderservice.event.CouponUseFailedEvent,
+          PaymentFailedEvent:com.ecommerce.orderservice.event.PaymentFailedEvent,
+          CancelApprovedEvent:com.ecommerce.orderservice.event.CancelApprovedEvent
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer

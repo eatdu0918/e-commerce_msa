@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -32,14 +33,28 @@ public class OrderEventConsumer {
     @KafkaListener(topics = "stock-decrease-failed", groupId = "order-service")
     @Transactional
     public void handleStockDecreaseFailed(StockDecreaseFailedEvent event) {
-        if (isDuplicate(event.getEventId(), "stock-decrease-failed")) return;
+        if (isDuplicate(event.getEventId(), "stock-decrease-failed"))
+            return;
 
         log.info("Received stock-decrease-failed event: orderId={}, reason={}",
                 event.getOrderId(), event.getReason());
 
-        orderRepository.findById(event.getOrderId()).ifPresent(order -> {
+        orderRepository.findByIdWithItems(event.getOrderId()).ifPresent(order -> {
             if (order.canCancel()) {
                 order.cancel();
+
+                // 재고는 product-service 내부에서 이미 롤백됨
+                // 쿠폰/결제가 진행됐을 수 있으므로 order-cancelled 이벤트 발행
+                OrderCancelledEvent cancelledEvent = OrderCancelledEvent.builder()
+                        .eventId(UUID.randomUUID().toString())
+                        .orderId(order.getId())
+                        .orderNumber(order.getOrderNumber())
+                        .userId(order.getUserId())
+                        .userCouponId(order.getUserCouponId())
+                        .items(Collections.emptyList())
+                        .build();
+
+                orderEventProducer.sendOrderCancelledEvent(cancelledEvent);
                 log.info("주문 취소 완료 (재고 부족): orderId={}", event.getOrderId());
             }
         });
@@ -50,7 +65,8 @@ public class OrderEventConsumer {
     @KafkaListener(topics = "coupon-used", groupId = "order-service")
     @Transactional
     public void handleCouponUsed(CouponUsedEvent event) {
-        if (isDuplicate(event.getEventId(), "coupon-used")) return;
+        if (isDuplicate(event.getEventId(), "coupon-used"))
+            return;
 
         log.info("Received coupon-used event: orderId={}, discountAmount={}",
                 event.getOrderId(), event.getDiscountAmount());
@@ -69,7 +85,8 @@ public class OrderEventConsumer {
     @KafkaListener(topics = "coupon-use-failed", groupId = "order-service")
     @Transactional
     public void handleCouponUseFailed(CouponUseFailedEvent event) {
-        if (isDuplicate(event.getEventId(), "coupon-use-failed")) return;
+        if (isDuplicate(event.getEventId(), "coupon-use-failed"))
+            return;
 
         log.info("Received coupon-use-failed event: orderId={}, reason={}",
                 event.getOrderId(), event.getReason());
@@ -100,6 +117,89 @@ public class OrderEventConsumer {
         });
 
         markProcessed(event.getEventId(), "coupon-use-failed");
+    }
+
+    /**
+     * 결제 실패 시 보상 트랜잭션: 주문 취소 + order-cancelled 이벤트 발행
+     * → product-service: 재고 복원, discount-service: 쿠폰 복원
+     */
+    @KafkaListener(topics = "payment-failed", groupId = "order-service")
+    @Transactional
+    public void handlePaymentFailed(PaymentFailedEvent event) {
+        if (isDuplicate(event.getEventId(), "payment-failed"))
+            return;
+
+        log.info("Received payment-failed event: orderId={}, reason={}",
+                event.getOrderId(), event.getReason());
+
+        orderRepository.findByIdWithItems(event.getOrderId()).ifPresent(order -> {
+            if (order.canCancel()) {
+                order.cancel();
+
+                List<OrderCancelledEvent.OrderItemEvent> items = order.getOrderItems().stream()
+                        .map(item -> OrderCancelledEvent.OrderItemEvent.builder()
+                                .productId(item.getProductId())
+                                .quantity(item.getQuantity())
+                                .build())
+                        .toList();
+
+                OrderCancelledEvent cancelledEvent = OrderCancelledEvent.builder()
+                        .eventId(UUID.randomUUID().toString())
+                        .orderId(order.getId())
+                        .orderNumber(order.getOrderNumber())
+                        .userId(order.getUserId())
+                        .userCouponId(order.getUserCouponId())
+                        .items(items)
+                        .build();
+
+                orderEventProducer.sendOrderCancelledEvent(cancelledEvent);
+                log.info("주문 취소 완료 (결제 실패): orderId={}", event.getOrderId());
+            }
+        });
+
+        markProcessed(event.getEventId(), "payment-failed");
+    }
+
+    /**
+     * 취소 승인 시 보상 트랜잭션: 주문 취소 + order-cancelled 이벤트 발행
+     * → product-service: 재고 복원, discount-service: 쿠폰 복원, payment-service: 결제 취소
+     */
+    @KafkaListener(topics = "cancel-approved", groupId = "order-service")
+    @Transactional
+    public void handleCancelApproved(CancelApprovedEvent event) {
+        if (isDuplicate(event.getEventId(), "cancel-approved"))
+            return;
+
+        log.info("Received cancel-approved event: cancelId={}, orderId={}",
+                event.getCancelId(), event.getOrderId());
+
+        orderRepository.findByIdWithItems(event.getOrderId()).ifPresent(order -> {
+            if (order.canCancel()) {
+                order.cancel();
+
+                List<OrderCancelledEvent.OrderItemEvent> items = order.getOrderItems().stream()
+                        .map(item -> OrderCancelledEvent.OrderItemEvent.builder()
+                                .productId(item.getProductId())
+                                .quantity(item.getQuantity())
+                                .build())
+                        .toList();
+
+                OrderCancelledEvent cancelledEvent = OrderCancelledEvent.builder()
+                        .eventId(UUID.randomUUID().toString())
+                        .orderId(order.getId())
+                        .orderNumber(order.getOrderNumber())
+                        .userId(order.getUserId())
+                        .userCouponId(order.getUserCouponId())
+                        .items(items)
+                        .build();
+
+                orderEventProducer.sendOrderCancelledEvent(cancelledEvent);
+                log.info("주문 취소 완료 (취소 승인): orderId={}, cancelId={}",
+                        event.getOrderId(), event.getCancelId());
+            }
+        });
+
+        markProcessed(event.getEventId(), "cancel-approved");
     }
 
     private boolean isDuplicate(String eventId, String eventType) {
