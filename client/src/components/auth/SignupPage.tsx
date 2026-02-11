@@ -1,171 +1,173 @@
 import { useState } from 'react';
+import { Mail, Lock, User, Phone, MapPin, ArrowLeft } from 'lucide-react';
 import { signup } from '../../api/services/user';
-import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import toast from 'react-hot-toast';
+import { Helmet } from 'react-helmet-async';
 
-interface SignupPageProps {
-    onNavigate: (view: string) => void;
-    onLoginClick: () => void;
-}
+const signupSchema = z.object({
+    email: z.string().email('올바른 이메일 형식이 아닙니다.'),
+    password: z.string().min(6, '비밀번호는 최소 6자 이상이어야 합니다.'),
+    confirmPassword: z.string(),
+    name: z.string().min(2, '이름을 2자 이상 입력해주세요.'),
+    phoneNumber: z.string().regex(/^\d{2,3}-\d{3,4}-\d{4}$/, '올바른 전화번호 형식이 아닙니다. (예: 010-1234-5678)'),
+    address: z.string().min(1, '주소를 입력해주세요.'),
+    gender: z.enum(['MALE', 'FEMALE']),
+}).refine((data) => data.password === data.confirmPassword, {
+    message: "비밀번호가 일치하지 않습니다.",
+    path: ["confirmPassword"],
+});
 
-export default function SignupPage({ onNavigate, onLoginClick }: SignupPageProps) {
-    const { t } = useTranslation();
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [name, setName] = useState('');
-    const [phoneNumber, setPhoneNumber] = useState('');
-    const [gender, setGender] = useState<'MALE' | 'FEMALE'>('MALE');
+type SignupFormValues = z.infer<typeof signupSchema>;
 
-    const [error, setError] = useState('');
+export default function SignupPage() {
+    const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
 
-    // Validation Regex
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
-    const phoneRegex = /^01(?:0|1|[6-9])-(?:\d{3}|\d{4})-\d{4}$/;
+    const { register, handleSubmit, formState: { errors }, setError } = useForm<SignupFormValues>({
+        resolver: zodResolver(signupSchema),
+        defaultValues: {
+            gender: 'MALE'
+        }
+    });
 
-    const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value.replace(/[^0-9]/g, '');
-        if (value.length <= 11) {
-            let formattedValue = value;
-            if (value.length > 3 && value.length <= 7) {
-                formattedValue = `${value.slice(0, 3)}-${value.slice(3)}`;
-            } else if (value.length > 7) {
-                formattedValue = `${value.slice(0, 3)}-${value.slice(3, 7)}-${value.slice(7)}`;
-            }
-            setPhoneNumber(formattedValue);
-        }
-    };
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setError('');
-
-        if (!emailRegex.test(email)) {
-            setError('올바른 이메일 형식이 아닙니다.');
-            return;
-        }
-        if (!passwordRegex.test(password)) {
-            setError('비밀번호는 8자 이상, 영문, 숫자, 특수문자를 포함해야 합니다.');
-            return;
-        }
-        if (!phoneRegex.test(phoneNumber)) {
-            setError('올바른 휴대폰 번호 형식이 아닙니다. (010-XXXX-XXXX)');
-            return;
-        }
-        if (!name) {
-            setError('이름을 입력해주세요.');
-            return;
-        }
-
+    const onSubmit = async (data: SignupFormValues) => {
         setLoading(true);
         try {
-            await signup({ email, password, name, phoneNumber, gender });
-            alert(t('auth.signup_success', '회원가입이 완료되었습니다. 로그인해주세요.'));
-            onLoginClick();
+            await signup({
+                email: data.email,
+                password: data.password,
+                name: data.name,
+                role: 'CUSTOMER',
+                address: data.address,
+                phoneNumber: data.phoneNumber,
+                gender: data.gender
+            });
+            toast.success('회원가입이 완료되었습니다. 로그인해주세요.');
+            navigate('/');
         } catch (err: any) {
-            console.error(err);
-            // Default error message, ideally parse backend error
-            setError(t('auth.signup_failed', '회원가입에 실패했습니다. 입력 정보를 확인해주세요.'));
+            console.error('Signup error:', err);
+            if (err.response?.status === 409) {
+                setError('email', { message: '이미 존재하는 이메일입니다.' });
+            } else {
+                toast.error(err.response?.data?.message || '회원가입 중 오류가 발생했습니다.');
+            }
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen pt-32 pb-24 bg-[#f9f7f2] flex flex-col items-center">
-            <div className="bg-white rounded-[40px] p-12 w-full max-w-lg shadow-sm border border-stone-100 text-left">
-                <h2 className="text-3xl font-bold mb-2">Join Us</h2>
-                <p className="text-stone-500 mb-8">URBAN THREADS의 멤버가 되어보세요.</p>
+        <div className="min-h-screen bg-stone-50 flex flex-col justify-center items-center p-6">
+            <Helmet>
+                <title>Sign Up | Sparta Shop</title>
+                <meta name="description" content="Create your account to start shopping." />
+            </Helmet>
+            <div className="w-full max-w-md bg-white rounded-3xl shadow-xl p-8 md:p-12 relative">
+                <button
+                    onClick={() => navigate(-1)}
+                    className="absolute top-8 left-8 text-stone-400 hover:text-black transition-colors"
+                >
+                    <ArrowLeft size={24} />
+                </button>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-bold text-stone-700 mb-1">이메일</label>
+                <div className="text-center mb-10">
+                    <h1 className="text-3xl font-bold tracking-tight mb-2">Create Account</h1>
+                    <p className="text-stone-500 text-sm">Join Urban Threads today</p>
+                </div>
+
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+                    <div className="relative">
+                        <User className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" size={20} />
+                        <input
+                            type="text"
+                            placeholder="Full Name"
+                            {...register('name')}
+                            className={`w-full pl-12 pr-4 py-3 rounded-xl border focus:outline-none focus:ring-2 transition-all bg-stone-50/50 ${errors.name ? 'border-red-300 focus:ring-red-200' : 'border-stone-200 focus:ring-black'
+                                }`}
+                        />
+                        {errors.name && <p className="text-xs text-red-500 mt-1 ml-1">{errors.name.message}</p>}
+                    </div>
+
+                    <div className="relative">
+                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" size={20} />
                         <input
                             type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-black transition-all"
-                            placeholder="hello@example.com"
-                            required
+                            placeholder="Email Address"
+                            {...register('email')}
+                            className={`w-full pl-12 pr-4 py-3 rounded-xl border focus:outline-none focus:ring-2 transition-all bg-stone-50/50 ${errors.email ? 'border-red-300 focus:ring-red-200' : 'border-stone-200 focus:ring-black'
+                                }`}
                         />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-bold text-stone-700 mb-1">비밀번호</label>
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-black transition-all"
-                            placeholder="8자 이상, 영문/숫자/특수문자 포함"
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-bold text-stone-700 mb-1">이름</label>
-                        <input
-                            type="text"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-black transition-all"
-                            placeholder="홍길동"
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-bold text-stone-700 mb-1">휴대폰 번호</label>
-                        <input
-                            type="text"
-                            value={phoneNumber}
-                            onChange={handlePhoneChange}
-                            className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-black transition-all"
-                            placeholder="010-0000-0000"
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-bold text-stone-700 mb-1">성별</label>
-                        <div className="flex space-x-4">
-                            <label className="flex items-center space-x-2 cursor-pointer">
-                                <input
-                                    type="radio"
-                                    value="MALE"
-                                    checked={gender === 'MALE'}
-                                    onChange={() => setGender('MALE')}
-                                    className="form-radio text-black focus:ring-black"
-                                />
-                                <span>남성</span>
-                            </label>
-                            <label className="flex items-center space-x-2 cursor-pointer">
-                                <input
-                                    type="radio"
-                                    value="FEMALE"
-                                    checked={gender === 'FEMALE'}
-                                    onChange={() => setGender('FEMALE')}
-                                    className="form-radio text-black focus:ring-black"
-                                />
-                                <span>여성</span>
-                            </label>
-                        </div>
+                        {errors.email && <p className="text-xs text-red-500 mt-1 ml-1">{errors.email.message}</p>}
                     </div>
 
-                    {error && <p className="text-red-500 text-sm font-medium">{error}</p>}
+                    <div className="relative">
+                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" size={20} />
+                        <input
+                            type="tel"
+                            placeholder="Phone Number (010-0000-0000)"
+                            {...register('phoneNumber')}
+                            className={`w-full pl-12 pr-4 py-3 rounded-xl border focus:outline-none focus:ring-2 transition-all bg-stone-50/50 ${errors.phoneNumber ? 'border-red-300 focus:ring-red-200' : 'border-stone-200 focus:ring-black'
+                                }`}
+                        />
+                        {errors.phoneNumber && <p className="text-xs text-red-500 mt-1 ml-1">{errors.phoneNumber.message}</p>}
+                    </div>
+
+                    <div className="relative">
+                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" size={20} />
+                        <input
+                            type="text"
+                            placeholder="Address"
+                            {...register('address')}
+                            className={`w-full pl-12 pr-4 py-3 rounded-xl border focus:outline-none focus:ring-2 transition-all bg-stone-50/50 ${errors.address ? 'border-red-300 focus:ring-red-200' : 'border-stone-200 focus:ring-black'
+                                }`}
+                        />
+                        {errors.address && <p className="text-xs text-red-500 mt-1 ml-1">{errors.address.message}</p>}
+                    </div>
+
+                    <div className="relative">
+                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" size={20} />
+                        <input
+                            type="password"
+                            placeholder="Password"
+                            {...register('password')}
+                            className={`w-full pl-12 pr-4 py-3 rounded-xl border focus:outline-none focus:ring-2 transition-all bg-stone-50/50 ${errors.password ? 'border-red-300 focus:ring-red-200' : 'border-stone-200 focus:ring-black'
+                                }`}
+                        />
+                        {errors.password && <p className="text-xs text-red-500 mt-1 ml-1">{errors.password.message}</p>}
+                    </div>
+
+                    <div className="relative">
+                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" size={20} />
+                        <input
+                            type="password"
+                            placeholder="Confirm Password"
+                            {...register('confirmPassword')}
+                            className={`w-full pl-12 pr-4 py-3 rounded-xl border focus:outline-none focus:ring-2 transition-all bg-stone-50/50 ${errors.confirmPassword ? 'border-red-300 focus:ring-red-200' : 'border-stone-200 focus:ring-black'
+                                }`}
+                        />
+                        {errors.confirmPassword && <p className="text-xs text-red-500 mt-1 ml-1">{errors.confirmPassword.message}</p>}
+                    </div>
 
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-black text-white py-4 rounded-xl font-bold text-lg hover:bg-stone-800 transition-colors disabled:opacity-50 mt-4"
+                        className="w-full bg-black text-white py-4 rounded-xl font-bold text-lg hover:bg-stone-800 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100 shadow-xl shadow-stone-200"
                     >
-                        {loading ? '처리가 중입니다...' : '회원가입'}
+                        {loading ? 'Creating Account...' : 'Sign Up'}
                     </button>
                 </form>
 
-                <div className="mt-8 text-center text-stone-500">
-                    이미 계정이 있으신가요? <button onClick={onLoginClick} className="font-bold text-black underline ml-1">로그인</button>
-                </div>
-                <div className="mt-4 text-center">
-                    <button onClick={() => onNavigate('home')} className="text-sm text-stone-400 hover:text-stone-600 transition-colors">
-                        홈으로 돌아가기
-                    </button>
+                <div className="mt-8 text-center">
+                    <p className="text-stone-500 text-sm">
+                        Already have an account?{' '}
+                        <button onClick={() => navigate(-1)} className="text-black font-bold hover:underline">
+                            Log In
+                        </button>
+                    </p>
                 </div>
             </div>
         </div>

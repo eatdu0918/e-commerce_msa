@@ -10,7 +10,7 @@ interface OrderModalProps {
     product: Product;
     quantity: number;
     user: UserResponse;
-    onOrderSuccess: () => void;
+    onOrderSuccess: (orderId: number) => void;
 }
 
 export default function OrderModal({ isOpen, onClose, product, quantity, user, onOrderSuccess }: OrderModalProps) {
@@ -30,7 +30,7 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
         setError('');
 
         try {
-            await createOrder({
+            const newOrder = await createOrder({
                 items: [{
                     productId: product.id,
                     productName: product.name,
@@ -42,7 +42,7 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
                 recipientPhone,
             });
             alert('주문이 완료되었습니다!');
-            onOrderSuccess();
+            onOrderSuccess(newOrder.id);
             onClose();
         } catch (err: any) {
             console.error(err);

@@ -1,53 +1,74 @@
 import { useState } from 'react';
 import { ChevronLeft, Minus, Plus, Heart } from 'lucide-react';
-import type { Product } from '../../types/product';
 import OrderModal from '../order/OrderModal';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getMyProfile } from '../../api/services/user';
 import { addToCart } from '../../api/services/cart';
 import { addToWishlist, removeFromWishlist, isInWishlist } from '../../api/services/wishlist';
 import { useTranslation } from 'react-i18next';
+import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
+import { getProduct } from '../../api/services/product';
+import ReviewList from '../review/ReviewList';
+import ReviewForm from '../review/ReviewForm';
+import { Helmet } from 'react-helmet-async';
 
-interface ProductDetailPageProps {
-    product: Product;
-    onBack: () => void;
-    onLoginRequest: () => void;
-    onCartOpenRequest: () => void;
+interface OutletContextType {
+    openLogin: () => void;
+    openCart: () => void;
 }
 
-export default function ProductDetailPage({ product, onBack, onLoginRequest, onCartOpenRequest }: ProductDetailPageProps) {
+export default function ProductDetailPage() {
     const { t } = useTranslation();
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const { openLogin, openCart } = useOutletContext<OutletContextType>();
+
     const [selectedSize, setSelectedSize] = useState('S');
     const [quantity, setQuantity] = useState(1);
     const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+    const [isReviewFormOpen, setIsReviewFormOpen] = useState(false);
     const queryClient = useQueryClient();
+
+    const { data: product, isLoading } = useQuery({
+        queryKey: ['product', id],
+        queryFn: () => getProduct(Number(id)),
+        enabled: !!id,
+    });
 
     const { data: user } = useQuery({ queryKey: ['user'], queryFn: getMyProfile, retry: false });
 
     const { data: isFavorite } = useQuery({
-        queryKey: ['wishlist-check', product.id],
-        queryFn: () => isInWishlist(product.id),
-        enabled: !!user,
+        queryKey: ['wishlist-check', id],
+        queryFn: () => isInWishlist(Number(id)),
+        enabled: !!user && !!id,
     });
 
     const addCartMutation = useMutation({
-        mutationFn: () => addToCart({ productId: product.id, quantity }),
+        mutationFn: () => addToCart({ productId: Number(id), quantity }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['cart'] });
-            onCartOpenRequest();
+            openCart();
         },
+        onError: (err: any) => {
+            // If 401, prompt login
+            if (err.response?.status === 401) {
+                openLogin();
+            } else {
+                alert('Failed to add to cart');
+            }
+        }
     });
 
     const wishlistMutation = useMutation({
         mutationFn: async () => {
             if (isFavorite) {
-                await removeFromWishlist(product.id);
+                await removeFromWishlist(Number(id));
             } else {
-                await addToWishlist({ productId: product.id });
+                await addToWishlist({ productId: Number(id) });
             }
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['wishlist-check', product.id] });
+            queryClient.invalidateQueries({ queryKey: ['wishlist-check', id] });
             queryClient.invalidateQueries({ queryKey: ['wishlist'] });
         },
     });
@@ -56,7 +77,7 @@ export default function ProductDetailPage({ product, onBack, onLoginRequest, onC
 
     const handleAddToCart = () => {
         if (!user) {
-            onLoginRequest();
+            openLogin();
             return;
         }
         addCartMutation.mutate();
@@ -64,7 +85,7 @@ export default function ProductDetailPage({ product, onBack, onLoginRequest, onC
 
     const handleWishlistToggle = () => {
         if (!user) {
-            onLoginRequest();
+            openLogin();
             return;
         }
         wishlistMutation.mutate();
@@ -72,17 +93,29 @@ export default function ProductDetailPage({ product, onBack, onLoginRequest, onC
 
     const handleBuyClick = () => {
         if (!user) {
-            onLoginRequest();
+            openLogin();
             return;
         }
         setIsOrderModalOpen(true);
     };
 
+    if (isLoading || !product) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen py-16 bg-[#f9f7f2]">
+            <Helmet>
+                <title>{`${product.name} | Sparta Shop`}</title>
+                <meta name="description" content={product.description} />
+            </Helmet>
             <div className="max-w-7xl mx-auto px-6">
                 <button
-                    onClick={onBack}
+                    onClick={() => navigate(-1)}
                     className="flex items-center text-stone-400 hover:text-black transition-colors mb-12 group"
                 >
                     <ChevronLeft size={20} className="mr-2 transition-transform group-hover:-translate-x-1" />
@@ -163,6 +196,29 @@ export default function ProductDetailPage({ product, onBack, onLoginRequest, onC
                         </div>
                     </div>
                 </div>
+
+                <div className="mt-20 border-t border-stone-200 pt-16">
+                    <div className="flex justify-between items-center mb-8">
+                        <h3 className="text-2xl font-bold text-left">Reviews</h3>
+                        {user && !isReviewFormOpen && (
+                            <button
+                                onClick={() => setIsReviewFormOpen(true)}
+                                className="px-6 py-2 bg-black text-white rounded-xl text-sm font-bold hover:bg-stone-800 transition-all"
+                            >
+                                Write a Review
+                            </button>
+                        )}
+                    </div>
+
+                    {isReviewFormOpen && (
+                        <ReviewForm
+                            productId={Number(id)}
+                            onCancel={() => setIsReviewFormOpen(false)}
+                        />
+                    )}
+
+                    <ReviewList productId={Number(id)} />
+                </div>
             </div>
 
             {user && (
@@ -172,35 +228,12 @@ export default function ProductDetailPage({ product, onBack, onLoginRequest, onC
                     product={product}
                     quantity={quantity}
                     user={user}
-                    onOrderSuccess={() => {
-                        alert('결제가 완료되었습니다. 주문 상세 페이지로 이동합니다.');
-                        onBack();
-                        // In a real app, maybe navigate to order history
+                    onOrderSuccess={(orderId) => {
+                        setIsOrderModalOpen(false);
+                        navigate(`/checkout/${orderId}`); // Or wherever we need to go
                     }}
                 />
             )}
-
-            <div className="max-w-7xl mx-auto px-6 mt-20 border-t border-stone-200 pt-16">
-                <h3 className="text-2xl font-bold mb-8 text-left">Reviews ({product.reviews})</h3>
-                <div className="space-y-8">
-                    {/* Mock Reviews - Deterministic based on ID */}
-                    {Array.from({ length: 3 }).map((_, i) => (
-                        <div key={i} className="bg-white p-8 rounded-3xl shadow-sm border border-stone-100 text-left">
-                            <div className="flex items-center space-x-2 mb-4">
-                                <span className="font-bold">User {1000 + product.id + i}</span>
-                                <span className="text-xs text-stone-400">2024.12.{10 + i}</span>
-                            </div>
-                            <div className="flex text-yellow-400 mb-4">
-                                {'★'.repeat(5)}
-                            </div>
-                            <p className="text-stone-600">
-                                This product is amazing! The quality exceeded my expectations.
-                                Highly recommended for anyone looking for {product.category.toLowerCase()} items.
-                            </p>
-                        </div>
-                    ))}
-                </div>
-            </div>
         </div>
     );
 }

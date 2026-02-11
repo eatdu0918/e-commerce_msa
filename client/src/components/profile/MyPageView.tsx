@@ -1,52 +1,26 @@
+```
 import { useTranslation } from 'react-i18next';
-import { ShoppingBag, Heart, Gift, MessageSquare, ChevronRight, User, XCircle, CreditCard } from 'lucide-react';
+import { User, Package, Heart, CreditCard, RotateCcw, Ticket, ChevronRight, Settings } from 'lucide-react';
 import type { UserResponse } from '../../api/services/user';
+import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 
-interface MyPageViewProps {
-    user: UserResponse;
-    onNavigate: (view: string) => void;
-}
-
-export default function MyPageView({ user, onNavigate }: MyPageViewProps) {
+export default function MyPageView() {
     const { t } = useTranslation();
+    const navigate = useNavigate();
+    const queryClient = useQueryClient();
+    const user = queryClient.getQueryData<UserResponse>(['user']);
+
+    if (!user) {
+        return <div className="p-8 text-center">Please log in to view your profile.</div>;
+    }
 
     const menuItems = [
-        {
-            title: t('common.order_tracking'),
-            icon: <ShoppingBag className="text-blue-500" size={24} />,
-            view: 'order',
-            desc: '주문하신 상품의 배송 상태를 확인하세요.'
-        },
-        {
-            title: t('common.wishlist') || '찜 목록',
-            icon: <Heart className="text-red-500" size={24} />,
-            view: 'wishlist',
-            desc: '나중에 구매하려고 찜해둔 상품들입니다.'
-        },
-        {
-            title: t('benefit.title') || '나의 혜택',
-            icon: <Gift className="text-purple-500" size={24} />,
-            view: 'benefit',
-            desc: '쿠폰 및 적립금 혜택을 확인하세요.'
-        },
-        {
-            title: '취소/환불 내역',
-            icon: <XCircle className="text-orange-500" size={24} />,
-            view: 'cancel_refund',
-            desc: '주문 취소 및 환불 처리 현황을 확인하세요.'
-        },
-        {
-            title: '결제 내역',
-            icon: <CreditCard className="text-indigo-500" size={24} />,
-            view: 'payment_history',
-            desc: '결제 이력과 상세 정보를 확인하세요.'
-        },
-        {
-            title: t('activity.title') || '리뷰 관리',
-            icon: <MessageSquare className="text-green-500" size={24} />,
-            view: 'activity',
-            desc: '내가 작성한 소중한 리뷰들을 관리하세요.'
-        }
+        { id: 'orders', label: t('common.order_tracking'), icon: <Package size={24} className="text-blue-500" />, path: '/me/orders', desc: 'Check shipping status' },
+        { id: 'wishlist', label: t('common.wishlist'), icon: <Heart size={24} className="text-red-500" />, path: '/me/wishlist', desc: 'Your saved items' }, 
+        { id: 'coupons', label: 'My Coupons', icon: <Ticket size={24} className="text-purple-500" />, path: '/me/coupons', desc: 'Available coupons' },
+        { id: 'payments', label: 'Payment History', icon: <CreditCard size={24} className="text-indigo-500" />, path: '/me/payments', desc: 'Transaction history' },
+        { id: 'cancel-refund', label: 'Cancel/Refund', icon: <RotateCcw size={24} className="text-orange-500" />, path: '/me/cancel-refund', desc: 'Returns and refunds' },
     ];
 
     return (
@@ -58,24 +32,20 @@ export default function MyPageView({ user, onNavigate }: MyPageViewProps) {
                 </div>
                 <div className="flex-1 text-center md:text-left">
                     <div className="flex flex-col md:flex-row md:items-center md:space-x-3 mb-2">
-                        <h3 className="text-2xl font-bold">{user.name} 님</h3>
+                        <h3 className="text-2xl font-bold">{user.name}</h3>
                         <span className="inline-block px-3 py-1 bg-black text-white text-[10px] font-bold rounded-full w-fit mx-auto md:mx-0">
                             {user.role}
                         </span>
                     </div>
                     <p className="text-stone-400 text-sm mb-6">{user.email}</p>
                     <div className="flex justify-center md:justify-start space-x-12 border-t border-stone-200 pt-6">
-                        <div className="text-center group cursor-pointer" onClick={() => onNavigate('benefit')}>
-                            <p className="text-[10px] font-bold text-stone-400 mb-1">CASH</p>
-                            <p className="font-bold text-lg group-hover:text-blue-600 transition-colors">1,200</p>
-                        </div>
-                        <div className="text-center group cursor-pointer" onClick={() => onNavigate('benefit')}>
+                        <div className="text-center group cursor-pointer" onClick={() => navigate('/me/coupons')}>
                             <p className="text-[10px] font-bold text-stone-400 mb-1">COUPON</p>
-                            <p className="font-bold text-lg group-hover:text-red-600 transition-colors">2</p>
+                            <p className="font-bold text-lg group-hover:text-red-600 transition-colors">0</p>
                         </div>
-                        <div className="text-center group cursor-pointer" onClick={() => onNavigate('activity')}>
-                            <p className="text-[10px] font-bold text-stone-400 mb-1">REVIEW</p>
-                            <p className="font-bold text-lg group-hover:text-green-600 transition-colors">1</p>
+                        <div className="text-center group cursor-pointer">
+                            <p className="text-[10px] font-bold text-stone-400 mb-1">POINTS</p>
+                            <p className="font-bold text-lg group-hover:text-blue-600 transition-colors">0</p>
                         </div>
                     </div>
                 </div>
@@ -84,22 +54,22 @@ export default function MyPageView({ user, onNavigate }: MyPageViewProps) {
             {/* Quick Menu Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {menuItems.map((item) => (
-                    <button
-                        key={item.view}
-                        onClick={() => onNavigate(item.view)}
-                        className="group bg-white p-6 rounded-3xl border border-stone-100 hover:border-stone-300 hover:shadow-md transition-all text-left flex items-start space-x-5"
+                    <div
+                        key={item.id}
+                        onClick={() => navigate(item.path)}
+                        className="bg-white p-6 rounded-2xl shadow-sm border border-stone-100 hover:shadow-md transition-shadow cursor-pointer group flex items-start space-x-5"
                     >
-                        <div className="p-3 bg-stone-50 rounded-2xl group-hover:scale-110 transition-transform">
+                         <div className="p-3 bg-stone-50 rounded-2xl group-hover:scale-110 transition-transform">
                             {item.icon}
                         </div>
                         <div className="flex-1">
                             <h4 className="font-bold mb-1 flex items-center">
-                                {item.title}
+                                {item.label}
                                 <ChevronRight size={16} className="ml-1 text-stone-300 group-hover:translate-x-1 transition-transform" />
                             </h4>
                             <p className="text-xs text-stone-400">{item.desc}</p>
                         </div>
-                    </button>
+                    </div>
                 ))}
             </div>
 
@@ -108,14 +78,14 @@ export default function MyPageView({ user, onNavigate }: MyPageViewProps) {
                 <h4 className="text-[11px] font-bold text-stone-400 uppercase tracking-widest mb-6 px-2">{t('common.my_info')}</h4>
                 <div className="bg-white rounded-3xl border border-stone-100 overflow-hidden divide-y divide-stone-50">
                     <button
-                        onClick={() => onNavigate('edit_profile')}
+                        onClick={() => navigate('/me/profile')}
                         className="w-full px-6 py-5 text-left text-sm hover:bg-stone-50 transition-colors flex justify-between items-center group"
                     >
                         <span className="font-medium">{t('common.edit_profile')}</span>
                         <ChevronRight size={16} className="text-stone-300 group-hover:translate-x-1 transition-transform" />
                     </button>
                     <button className="w-full px-6 py-5 text-left text-sm text-stone-300 cursor-not-allowed flex justify-between items-center">
-                        <span className="font-medium">알림 설정</span>
+                        <span className="font-medium">Notifications</span>
                         <span className="text-[10px] font-bold uppercase tracking-tighter bg-stone-50 px-2 py-0.5 rounded text-stone-300">Coming soon</span>
                     </button>
                 </div>

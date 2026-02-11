@@ -1,40 +1,43 @@
-interface CategoryGridProps {
-    onCategoryClick?: (category: string) => void;
-}
+import { useNavigate } from 'react-router-dom';
 
-export default function CategoryGrid({ onCategoryClick }: CategoryGridProps) {
+export default function CategoryGrid() {
+    const navigate = useNavigate();
     const categories = [
         {
             title: 'Cozy Knitwear',
             subtitle: 'Soften up your look',
             image: '/assets/images/category_knitwear.png',
+            id: 'fashion'
         },
         {
             title: 'Essential Denim',
             subtitle: 'Everyday essentials',
             image: '/assets/images/category_denim.png',
+            id: 'fashion'
         },
         {
             title: 'Curated Decor',
             subtitle: 'Interior inspirations',
             image: '/assets/images/category_decor.png',
+            id: 'home'
         },
         {
             title: 'Active Lifestyle',
             subtitle: 'Keep moving',
             image: '/assets/images/category_lifestyle.png',
+            id: 'fashion'
         },
-
     ];
 
     return (
         <section className="max-w-7xl mx-auto px-6 py-20">
+            <h2 className="text-2xl font-bold tracking-tight mb-10 text-left">SHOP BY CATEGORY</h2>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
                 {categories.map((cat, index) => (
                     <div
                         key={index}
                         className="group cursor-pointer"
-                        onClick={() => onCategoryClick?.(cat.title)}
+                        onClick={() => navigate(`/shop?category=${cat.id}`)}
                     >
                         <div className="aspect-square bg-[#ece8e2] rounded-2xl p-8 mb-4 transition-transform duration-500 group-hover:scale-[1.02]">
                             <img
@@ -51,4 +54,3 @@ export default function CategoryGrid({ onCategoryClick }: CategoryGridProps) {
         </section>
     );
 }
-

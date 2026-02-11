@@ -11,6 +11,8 @@ export interface SignupRequest {
     name: string;
     phoneNumber: string;
     gender: 'MALE' | 'FEMALE';
+    address: string;
+    role: string;
 }
 
 export interface LoginResponse {
@@ -26,6 +28,8 @@ export interface UserResponse {
     email: string;
     name: string;
     phoneNumber: string;
+    address?: string;
+    gender?: 'MALE' | 'FEMALE';
     role: string;
     isActive: boolean;
     createdAt: string;
@@ -34,7 +38,8 @@ export interface UserResponse {
 export interface UpdateProfileRequest {
     name: string;
     phoneNumber: string;
-    gender: 'MALE' | 'FEMALE';
+    address?: string;
+    gender?: 'MALE' | 'FEMALE';
 }
 
 export const login = async (data: LoginRequest): Promise<LoginResponse> => {

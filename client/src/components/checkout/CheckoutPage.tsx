@@ -8,12 +8,12 @@ import { getAvailableCoupons, calculateDiscount } from '../../api/services/coupo
 import type { UserCouponResponse, DiscountCalculationResponse } from '../../api/services/coupon';
 import { createPayment } from '../../api/services/payment';
 
-interface CheckoutPageProps {
-    onBack: () => void;
-    onOrderComplete: (orderId: number) => void;
-}
+import { useNavigate } from 'react-router-dom';
 
-export default function CheckoutPage({ onBack, onOrderComplete }: CheckoutPageProps) {
+export default function CheckoutPage() {
+    const navigate = useNavigate();
+    const onBack = () => navigate(-1);
+    const onOrderComplete = (orderId: number) => navigate(`/order/complete/${orderId}`);
     const queryClient = useQueryClient();
 
     const [shippingAddress, setShippingAddress] = useState('');

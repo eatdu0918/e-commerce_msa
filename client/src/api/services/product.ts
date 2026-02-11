@@ -61,10 +61,11 @@ const transformProduct = (serverProduct: ProductResponse): Product => {
     };
 };
 
-export const fetchProducts = async (page = 0, size = 10, categoryId?: number, sort?: string): Promise<PageResponse<Product>> => {
+export const fetchProducts = async (page = 0, size = 10, categoryId?: number, sort?: string, keyword?: string): Promise<PageResponse<Product>> => {
     const params: any = { page, size };
     if (categoryId) params.categoryId = categoryId;
     if (sort) params.sort = sort;
+    if (keyword) params.keyword = keyword;
 
     const response = await api.get<{ data: PageResponse<ProductResponse> }>('/api/products', { params });
     const pageData = response.data.data;

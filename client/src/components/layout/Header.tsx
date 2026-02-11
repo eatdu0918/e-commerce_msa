@@ -3,13 +3,12 @@ import { useState, useEffect, useRef } from 'react';
 import type { UserResponse } from '../../api/services/user';
 import LanguageSwitcher from '../LanguageSwitcher';
 import { useTranslation } from 'react-i18next';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface HeaderProps {
     category: string;
     setCategory: (category: string) => void;
     categories: string[];
-    onNavigate: (view: string) => void;
-    view?: string;
     user?: UserResponse;
     onLoginClick: () => void;
     onLogoutClick: () => void;
@@ -17,14 +16,19 @@ interface HeaderProps {
     cartCount?: number;
 }
 
-export default function Header({ category, setCategory, categories, onNavigate, view, user, onLoginClick, onLogoutClick, onCartClick, cartCount = 0 }: HeaderProps) {
+export default function Header({ category, setCategory, categories, user, onLoginClick, onLogoutClick, onCartClick, cartCount = 0 }: HeaderProps) {
     const { t } = useTranslation();
+    const navigate = useNavigate();
+    const location = useLocation();
 
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [userDropdownOpen, setUserDropdownOpen] = useState(false);
     const [notificationOpen, setNotificationOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const notificationRef = useRef<HTMLDivElement>(null);
+
+    // Derive active view from location
+    const isActive = (path: string) => location.pathname === path;
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -39,6 +43,12 @@ export default function Header({ category, setCategory, categories, onNavigate, 
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    const handleNavigate = (path: string) => {
+        navigate(path);
+        setUserDropdownOpen(false);
+        setMobileMenuOpen(false);
+    };
+
     return (
         <nav className="sticky top-0 z-[100] bg-white/80 backdrop-blur-md border-b border-stone-200">
             <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -46,7 +56,7 @@ export default function Header({ category, setCategory, categories, onNavigate, 
                     className="text-xl font-bold tracking-tighter cursor-pointer"
                     onClick={() => {
                         setCategory(t('common.category_all'));
-                        onNavigate('home');
+                        handleNavigate('/');
                     }}
                 >
                     URBAN THREADS
@@ -54,8 +64,8 @@ export default function Header({ category, setCategory, categories, onNavigate, 
 
                 <div className="hidden md:flex space-x-8 text-sm font-medium text-stone-600">
                     <button
-                        onClick={() => onNavigate('all_products')}
-                        className={`hover:text-black transition-colors ${view === 'all_products' ? 'text-black font-bold' : ''}`}
+                        onClick={() => handleNavigate('/shop')}
+                        className={`hover:text-black transition-colors ${isActive('/shop') ? 'text-black font-bold' : ''}`}
                     >
                         SHOP ALL
                     </button>
@@ -64,7 +74,7 @@ export default function Header({ category, setCategory, categories, onNavigate, 
                             key={cat}
                             onClick={() => {
                                 setCategory(cat);
-                                onNavigate('home');
+                                handleNavigate('/');
                             }}
                             className={`hover:text-black transition-colors ${category === cat ? 'text-black' : ''
                                 }`}
@@ -77,7 +87,27 @@ export default function Header({ category, setCategory, categories, onNavigate, 
 
                 <div className="flex items-center space-x-1 md:space-x-4">
                     <LanguageSwitcher />
-                    <button className="p-2 hover:bg-stone-100 rounded-full transition-colors">
+                    <form
+                        onSubmit={(e) => {
+                            e.preventDefault();
+                            const formData = new FormData(e.currentTarget);
+                            const keyword = formData.get('keyword') as string;
+                            if (keyword.trim()) {
+                                navigate(`/shop?keyword=${encodeURIComponent(keyword.trim())}`);
+                                setCategory(t('common.category_all'));
+                            }
+                        }}
+                        className="hidden md:flex items-center bg-stone-100 rounded-full px-3 py-1.5 focus-within:ring-2 focus-within:ring-black/5"
+                    >
+                        <Search size={16} className="text-stone-400 mr-2" />
+                        <input
+                            name="keyword"
+                            type="text"
+                            placeholder={t('common.search') || 'Search'}
+                            className="bg-transparent border-none focus:ring-0 text-sm w-32 focus:w-48 transition-all placeholder-stone-400"
+                        />
+                    </form>
+                    <button className="md:hidden p-2 hover:bg-stone-100 rounded-full transition-colors">
                         <Search size={20} strokeWidth={2} />
                     </button>
 
@@ -111,30 +141,21 @@ export default function Header({ category, setCategory, categories, onNavigate, 
                                                 <ul className="space-y-3 text-sm text-left">
                                                     <li
                                                         className="flex justify-between items-center cursor-pointer hover:text-black transition-colors"
-                                                        onClick={() => {
-                                                            onNavigate('mypage');
-                                                            setUserDropdownOpen(false);
-                                                        }}
+                                                        onClick={() => handleNavigate('/me')}
                                                     >
                                                         <span className="font-bold text-blue-600">{t('common.my_page')}</span>
                                                         <ChevronRight size={14} className="text-stone-300" />
                                                     </li>
                                                     <li
                                                         className="flex justify-between items-center cursor-pointer hover:text-blue-600 transition-colors"
-                                                        onClick={() => {
-                                                            onNavigate('order');
-                                                            setUserDropdownOpen(false);
-                                                        }}
+                                                        onClick={() => handleNavigate('/me/orders')}
                                                     >
                                                         <span>{t('common.order_tracking')}</span>
                                                         <span className="text-xs bg-stone-100 px-2 py-0.5 rounded text-stone-500 font-medium">3건</span>
                                                     </li>
                                                     <li
                                                         className="flex justify-between items-center cursor-pointer hover:text-red-600 transition-colors"
-                                                        onClick={() => {
-                                                            onNavigate('wishlist');
-                                                            setUserDropdownOpen(false);
-                                                        }}
+                                                        onClick={() => handleNavigate('/me/wishlist')}
                                                     >
                                                         <span>{t('common.wishlist') || '찜한 상품'}</span>
                                                         <span className="text-xs bg-stone-100 px-2 py-0.5 rounded text-stone-500 font-medium">{cartCount > 0 ? '●' : ''}</span>
@@ -146,10 +167,7 @@ export default function Header({ category, setCategory, categories, onNavigate, 
                                                 <ul className="space-y-3 text-sm">
                                                     <li
                                                         className="cursor-pointer hover:text-black transition-colors"
-                                                        onClick={() => {
-                                                            onNavigate('edit_profile');
-                                                            setUserDropdownOpen(false);
-                                                        }}
+                                                        onClick={() => handleNavigate('/me/profile')}
                                                     >
                                                         {t('common.edit_profile')}
                                                     </li>
@@ -233,11 +251,8 @@ export default function Header({ category, setCategory, categories, onNavigate, 
                 <div className="md:hidden bg-white border-t border-stone-200 py-4 px-6">
                     <div className="flex flex-col space-y-4 text-sm font-medium text-stone-600 text-left">
                         <button
-                            onClick={() => {
-                                onNavigate('all_products');
-                                setMobileMenuOpen(false);
-                            }}
-                            className={`hover:text-black transition-colors ${view === 'all_products' ? 'text-black' : ''}`}
+                            onClick={() => handleNavigate('/shop')}
+                            className={`hover:text-black transition-colors ${isActive('/shop') ? 'text-black' : ''}`}
                         >
                             SHOP ALL
                         </button>
@@ -246,8 +261,7 @@ export default function Header({ category, setCategory, categories, onNavigate, 
                                 key={cat}
                                 onClick={() => {
                                     setCategory(cat);
-                                    setMobileMenuOpen(false);
-                                    onNavigate('home');
+                                    handleNavigate('/');
                                 }}
                                 className={`text-left hover:text-black transition-colors ${category === cat ? 'text-black' : ''
                                     }`}

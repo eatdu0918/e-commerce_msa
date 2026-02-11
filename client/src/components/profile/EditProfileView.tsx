@@ -1,34 +1,46 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { User, Phone, Mail, ChevronLeft } from 'lucide-react';
+import { User, Phone, Mail, ArrowLeft } from 'lucide-react';
 import type { UserResponse, UpdateProfileRequest } from '../../api/services/user';
 import { updateProfile } from '../../api/services/user';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
-interface EditProfileViewProps {
-    user: UserResponse;
-    onBack: () => void;
-}
-
-export default function EditProfileView({ user, onBack }: EditProfileViewProps) {
+export default function EditProfileView() {
     const { t } = useTranslation();
+    const navigate = useNavigate();
     const queryClient = useQueryClient();
 
+    const user = queryClient.getQueryData<UserResponse>(['user']);
+
     const [form, setForm] = useState<UpdateProfileRequest>({
-        name: user.name,
-        phoneNumber: user.phoneNumber || '',
-        gender: 'MALE'
+        name: '',
+        phoneNumber: '',
+        address: '',
+        gender: 'MALE',
     });
 
+    useEffect(() => {
+        if (user) {
+            setForm({
+                name: user.name || '',
+                phoneNumber: user.phoneNumber || '',
+                address: user.address || '',
+                gender: user.gender || 'MALE',
+            });
+        }
+    }, [user]);
+
     const mutation = useMutation({
-        mutationFn: updateProfile,
+        mutationFn: (data: UpdateProfileRequest) => updateProfile(data),
         onSuccess: (data) => {
             queryClient.setQueryData(['user'], data);
-            alert(t('profile.success'));
-            onBack();
+            toast.success(t('profile.success') || 'Profile updated successfully');
+            navigate(-1);
         },
         onError: () => {
-            alert(t('profile.error'));
+            toast.error(t('profile.error') || 'Failed to update profile');
         }
     });
 
@@ -37,16 +49,18 @@ export default function EditProfileView({ user, onBack }: EditProfileViewProps) 
         mutation.mutate(form);
     };
 
+    if (!user) return <div>Loading...</div>;
+
     return (
         <div className="max-w-xl mx-auto">
             <div className="flex items-center mb-8">
                 <button
-                    onClick={onBack}
+                    onClick={() => navigate(-1)}
                     className="p-2 hover:bg-stone-100 rounded-full transition-colors mr-2"
                 >
-                    <ChevronLeft size={20} />
+                    <ArrowLeft size={24} />
                 </button>
-                <h3 className="text-2xl font-bold">{t('profile.title')}</h3>
+                <h1 className="text-2xl font-bold tracking-tight">{t('common.edit_profile')}</h1>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6 text-left">
@@ -111,8 +125,8 @@ export default function EditProfileView({ user, onBack }: EditProfileViewProps) 
                             type="button"
                             onClick={() => setForm({ ...form, gender: 'MALE' })}
                             className={`py-4 rounded-2xl border text-sm font-medium transition-all ${form.gender === 'MALE'
-                                    ? 'bg-black text-white border-black'
-                                    : 'bg-white text-stone-400 border-stone-200 hover:border-stone-400'
+                                ? 'bg-black text-white border-black'
+                                : 'bg-white text-stone-400 border-stone-200 hover:border-stone-400'
                                 }`}
                         >
                             {t('profile.male')}
@@ -121,8 +135,8 @@ export default function EditProfileView({ user, onBack }: EditProfileViewProps) 
                             type="button"
                             onClick={() => setForm({ ...form, gender: 'FEMALE' })}
                             className={`py-4 rounded-2xl border text-sm font-medium transition-all ${form.gender === 'FEMALE'
-                                    ? 'bg-black text-white border-black'
-                                    : 'bg-white text-stone-400 border-stone-200 hover:border-stone-400'
+                                ? 'bg-black text-white border-black'
+                                : 'bg-white text-stone-400 border-stone-200 hover:border-stone-400'
                                 }`}
                         >
                             {t('profile.female')}
@@ -133,7 +147,7 @@ export default function EditProfileView({ user, onBack }: EditProfileViewProps) 
                 <div className="pt-6 flex space-x-3">
                     <button
                         type="button"
-                        onClick={onBack}
+                        onClick={() => navigate(-1)}
                         className="flex-1 py-4 bg-stone-100 text-stone-600 rounded-2xl text-sm font-bold hover:bg-stone-200 transition-colors"
                     >
                         {t('profile.cancel')}

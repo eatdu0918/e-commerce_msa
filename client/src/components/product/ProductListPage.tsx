@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import type { Product } from '../../types/product';
+import { useState, useEffect } from 'react';
+
 import ProductCard from './ProductCard';
 import { useQuery } from '@tanstack/react-query';
 import { fetchProducts } from '../../api/services/product';
@@ -8,8 +8,15 @@ import { fetchProducts } from '../../api/services/product';
 
 import { useTranslation } from 'react-i18next';
 
-export default function ProductListPage({ onProductClick }: { onProductClick: (product: Product) => void }) {
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
+
+export default function ProductListPage() {
     const { t } = useTranslation();
+    const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const keyword = searchParams.get('keyword') || undefined;
+
     const [currentFilter, setCurrentFilter] = useState('all');
     const [currentSort, setCurrentSort] = useState('new');
     const [page, setPage] = useState(0);
@@ -26,6 +33,11 @@ export default function ProductListPage({ onProductClick }: { onProductClick: (p
         setCurrentSort(sort);
         setPage(0);
     };
+
+    // Reset page when keyword changes
+    useEffect(() => {
+        setPage(0);
+    }, [keyword]);
 
     // Map frontend sort to backend sort
     const getBackendSort = (sort: string) => {
@@ -58,8 +70,8 @@ export default function ProductListPage({ onProductClick }: { onProductClick: (p
     };
 
     const { data: productsPage, isLoading } = useQuery({
-        queryKey: ['products', page, currentFilter, currentSort],
-        queryFn: () => fetchProducts(page, pageSize, getCategoryId(currentFilter), getBackendSort(currentSort)),
+        queryKey: ['products', page, currentFilter, currentSort, keyword],
+        queryFn: () => fetchProducts(page, pageSize, getCategoryId(currentFilter), getBackendSort(currentSort), keyword),
     });
 
     const products = productsPage?.content || [];
@@ -67,6 +79,10 @@ export default function ProductListPage({ onProductClick }: { onProductClick: (p
 
     return (
         <div className="min-h-screen py-20 bg-[#f9f7f2]">
+            <Helmet>
+                <title>{keyword ? `Search: ${keyword} | Sparta Shop` : 'Shop All | Sparta Shop'}</title>
+                <meta name="description" content="Explore our complete collection of premium products." />
+            </Helmet>
             <div className="max-w-7xl mx-auto px-6">
                 <header className="mb-16 text-left">
                     <h2 className="text-5xl font-bold tracking-tight mb-4">{t('common.shop_all')}</h2>
@@ -112,7 +128,7 @@ export default function ProductListPage({ onProductClick }: { onProductClick: (p
                     <>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-12">
                             {products.map(product => (
-                                <div key={product.id} onClick={() => onProductClick(product)} className="cursor-pointer">
+                                <div key={product.id} onClick={() => navigate(`/product/${product.id}`)} className="cursor-pointer">
                                     <ProductCard product={product} />
                                 </div>
                             ))}

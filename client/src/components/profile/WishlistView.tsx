@@ -4,16 +4,15 @@ import { getWishlist, removeFromWishlist } from '../../api/services/wishlist';
 import { addToCart } from '../../api/services/cart';
 import type { WishlistItemResponse } from '../../api/services/wishlist';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
-interface WishlistViewProps {
-    onProductClick: (productId: number) => void;
-}
-
-export default function WishlistView({ onProductClick }: WishlistViewProps) {
+export default function WishlistView() {
     const { t } = useTranslation();
+    const navigate = useNavigate();
     const queryClient = useQueryClient();
 
-    const { data: wishlist, isLoading } = useQuery<WishlistItemResponse[]>({
+    const { data: wishlistItems, isLoading } = useQuery<WishlistItemResponse[]>({
         queryKey: ['wishlist'],
         queryFn: getWishlist,
     });
@@ -29,7 +28,7 @@ export default function WishlistView({ onProductClick }: WishlistViewProps) {
         mutationFn: (productId: number) => addToCart({ productId, quantity: 1 }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['cart'] });
-            alert(t('cart.wish_to_cart_success'));
+            toast.success(t('cart.wish_to_cart_success') || '장바구니에 담겼습니다.');
         },
     });
 
@@ -41,7 +40,7 @@ export default function WishlistView({ onProductClick }: WishlistViewProps) {
         );
     }
 
-    if (!wishlist || wishlist.length === 0) {
+    if (!wishlistItems || wishlistItems.length === 0) {
         return (
             <div className="text-center py-20 text-stone-500">
                 <div className="w-16 h-16 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -54,14 +53,14 @@ export default function WishlistView({ onProductClick }: WishlistViewProps) {
 
     return (
         <div className="grid gap-6">
-            {wishlist.map((item) => (
+            {wishlistItems.map((item) => (
                 <div
                     key={item.wishlistItemId}
                     className="group bg-white border border-stone-100 p-6 rounded-[30px] flex items-center space-x-6 hover:shadow-md transition-all"
                 >
                     <div
                         className="w-24 h-24 bg-stone-100 rounded-2xl overflow-hidden cursor-pointer flex-shrink-0"
-                        onClick={() => onProductClick(item.productId)}
+                        onClick={() => navigate(`/product/${item.productId}`)}
                     >
                         {item.imageUrl ? (
                             <img
@@ -81,7 +80,7 @@ export default function WishlistView({ onProductClick }: WishlistViewProps) {
                             <div>
                                 <h4
                                     className="font-bold text-lg cursor-pointer hover:text-stone-600 transition-colors line-clamp-1"
-                                    onClick={() => onProductClick(item.productId)}
+                                    onClick={() => navigate(`/product/${item.productId}`)}
                                 >
                                     {item.productName}
                                 </h4>
@@ -106,7 +105,7 @@ export default function WishlistView({ onProductClick }: WishlistViewProps) {
                                     <ShoppingBag size={18} />
                                 </button>
                                 <button
-                                    onClick={() => onProductClick(item.productId)}
+                                    onClick={() => navigate(`/product/${item.productId}`)}
                                     className="p-2 bg-stone-50 text-stone-500 hover:bg-stone-900 hover:text-white rounded-full transition-all"
                                 >
                                     <ChevronRight size={18} />

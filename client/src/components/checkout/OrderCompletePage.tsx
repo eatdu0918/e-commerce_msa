@@ -1,12 +1,14 @@
 import { CheckCircle, ShoppingBag, ChevronRight } from 'lucide-react';
 
-interface OrderCompletePageProps {
-    orderId: number;
-    onGoHome: () => void;
-    onViewOrder: (orderId: number) => void;
-}
+import { useNavigate, useParams } from 'react-router-dom';
 
-export default function OrderCompletePage({ orderId, onGoHome, onViewOrder }: OrderCompletePageProps) {
+export default function OrderCompletePage() {
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const orderId = Number(id);
+
+    const onGoHome = () => navigate('/');
+    const onViewOrder = (orderId: number) => navigate(`/me/orders/${orderId}`);
     return (
         <div className="min-h-screen pt-12 pb-24 bg-[#f9f7f2]">
             <div className="max-w-lg mx-auto px-6 text-center">
