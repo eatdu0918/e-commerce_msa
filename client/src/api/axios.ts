@@ -30,6 +30,11 @@ api.interceptors.response.use(
         if (error.response?.status === 401) {
             // Redirect to login or refresh token logic
             console.warn('Unauthorized access. Redirecting to login...');
+            sessionStorage.removeItem('accessToken');
+            sessionStorage.removeItem('refreshToken');
+            // Force redirect to login page (or trigger existing auth flow)
+            // Since we use a modal or might want a full redirect:
+            window.location.href = '/?login=true';
         }
         return Promise.reject(error);
     }

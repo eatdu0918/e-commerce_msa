@@ -1,5 +1,6 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Outlet } from 'react-router-dom';
 import RootLayout from './components/layout/RootLayout';
+import AuthGuard from './components/auth/AuthGuard';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from '@tanstack/react-query';
 import { getMyProfile } from './api/services/user';
@@ -44,14 +45,17 @@ function App() {
           <Route path="/order/complete/:id" element={<OrderCompletePage />} />
 
           {/* User Routes - In real app, wrap in AuthGuard */}
-          <Route path="/me" element={<MyPageView />} />
-          <Route path="/me/profile" element={<EditProfileView />} />
-          <Route path="/me/wishlist" element={<WishlistView />} />
-          <Route path="/me/orders" element={<OrderListView />} />
-          <Route path="/me/orders/:id" element={<OrderDetailView />} />
-          <Route path="/me/coupons" element={<CouponView />} />
-          <Route path="/me/cancel-refund" element={<CancelRefundView />} />
-          <Route path="/me/payments" element={<PaymentHistoryView />} />
+          <Route element={<AuthGuard><Outlet /></AuthGuard>}>
+            <Route path="/me" element={<MyPageView />} />
+            <Route path="/me/profile" element={<EditProfileView />} />
+            <Route path="/me/wishlist" element={<WishlistView />} />
+            <Route path="/me/orders" element={<OrderListView />} />
+            <Route path="/me/orders/:id" element={<OrderDetailView />} />
+            <Route path="/me/coupons" element={<CouponView />} />
+            <Route path="/me/cancel-refund" element={<CancelRefundView />} />
+            <Route path="/me/payments" element={<PaymentHistoryView />} />
+          </Route>
+
         </Route>
 
         <Route path="/signup" element={<SignupPage />} />

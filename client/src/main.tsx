@@ -7,6 +7,7 @@ import { Toaster } from 'react-hot-toast';
 import './index.css'
 import './i18n';
 import App from './App.tsx'
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 const queryClient = new QueryClient();
 
@@ -14,10 +15,12 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <HelmetProvider>
-        <BrowserRouter>
-          <App />
-          <Toaster position="top-center" />
-        </BrowserRouter>
+        <ErrorBoundary>
+          <BrowserRouter>
+            <App />
+            <Toaster position="top-center" />
+          </BrowserRouter>
+        </ErrorBoundary>
       </HelmetProvider>
     </QueryClientProvider>
   </StrictMode>,
