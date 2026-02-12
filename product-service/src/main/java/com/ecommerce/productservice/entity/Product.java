@@ -7,6 +7,9 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import com.ecommerce.productservice.exception.ProductDomainException;
+import com.ecommerce.productservice.exception.ProductDomainExceptionCode;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -87,7 +90,7 @@ public class Product extends BaseEntity {
 
     public void decreaseStock(int quantity) {
         if (this.stockQuantity < quantity) {
-            throw new IllegalArgumentException("재고가 부족합니다.");
+            throw new ProductDomainException(ProductDomainExceptionCode.InsufficientStockException);
         }
         this.stockQuantity -= quantity;
     }

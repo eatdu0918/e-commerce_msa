@@ -19,18 +19,18 @@ public class PaymentEventProducer {
     public void sendPaymentCompletedEvent(PaymentCompletedEvent event) {
         log.info("Publishing payment-completed event: paymentId={}, orderNumber={}",
                 event.getPaymentId(), event.getOrderNumber());
-        kafkaTemplate.send(KafkaConfig.TOPIC_PAYMENT_COMPLETED, event.getPaymentNumber(), event);
+        kafkaTemplate.send(KafkaConfig.TOPIC_PAYMENT_COMPLETED, event.getOrderNumber(), event);
     }
 
     public void sendPaymentFailedEvent(PaymentFailedEvent event) {
         log.info("Publishing payment-failed event: paymentId={}, orderNumber={}",
                 event.getPaymentId(), event.getOrderNumber());
-        kafkaTemplate.send(KafkaConfig.TOPIC_PAYMENT_FAILED, event.getPaymentNumber(), event);
+        kafkaTemplate.send(KafkaConfig.TOPIC_PAYMENT_FAILED, event.getOrderNumber(), event);
     }
 
     public void sendPaymentCancelledEvent(PaymentCancelledEvent event) {
         log.info("Publishing payment-cancelled event: paymentId={}, orderNumber={}",
                 event.getPaymentId(), event.getOrderNumber());
-        kafkaTemplate.send(KafkaConfig.TOPIC_PAYMENT_CANCELLED, event.getPaymentNumber(), event);
+        kafkaTemplate.send(KafkaConfig.TOPIC_PAYMENT_CANCELLED, event.getOrderNumber(), event);
     }
 }

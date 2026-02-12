@@ -19,18 +19,18 @@ public class CancelEventProducer {
     public void sendCancelRequestedEvent(CancelRequestedEvent event) {
         log.info("Publishing cancel-requested event: cancelId={}, orderNumber={}",
                 event.getCancelId(), event.getOrderNumber());
-        kafkaTemplate.send(KafkaConfig.TOPIC_CANCEL_REQUESTED, event.getCancelNumber(), event);
+        kafkaTemplate.send(KafkaConfig.TOPIC_CANCEL_REQUESTED, event.getOrderNumber(), event);
     }
 
     public void sendCancelApprovedEvent(CancelApprovedEvent event) {
         log.info("Publishing cancel-approved event: cancelId={}, orderNumber={}",
                 event.getCancelId(), event.getOrderNumber());
-        kafkaTemplate.send(KafkaConfig.TOPIC_CANCEL_APPROVED, event.getCancelNumber(), event);
+        kafkaTemplate.send(KafkaConfig.TOPIC_CANCEL_APPROVED, event.getOrderNumber(), event);
     }
 
     public void sendCancelRejectedEvent(CancelRejectedEvent event) {
         log.info("Publishing cancel-rejected event: cancelId={}, orderNumber={}",
                 event.getCancelId(), event.getOrderNumber());
-        kafkaTemplate.send(KafkaConfig.TOPIC_CANCEL_REJECTED, event.getCancelNumber(), event);
+        kafkaTemplate.send(KafkaConfig.TOPIC_CANCEL_REJECTED, event.getOrderNumber(), event);
     }
 }

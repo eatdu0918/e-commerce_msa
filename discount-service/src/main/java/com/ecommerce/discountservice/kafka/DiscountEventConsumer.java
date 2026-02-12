@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -24,6 +25,7 @@ public class DiscountEventConsumer {
     private final ProcessedEventRepository processedEventRepository;
 
     @KafkaListener(topics = "stock-decreased", groupId = "discount-service")
+    @Transactional
     public void handleStockDecreased(StockDecreasedEvent event) {
         if (isDuplicate(event.getEventId(), "stock-decreased")) return;
 
@@ -92,6 +94,7 @@ public class DiscountEventConsumer {
     }
 
     @KafkaListener(topics = "order-cancelled", groupId = "discount-service")
+    @Transactional
     public void handleOrderCancelled(OrderCancelledEvent event) {
         if (isDuplicate(event.getEventId(), "order-cancelled")) return;
 

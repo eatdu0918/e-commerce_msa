@@ -18,12 +18,12 @@ public class RefundEventProducer {
     public void sendRefundCompletedEvent(RefundCompletedEvent event) {
         log.info("Publishing refund-completed event: refundId={}, orderId={}",
                 event.getRefundId(), event.getOrderId());
-        kafkaTemplate.send(KafkaConfig.TOPIC_REFUND_COMPLETED, event.getRefundNumber(), event);
+        kafkaTemplate.send(KafkaConfig.TOPIC_REFUND_COMPLETED, event.getOrderId().toString(), event);
     }
 
     public void sendRefundFailedEvent(RefundFailedEvent event) {
         log.info("Publishing refund-failed event: refundId={}, orderId={}",
                 event.getRefundId(), event.getOrderId());
-        kafkaTemplate.send(KafkaConfig.TOPIC_REFUND_FAILED, event.getRefundNumber(), event);
+        kafkaTemplate.send(KafkaConfig.TOPIC_REFUND_FAILED, event.getOrderId().toString(), event);
     }
 }

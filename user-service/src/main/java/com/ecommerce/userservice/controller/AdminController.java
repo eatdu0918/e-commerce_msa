@@ -1,14 +1,16 @@
 package com.ecommerce.userservice.controller;
 
+import com.ecommerce.userservice.dto.response.PageResponse;
 import com.ecommerce.userservice.dto.response.UserResponse;
 import com.ecommerce.userservice.response.ApiResponse;
 import com.ecommerce.userservice.service.AdminService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -20,9 +22,10 @@ public class AdminController {
     private final AdminService adminService;
 
     @GetMapping("/users")
-    public ApiResponse<List<UserResponse>> getAllUsers() {
+    public ApiResponse<PageResponse<UserResponse>> getAllUsers(
+            @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
         log.info("GET /api/admin/users - 전체 회원 조회");
-        return ApiResponse.success(adminService.getAllUsers());
+        return ApiResponse.success(adminService.getAllUsers(pageable));
     }
 
     @GetMapping("/users/{userId}")

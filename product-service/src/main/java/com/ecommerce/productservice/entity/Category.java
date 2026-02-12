@@ -7,6 +7,7 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,6 +50,9 @@ public class Category extends BaseEntity {
     @Builder.Default
     Boolean isActive = true;
 
+    @Column(name = "deleted_at")
+    LocalDateTime deletedAt;
+
     public static Category create(String name, String description, Category parent, Integer displayOrder) {
         return Category.builder()
                 .name(name)
@@ -67,9 +71,11 @@ public class Category extends BaseEntity {
 
     public void deactivate() {
         this.isActive = false;
+        this.deletedAt = LocalDateTime.now();
     }
 
     public void activate() {
         this.isActive = true;
+        this.deletedAt = null;
     }
 }

@@ -13,6 +13,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +27,7 @@ public class CartService {
     private final ProductService productService;
 
     private static final String CART_KEY_PREFIX = "cart:";
+    private static final Duration CART_TTL = Duration.ofDays(30);
 
     public CartResponse getCart(Long userId) {
         String key = CART_KEY_PREFIX + userId;
@@ -67,6 +69,7 @@ public class CartService {
         }
 
         redisTemplate.opsForHash().put(key, productIdStr, String.valueOf(newQuantity));
+        redisTemplate.expire(key, CART_TTL);
         return buildCartItemResponse(product, newQuantity);
     }
 
@@ -82,6 +85,7 @@ public class CartService {
 
         Product product = productService.getActiveProduct(productId);
         redisTemplate.opsForHash().put(key, productIdStr, String.valueOf(request.getQuantity()));
+        redisTemplate.expire(key, CART_TTL);
 
         log.info("장바구니 수량 수정 완료: productId={}, newQuantity={}", productId, request.getQuantity());
         return buildCartItemResponse(product, request.getQuantity());

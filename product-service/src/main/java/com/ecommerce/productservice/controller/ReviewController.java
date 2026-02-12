@@ -1,6 +1,7 @@
 package com.ecommerce.productservice.controller;
 
 import com.ecommerce.productservice.dto.request.CreateReviewRequest;
+import com.ecommerce.productservice.dto.request.UpdateReviewRequest;
 import com.ecommerce.productservice.dto.response.PageResponse;
 import com.ecommerce.productservice.dto.response.ReviewResponse;
 import com.ecommerce.productservice.response.ApiResponse;
@@ -45,6 +46,15 @@ public class ReviewController {
             @Valid @RequestBody CreateReviewRequest request) {
         log.info("POST /api/reviews - 리뷰 등록, userId={}, productId={}", userDetails.getUserId(), request.getProductId());
         return ApiResponse.success(reviewService.createReview(userDetails.getUserId(), userDetails.getEmail(), request));
+    }
+
+    @PutMapping("/{reviewId}")
+    public ApiResponse<ReviewResponse> updateReview(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long reviewId,
+            @Valid @RequestBody UpdateReviewRequest request) {
+        log.info("PUT /api/reviews/{} - 리뷰 수정, userId={}", reviewId, userDetails.getUserId());
+        return ApiResponse.success(reviewService.updateReview(userDetails.getUserId(), reviewId, request));
     }
 
     @DeleteMapping("/{reviewId}")

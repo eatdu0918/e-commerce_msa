@@ -1,5 +1,6 @@
 package com.ecommerce.userservice.service;
 
+import com.ecommerce.userservice.dto.response.PageResponse;
 import com.ecommerce.userservice.dto.response.UserResponse;
 import com.ecommerce.userservice.entity.User;
 import com.ecommerce.userservice.enums.UserRole;
@@ -8,11 +9,9 @@ import com.ecommerce.userservice.exception.UserDomainExceptionCode;
 import com.ecommerce.userservice.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -23,10 +22,10 @@ public class AdminService {
     private final TokenService tokenService;
 
     @Transactional(readOnly = true)
-    public List<UserResponse> getAllUsers() {
-        return userRepository.findAll().stream()
-                .map(this::convertToUserResponse)
-                .collect(Collectors.toList());
+    public PageResponse<UserResponse> getAllUsers(Pageable pageable) {
+        return PageResponse.from(
+                userRepository.findAll(pageable).map(this::convertToUserResponse)
+        );
     }
 
     @Transactional(readOnly = true)

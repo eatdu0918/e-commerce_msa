@@ -1,6 +1,7 @@
 package com.ecommerce.productservice.service;
 
 import com.ecommerce.productservice.dto.request.CreateReviewRequest;
+import com.ecommerce.productservice.dto.request.UpdateReviewRequest;
 import com.ecommerce.productservice.dto.response.PageResponse;
 import com.ecommerce.productservice.dto.response.ReviewResponse;
 import com.ecommerce.productservice.entity.Review;
@@ -60,6 +61,20 @@ public class ReviewService {
 
         reviewRepository.save(review);
         log.info("리뷰 등록 완료 - reviewId={}, productId={}, userId={}", review.getId(), request.getProductId(), userId);
+        return ReviewResponse.from(review);
+    }
+
+    @Transactional
+    public ReviewResponse updateReview(Long userId, Long reviewId, UpdateReviewRequest request) {
+        Review review = reviewRepository.findByIdAndIsActiveTrue(reviewId)
+                .orElseThrow(() -> new ProductDomainException(ProductDomainExceptionCode.ReviewNotFoundException));
+
+        if (!review.getUserId().equals(userId)) {
+            throw new ProductDomainException(ProductDomainExceptionCode.AccessDeniedException);
+        }
+
+        review.update(request.getScore(), request.getContent(), request.getImageUrl());
+        log.info("리뷰 수정 완료 - reviewId={}, userId={}", reviewId, userId);
         return ReviewResponse.from(review);
     }
 

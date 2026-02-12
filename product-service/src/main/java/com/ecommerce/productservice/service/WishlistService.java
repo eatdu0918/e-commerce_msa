@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -23,6 +24,7 @@ public class WishlistService {
     private final ProductService productService;
 
     private static final String WISHLIST_KEY_PREFIX = "wishlist:";
+    private static final Duration WISHLIST_TTL = Duration.ofDays(30);
 
     public List<WishlistItemResponse> getWishlist(Long userId) {
         String key = WISHLIST_KEY_PREFIX + userId;
@@ -57,6 +59,7 @@ public class WishlistService {
 
         Product product = productService.getActiveProduct(request.getProductId());
         redisTemplate.opsForSet().add(key, productIdStr);
+        redisTemplate.expire(key, WISHLIST_TTL);
 
         log.info("찜 추가 완료: productId={}", request.getProductId());
         return buildWishlistItemResponse(product);
