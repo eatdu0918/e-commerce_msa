@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import * as PortOne from '@portone/browser-sdk/v2';
+import { v4 as uuidv4 } from 'uuid';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft, Tag, Truck, CreditCard, ShoppingBag, Check, Ticket } from 'lucide-react';
 import { getCart } from '../../api/services/cart';
@@ -7,6 +9,7 @@ import type { CreateOrderRequest, OrderItemRequest } from '../../api/services/or
 import { getAvailableCoupons, calculateDiscount } from '../../api/services/coupon';
 import type { UserCouponResponse, DiscountCalculationResponse } from '../../api/services/coupon';
 import { createPayment } from '../../api/services/payment';
+import AddressSearchModal from '../common/AddressSearchModal';
 
 import { useNavigate } from 'react-router-dom';
 
@@ -24,6 +27,11 @@ export default function CheckoutPage() {
     const [paymentMethod, setPaymentMethod] = useState('CREDIT_CARD');
     const [step, setStep] = useState<'shipping' | 'payment'>('shipping');
     const [error, setError] = useState('');
+
+    const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+    const [zonecode, setZonecode] = useState('');
+    const [roadAddress, setRoadAddress] = useState('');
+    const [detailAddress, setDetailAddress] = useState('');
 
     const { data: cart, isLoading: cartLoading } = useQuery({
         queryKey: ['cart'],
@@ -48,6 +56,19 @@ export default function CheckoutPage() {
             setDiscountInfo(null);
         }
     }, [selectedCouponId, totalPrice]);
+
+    // Update shippingAddress whenever parts change
+    useEffect(() => {
+        if (roadAddress) {
+            setShippingAddress(`(${zonecode}) ${roadAddress} ${detailAddress}`);
+        }
+    }, [zonecode, roadAddress, detailAddress]);
+
+    const handleAddressComplete = (address: string, zonecode: string) => {
+        setRoadAddress(address);
+        setZonecode(zonecode);
+        setDetailAddress('');
+    };
 
     const finalAmount = discountInfo ? discountInfo.finalAmount : totalPrice;
     const discountAmount = discountInfo ? discountInfo.discountAmount : 0;
@@ -89,13 +110,47 @@ export default function CheckoutPage() {
         },
     });
 
-    const handleSubmitOrder = () => {
+    const handlePayment = async () => {
         if (!shippingAddress.trim() || !recipientName.trim() || !recipientPhone.trim()) {
             setError('배송 정보를 모두 입력해주세요.');
             return;
         }
         setError('');
-        orderMutation.mutate();
+
+        const paymentId = `ORD-${Date.now()}-${uuidv4().slice(0, 8)}`;
+
+        try {
+            const response = await PortOne.requestPayment({
+                storeId: "store-4ff4af41-85e3-4573-9e96-e5616a354316",
+                channelKey: "channel-key-3b3d3f9b-640c-4384-8271-970183211516",
+                paymentId: paymentId,
+                orderName: items.length > 1 ? `${items[0].productName} 외 ${items.length - 1}건` : items[0].productName,
+                totalAmount: finalAmount,
+                currency: "CURRENCY_KRW",
+                payMethod: "CARD",
+                customer: {
+                    fullName: recipientName,
+                    phoneNumber: recipientPhone,
+                    address: {
+                        addressLine1: shippingAddress
+                    }
+                },
+            });
+
+            if (response.code != null) {
+                setError(response.message || '결제에 실패했습니다.');
+                return;
+            }
+
+            orderMutation.mutate();
+
+        } catch (_error: any) {
+            setError('결제 시스템 연동 중 오류가 발생했습니다.');
+        }
+    };
+
+    const handleSubmitOrder = () => {
+        handlePayment();
     };
 
     if (cartLoading) {
@@ -183,11 +238,34 @@ export default function CheckoutPage() {
                                     </div>
                                     <div>
                                         <label className="block text-xs font-bold text-stone-400 uppercase tracking-wider mb-2">배송지 주소</label>
+                                        <div className="flex space-x-2 mb-2">
+                                            <input
+                                                type="text"
+                                                value={zonecode}
+                                                readOnly
+                                                placeholder="우편번호"
+                                                className="w-24 px-5 py-3.5 bg-stone-100 border border-stone-100 rounded-2xl text-sm focus:outline-none text-stone-500"
+                                            />
+                                            <button
+                                                onClick={() => setIsAddressModalOpen(true)}
+                                                className="px-4 py-3.5 bg-black text-white rounded-2xl text-sm font-bold hover:bg-stone-800 transition-all whitespace-nowrap"
+                                            >
+                                                주소 검색
+                                            </button>
+                                        </div>
                                         <input
                                             type="text"
-                                            value={shippingAddress}
-                                            onChange={(e) => setShippingAddress(e.target.value)}
-                                            placeholder="서울특별시 강남구 ..."
+                                            value={roadAddress}
+                                            readOnly
+                                            placeholder="기본 주소"
+                                            className="w-full px-5 py-3.5 bg-stone-100 border border-stone-100 rounded-2xl text-sm focus:outline-none mb-2 text-stone-500 cursor-pointer"
+                                            onClick={() => setIsAddressModalOpen(true)}
+                                        />
+                                        <input
+                                            type="text"
+                                            value={detailAddress}
+                                            onChange={(e) => setDetailAddress(e.target.value)}
+                                            placeholder="상세 주소를 입력하세요 (예: 101동 1201호)"
                                             className="w-full px-5 py-3.5 bg-stone-50 border border-stone-100 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-black/10 transition-all"
                                         />
                                     </div>
@@ -201,6 +279,11 @@ export default function CheckoutPage() {
                                 >
                                     결제 단계로 →
                                 </button>
+                                <AddressSearchModal
+                                    isOpen={isAddressModalOpen}
+                                    onClose={() => setIsAddressModalOpen(false)}
+                                    onComplete={handleAddressComplete}
+                                />
                             </div>
                         )}
 

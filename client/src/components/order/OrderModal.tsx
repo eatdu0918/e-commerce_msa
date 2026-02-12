@@ -44,8 +44,7 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
             alert('주문이 완료되었습니다!');
             onOrderSuccess(newOrder.id);
             onClose();
-        } catch (err: any) {
-            console.error(err);
+        } catch (_err: any) {
             setError('주문 생성에 실패했습니다.');
         } finally {
             setLoading(false);

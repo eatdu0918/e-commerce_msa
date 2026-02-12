@@ -27,8 +27,7 @@ export default function SignupModal({ isOpen, onClose, onSwitchToLogin }: Signup
             await signup({ email, password, name, phoneNumber, gender });
             alert('회원가입이 완료되었습니다. 로그인해주세요.');
             onSwitchToLogin();
-        } catch (err: any) {
-            console.error(err);
+        } catch (_err: any) {
             setError('회원가입에 실패했습니다.');
         } finally {
             setLoading(false);

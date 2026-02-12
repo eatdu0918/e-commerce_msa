@@ -1,6 +1,5 @@
-```
 import { useTranslation } from 'react-i18next';
-import { User, Package, Heart, CreditCard, RotateCcw, Ticket, ChevronRight, Settings } from 'lucide-react';
+import { User, Package, Heart, CreditCard, RotateCcw, Ticket, ChevronRight } from 'lucide-react';
 import type { UserResponse } from '../../api/services/user';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
@@ -17,7 +16,7 @@ export default function MyPageView() {
 
     const menuItems = [
         { id: 'orders', label: t('common.order_tracking'), icon: <Package size={24} className="text-blue-500" />, path: '/me/orders', desc: 'Check shipping status' },
-        { id: 'wishlist', label: t('common.wishlist'), icon: <Heart size={24} className="text-red-500" />, path: '/me/wishlist', desc: 'Your saved items' }, 
+        { id: 'wishlist', label: t('common.wishlist'), icon: <Heart size={24} className="text-red-500" />, path: '/me/wishlist', desc: 'Your saved items' },
         { id: 'coupons', label: 'My Coupons', icon: <Ticket size={24} className="text-purple-500" />, path: '/me/coupons', desc: 'Available coupons' },
         { id: 'payments', label: 'Payment History', icon: <CreditCard size={24} className="text-indigo-500" />, path: '/me/payments', desc: 'Transaction history' },
         { id: 'cancel-refund', label: 'Cancel/Refund', icon: <RotateCcw size={24} className="text-orange-500" />, path: '/me/cancel-refund', desc: 'Returns and refunds' },
@@ -59,7 +58,7 @@ export default function MyPageView() {
                         onClick={() => navigate(item.path)}
                         className="bg-white p-6 rounded-2xl shadow-sm border border-stone-100 hover:shadow-md transition-shadow cursor-pointer group flex items-start space-x-5"
                     >
-                         <div className="p-3 bg-stone-50 rounded-2xl group-hover:scale-110 transition-transform">
+                        <div className="p-3 bg-stone-50 rounded-2xl group-hover:scale-110 transition-transform">
                             {item.icon}
                         </div>
                         <div className="flex-1">

@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { formatDateTime } from '../../utils/date';
 import { CreditCard, MapPin, Package, Clock, ArrowLeft } from 'lucide-react';
 import { getOrderDetail, cancelOrder } from '../../api/services/order';
 import type { OrderDetailResponse } from '../../api/services/order';
@@ -75,15 +76,15 @@ export default function OrderDetailView() {
                         <div className="flex items-center space-x-3 mb-2">
                             <span className="font-bold text-lg">주문 #{order.orderNumber}</span>
                             <span className={`px-3 py-1 rounded-full text-xs font-bold ${order.status === 'DELIVERED' ? 'bg-green-100 text-green-700' :
-                                    order.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
-                                        'bg-blue-100 text-blue-700'
+                                order.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
+                                    'bg-blue-100 text-blue-700'
                                 }`}>
                                 {STATUS_LABELS[order.status] || order.statusDescription}
                             </span>
                         </div>
                         <div className="flex items-center text-sm text-stone-500">
                             <Clock size={14} className="mr-2" />
-                            {new Date(order.createdAt).toLocaleString()}
+                            {formatDateTime(order.createdAt)}
                         </div>
                     </div>
                 </div>
@@ -135,7 +136,7 @@ export default function OrderDetailView() {
                                     <>
                                         <p><span className="font-medium text-stone-900">결제수단:</span> {order.payment.paymentMethod}</p>
                                         <p><span className="font-medium text-stone-900">상태:</span> {order.payment.status}</p>
-                                        <p><span className="font-medium text-stone-900">결제일시:</span> {new Date(order.payment.paidAt).toLocaleString()}</p>
+                                        <p><span className="font-medium text-stone-900">결제일시:</span> {formatDateTime(order.payment.paidAt)}</p>
                                     </>
                                 ) : (
                                     <p>결제 정보가 없습니다.</p>
