@@ -4,6 +4,7 @@ import type { UserResponse } from '../../api/services/user';
 import LanguageSwitcher from '../LanguageSwitcher';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
+import SearchBar from '../common/SearchBar';
 
 interface HeaderProps {
     category: string;
@@ -22,6 +23,7 @@ export default function Header({ category, setCategory, categories, user, onLogi
     const location = useLocation();
 
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
     const [userDropdownOpen, setUserDropdownOpen] = useState(false);
     const [notificationOpen, setNotificationOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -47,6 +49,7 @@ export default function Header({ category, setCategory, categories, user, onLogi
         navigate(path);
         setUserDropdownOpen(false);
         setMobileMenuOpen(false);
+        setMobileSearchOpen(false);
     };
 
     return (
@@ -87,28 +90,12 @@ export default function Header({ category, setCategory, categories, user, onLogi
 
                 <div className="flex items-center space-x-1 md:space-x-4">
                     <LanguageSwitcher />
-                    <form
-                        onSubmit={(e) => {
-                            e.preventDefault();
-                            const formData = new FormData(e.currentTarget);
-                            const keyword = formData.get('keyword') as string;
-                            if (keyword.trim()) {
-                                navigate(`/shop?keyword=${encodeURIComponent(keyword.trim())}`);
-                                setCategory(t('common.category_all'));
-                            }
-                        }}
-                        className="hidden md:flex items-center bg-stone-100 rounded-full px-3 py-1.5 focus-within:ring-2 focus-within:ring-black/5"
+                    <SearchBar className="hidden md:block w-64" />
+                    <button
+                        className="md:hidden p-2 hover:bg-stone-100 rounded-full transition-colors"
+                        onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
                     >
-                        <Search size={16} className="text-stone-400 mr-2" />
-                        <input
-                            name="keyword"
-                            type="text"
-                            placeholder={t('common.search') || 'Search'}
-                            className="bg-transparent border-none focus:ring-0 text-sm w-32 focus:w-48 transition-all placeholder-stone-400"
-                        />
-                    </form>
-                    <button className="md:hidden p-2 hover:bg-stone-100 rounded-full transition-colors">
-                        <Search size={20} strokeWidth={2} />
+                        {mobileSearchOpen ? <X size={20} /> : <Search size={20} strokeWidth={2} />}
                     </button>
 
                     {/* User Dropdown */}
@@ -270,7 +257,16 @@ export default function Header({ category, setCategory, categories, user, onLogi
                             </button>
                         ))}
                     </div>
+                </div>
+            )}
 
+            {/* Mobile Search Overlay */}
+            {mobileSearchOpen && (
+                <div className="md:hidden absolute top-16 left-0 w-full bg-white border-b border-stone-200 p-4 z-50 animate-in slide-in-from-top-5">
+                    <SearchBar
+                        className="w-full"
+                        onSearch={() => setMobileSearchOpen(false)}
+                    />
                 </div>
             )}
         </nav>

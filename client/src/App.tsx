@@ -10,6 +10,18 @@ import { Suspense, lazy } from 'react';
 const HomePage = lazy(() => import('./components/home/HomePage'));
 const ProductListPage = lazy(() => import('./components/product/ProductListPage'));
 const ProductDetailPage = lazy(() => import('./components/product/ProductDetailPage'));
+const AdminLayout = lazy(() => import('./components/admin/AdminLayout'));
+const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard'));
+const AdminProductList = lazy(() => import('./components/admin/AdminProductList'));
+const AdminOrderList = lazy(() => import('./components/admin/AdminOrderList'));
+const AdminUserList = lazy(() => import('./components/admin/AdminUserList'));
+const AdminPaymentList = lazy(() => import('./components/admin/AdminPaymentList'));
+const AdminCouponList = lazy(() => import('./components/admin/AdminCouponList'));
+const AdminCancelList = lazy(() => import('./components/admin/AdminCancelList'));
+const AdminRefundList = lazy(() => import('./components/admin/AdminRefundList'));
+
+const SearchResultPage = lazy(() => import('./components/product/SearchResultPage'));
+const NotFoundPage = lazy(() => import('./components/common/NotFoundPage'));
 const SignupPage = lazy(() => import('./components/auth/SignupPage'));
 const CheckoutPage = lazy(() => import('./components/checkout/CheckoutPage'));
 const OrderCompletePage = lazy(() => import('./components/checkout/OrderCompletePage'));
@@ -23,7 +35,7 @@ const CancelRefundView = lazy(() => import('./components/profile/CancelRefundVie
 const PaymentHistoryView = lazy(() => import('./components/profile/PaymentHistoryView'));
 
 function App() {
-  const { i18n } = useTranslation();
+  useTranslation();
 
   // Ensuring user data is loaded for protected routes
   useQuery({
@@ -43,6 +55,7 @@ function App() {
           <Route path="/product/:id" element={<ProductDetailPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/order/complete/:id" element={<OrderCompletePage />} />
+          <Route path="/search" element={<SearchResultPage />} />
 
           {/* User Routes - In real app, wrap in AuthGuard */}
           <Route element={<AuthGuard><Outlet /></AuthGuard>}>
@@ -59,6 +72,20 @@ function App() {
         </Route>
 
         <Route path="/signup" element={<SignupPage />} />
+
+        {/* Admin Routes */}
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<AdminDashboard />} />
+          <Route path="users" element={<AdminUserList />} />
+          <Route path="products" element={<AdminProductList />} />
+          <Route path="orders" element={<AdminOrderList />} />
+          <Route path="payments" element={<AdminPaymentList />} />
+          <Route path="coupons" element={<AdminCouponList />} />
+          <Route path="cancels" element={<AdminCancelList />} />
+          <Route path="refunds" element={<AdminRefundList />} />
+        </Route>
+
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Suspense>
   );
