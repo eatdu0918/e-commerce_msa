@@ -1,17 +1,18 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { RotateCcw, XCircle, CheckCircle, Clock, AlertCircle, Package } from 'lucide-react';
-import { getMyCancels } from '../../api/services/cancel';
-import type { CancelResponse } from '../../api/services/cancel';
+import { getMyCancels, CANCEL_REASON_LABELS } from '../../api/services/cancel';
+import type { CancelResponse, CancelReason } from '../../api/services/cancel';
 import { getMyRefunds } from '../../api/services/refund';
 import type { RefundResponse } from '../../api/services/refund';
 
 type TabType = 'cancel' | 'refund';
 
 const CANCEL_STATUS_MAP: Record<string, { label: string; color: string; icon: any }> = {
-    PENDING: { label: '처리 대기', color: 'text-yellow-600 bg-yellow-50', icon: Clock },
-    APPROVED: { label: '승인됨', color: 'text-green-600 bg-green-50', icon: CheckCircle },
+    REQUESTED: { label: '승인 대기', color: 'text-yellow-600 bg-yellow-50', icon: Clock },
+    APPROVED: { label: '승인됨', color: 'text-blue-600 bg-blue-50', icon: CheckCircle },
     REJECTED: { label: '거절됨', color: 'text-red-600 bg-red-50', icon: XCircle },
+    COMPLETED: { label: '처리 완료', color: 'text-green-600 bg-green-50', icon: CheckCircle },
 };
 
 const REFUND_STATUS_MAP: Record<string, { label: string; color: string; icon: any }> = {
@@ -98,7 +99,7 @@ export default function CancelRefundView() {
                                             {statusInfo.label}
                                         </span>
                                     </div>
-                                    <p className="text-sm"><span className="text-stone-400">사유:</span> {cancel.cancelReason}</p>
+                                    <p className="text-sm"><span className="text-stone-400">사유:</span> {CANCEL_REASON_LABELS[cancel.cancelReason as CancelReason] || cancel.cancelReason}</p>
                                     {cancel.rejectedReason && (
                                         <p className="text-xs text-red-400 mt-2 bg-red-50 p-2 rounded-lg">
                                             거절 사유: {cancel.rejectedReason}

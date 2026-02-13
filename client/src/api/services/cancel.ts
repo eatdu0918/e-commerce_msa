@@ -1,20 +1,55 @@
 import api from '../axios';
 
-export interface CancelResponse {
-    id: number;
-    orderId: number;
-    userId: number;
-    cancelReason: string;
-    status: string;
-    statusDescription: string;
-    rejectedReason: string | null;
-    createdAt: string;
-    updatedAt: string;
+export type CancelReason = 'CHANGE_OF_MIND' | 'WRONG_ORDER' | 'DUPLICATE_ORDER' | 'PRICE_CHANGE' | 'DELIVERY_DELAY' | 'OTHER';
+
+export const CANCEL_REASON_LABELS: Record<CancelReason, string> = {
+    CHANGE_OF_MIND: '단순 변심',
+    WRONG_ORDER: '잘못된 주문',
+    DUPLICATE_ORDER: '중복 주문',
+    PRICE_CHANGE: '가격 변동',
+    DELIVERY_DELAY: '배송 지연',
+    OTHER: '기타',
+};
+
+export interface CancelItemRequest {
+    productId: number;
+    productName: string;
+    quantity: number;
+    unitPrice: number;
 }
 
 export interface CreateCancelRequest {
     orderId: number;
+    orderNumber: string;
+    cancelReason: CancelReason;
+    cancelDetail?: string;
+    items: CancelItemRequest[];
+}
+
+export interface CancelItemResponse {
+    id: number;
+    productId: number;
+    productName: string;
+    quantity: number;
+    unitPrice: number;
+}
+
+export interface CancelResponse {
+    id: number;
+    cancelNumber: string;
+    orderId: number;
+    orderNumber: string;
+    userId: number;
     cancelReason: string;
+    cancelDetail: string | null;
+    status: string;
+    statusDescription: string;
+    rejectedReason: string | null;
+    items: CancelItemResponse[];
+    createdAt: string;
+    approvedAt: string | null;
+    rejectedAt: string | null;
+    completedAt: string | null;
 }
 
 export interface PageResponse<T> {

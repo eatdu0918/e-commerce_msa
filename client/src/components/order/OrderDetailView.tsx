@@ -1,8 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { formatDateTime } from '../../utils/date';
 import { CreditCard, MapPin, Package, Clock, ArrowLeft } from 'lucide-react';
-import { getOrderDetail, cancelOrder } from '../../api/services/order';
+import { getOrderDetail } from '../../api/services/order';
 import type { OrderDetailResponse } from '../../api/services/order';
+import { createCancel, CANCEL_REASON_LABELS } from '../../api/services/cancel';
+import type { CancelReason, CreateCancelRequest } from '../../api/services/cancel';
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
@@ -14,6 +16,7 @@ const STATUS_LABELS: Record<string, string> = {
     SHIPPING: '배송 중',
     DELIVERED: '배송 완료',
     CANCELLED: '주문 취소',
+    CANCEL_REQUESTED: '취소 요청 중',
 };
 
 const CANCELLABLE_STATUSES = ['PENDING', 'CONFIRMED', 'PREPARING'];
@@ -23,7 +26,9 @@ export default function OrderDetailView() {
     const orderId = Number(id);
     const navigate = useNavigate();
     const queryClient = useQueryClient();
-    const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [cancelReason, setCancelReason] = useState<CancelReason>('CHANGE_OF_MIND');
+    const [cancelDetail, setCancelDetail] = useState('');
 
     const { data: order, isLoading } = useQuery<OrderDetailResponse>({
         queryKey: ['order', orderId],
@@ -31,13 +36,32 @@ export default function OrderDetailView() {
     });
 
     const cancelMutation = useMutation({
-        mutationFn: () => cancelOrder(orderId),
+        mutationFn: (data: CreateCancelRequest) => createCancel(data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['order', orderId] });
             queryClient.invalidateQueries({ queryKey: ['orders'] });
-            setShowCancelConfirm(false);
+            queryClient.invalidateQueries({ queryKey: ['cancels'] });
+            setShowCancelModal(false);
+            navigate('/me/cancel-refund');
         },
     });
+
+    const handleCancelSubmit = () => {
+        if (!order) return;
+        const request: CreateCancelRequest = {
+            orderId: order.id,
+            orderNumber: order.orderNumber,
+            cancelReason,
+            cancelDetail: cancelDetail.trim() || undefined,
+            items: order.items.map(item => ({
+                productId: item.productId,
+                productName: item.productName,
+                quantity: item.quantity,
+                unitPrice: item.price,
+            })),
+        };
+        cancelMutation.mutate(request);
+    };
 
     if (isLoading) {
         return (
@@ -143,41 +167,97 @@ export default function OrderDetailView() {
                                 )}
                             </div>
 
-                            {/* Cancel Button */}
-                            {canCancel && !showCancelConfirm && (
+                            {canCancel && (
                                 <button
-                                    onClick={() => setShowCancelConfirm(true)}
+                                    onClick={() => setShowCancelModal(true)}
                                     className="w-full mt-6 py-4 bg-white border border-red-200 text-red-500 rounded-2xl text-sm font-bold hover:bg-red-50 transition-all"
                                 >
-                                    주문 취소하기
+                                    주문 취소 요청
                                 </button>
-                            )}
-
-                            {showCancelConfirm && (
-                                <div className="mt-6 bg-red-50 p-6 rounded-2xl border border-red-200">
-                                    <p className="font-bold text-red-600 mb-2">정말 주문을 취소하시겠습니까?</p>
-                                    <p className="text-xs text-red-400 mb-6">취소 후에는 되돌릴 수 없습니다.</p>
-                                    <div className="flex space-x-3">
-                                        <button
-                                            onClick={() => cancelMutation.mutate()}
-                                            disabled={cancelMutation.isPending}
-                                            className="flex-1 py-3 bg-red-500 text-white rounded-xl text-sm font-bold hover:bg-red-600 transition-colors disabled:opacity-50"
-                                        >
-                                            {cancelMutation.isPending ? '처리 중...' : '주문 취소'}
-                                        </button>
-                                        <button
-                                            onClick={() => setShowCancelConfirm(false)}
-                                            className="flex-1 py-3 bg-white border border-stone-200 rounded-xl text-sm font-bold hover:bg-stone-50 transition-colors"
-                                        >
-                                            돌아가기
-                                        </button>
-                                    </div>
-                                </div>
                             )}
                         </div>
                     </div>
                 </div>
             </div>
+
+            {/* Cancel Request Modal */}
+            {showCancelModal && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-3xl max-w-md w-full p-8 shadow-xl">
+                        <h3 className="font-bold text-lg mb-6">주문 취소 요청</h3>
+
+                        <div className="mb-6">
+                            <label className="block text-sm font-bold text-stone-700 mb-3">취소 사유</label>
+                            <div className="space-y-2">
+                                {(Object.entries(CANCEL_REASON_LABELS) as [CancelReason, string][]).map(([value, label]) => (
+                                    <label
+                                        key={value}
+                                        className={`flex items-center p-3 rounded-xl border cursor-pointer transition-all ${cancelReason === value
+                                            ? 'border-black bg-stone-50'
+                                            : 'border-stone-200 hover:border-stone-300'
+                                            }`}
+                                    >
+                                        <input
+                                            type="radio"
+                                            name="cancelReason"
+                                            value={value}
+                                            checked={cancelReason === value}
+                                            onChange={() => setCancelReason(value)}
+                                            className="sr-only"
+                                        />
+                                        <span className={`w-4 h-4 rounded-full border-2 mr-3 flex items-center justify-center ${cancelReason === value ? 'border-black' : 'border-stone-300'
+                                            }`}>
+                                            {cancelReason === value && <span className="w-2 h-2 bg-black rounded-full" />}
+                                        </span>
+                                        <span className="text-sm font-medium">{label}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="mb-6">
+                            <label className="block text-sm font-bold text-stone-700 mb-2">상세 사유 (선택)</label>
+                            <textarea
+                                value={cancelDetail}
+                                onChange={(e) => setCancelDetail(e.target.value)}
+                                placeholder="추가 설명을 입력해주세요..."
+                                rows={3}
+                                className="w-full border border-stone-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-black/10 resize-none"
+                            />
+                        </div>
+
+                        <p className="text-xs text-stone-400 mb-6">
+                            취소 요청 후 관리자 승인을 거쳐 처리됩니다. 승인 시 자동으로 환불이 진행됩니다.
+                        </p>
+
+                        {cancelMutation.isError && (
+                            <p className="text-xs text-red-500 mb-4 bg-red-50 p-3 rounded-lg">
+                                취소 요청에 실패했습니다. 다시 시도해주세요.
+                            </p>
+                        )}
+
+                        <div className="flex space-x-3">
+                            <button
+                                onClick={handleCancelSubmit}
+                                disabled={cancelMutation.isPending}
+                                className="flex-1 py-3 bg-red-500 text-white rounded-xl text-sm font-bold hover:bg-red-600 transition-colors disabled:opacity-50"
+                            >
+                                {cancelMutation.isPending ? '처리 중...' : '취소 요청'}
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowCancelModal(false);
+                                    setCancelReason('CHANGE_OF_MIND');
+                                    setCancelDetail('');
+                                }}
+                                className="flex-1 py-3 bg-white border border-stone-200 rounded-xl text-sm font-bold hover:bg-stone-50 transition-colors"
+                            >
+                                닫기
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
