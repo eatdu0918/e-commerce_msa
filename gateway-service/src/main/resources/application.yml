@@ -14,7 +14,7 @@ spring:
         - id: user-service
           uri: ${USER_SERVICE_URL:http://localhost:8080}
           predicates:
-            - Path=/api/users/**, /api/auth/**
+            - Path=/api/users/**, /api/auth/**, /api/admin/users/**
         - id: product-service
           uri: ${PRODUCT_SERVICE_URL:http://localhost:8081}
           predicates:
@@ -22,23 +22,23 @@ spring:
         - id: order-service
           uri: ${ORDER_SERVICE_URL:http://localhost:8082}
           predicates:
-            - Path=/api/orders/**
+            - Path=/api/orders/**, /api/admin/orders/**
         - id: discount-service
           uri: ${DISCOUNT_SERVICE_URL:http://localhost:8083}
           predicates:
-            - Path=/api/discounts/**, /api/coupons/**
+            - Path=/api/discounts/**, /api/coupons/**, /api/admin/coupons/**
         - id: payment-service
           uri: ${PAYMENT_SERVICE_URL:http://localhost:8084}
           predicates:
-            - Path=/api/payments/**
+            - Path=/api/payments/**, /api/admin/payments/**
         - id: cancel-service
           uri: ${CANCEL_SERVICE_URL:http://localhost:8085}
           predicates:
-            - Path=/api/cancels/**
+            - Path=/api/cancels/**, /api/admin/cancels/**
         - id: refund-service
           uri: ${REFUND_SERVICE_URL:http://localhost:8086}
           predicates:
-            - Path=/api/refunds/**
+            - Path=/api/refunds/**, /api/admin/refunds/**
       globalcors:
         cors-configurations:
           '[/**]':
