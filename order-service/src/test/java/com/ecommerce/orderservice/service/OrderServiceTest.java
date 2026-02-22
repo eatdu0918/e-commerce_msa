@@ -66,7 +66,7 @@ class OrderServiceTest {
         assertThat(response).isNotNull();
         assertThat(response.getUserId()).isEqualTo(userId);
         assertThat(response.getTotalAmount()).isEqualByComparingTo(new BigDecimal("20000"));
-        assertThat(response.getStatus()).isEqualTo(OrderStatus.PENDING.name());
+        assertThat(response.getStatus()).isEqualTo(OrderStatus.PENDING);
         verify(orderRepository).save(any(Order.class));
         verify(orderEventProducer).sendOrderCreatedEvent(any());
     }
@@ -144,7 +144,7 @@ class OrderServiceTest {
         OrderResponse response = orderService.cancelOrder(orderId, userId);
 
         // then
-        assertThat(response.getStatus()).isEqualTo(OrderStatus.CANCELLED.name());
+        assertThat(response.getStatus()).isEqualTo(OrderStatus.CANCELLED);
         verify(orderEventProducer).sendOrderCancelledEvent(any());
     }
 
@@ -211,7 +211,7 @@ class OrderServiceTest {
         OrderResponse response = orderService.updateOrderStatus(orderId, OrderStatus.PREPARING);
 
         // then
-        assertThat(response.getStatus()).isEqualTo(OrderStatus.PREPARING.name());
+        assertThat(response.getStatus()).isEqualTo(OrderStatus.PREPARING);
     }
 
     @Test
