@@ -11,7 +11,7 @@ import com.ecommerce.orderservice.event.OrderCancelledEvent;
 import com.ecommerce.orderservice.event.OrderCreatedEvent;
 import com.ecommerce.orderservice.exception.OrderDomainException;
 import com.ecommerce.orderservice.exception.OrderDomainExceptionCode;
-import com.ecommerce.orderservice.kafka.OrderEventProducer;
+import com.ecommerce.orderservice.outbox.OutboxEventPublisher;
 import com.ecommerce.orderservice.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +30,7 @@ import java.util.UUID;
 public class OrderService {
 
     private final OrderRepository orderRepository;
-    private final OrderEventProducer orderEventProducer;
+    private final OutboxEventPublisher outboxEventPublisher;
 
     @Transactional
     public OrderResponse createOrder(Long userId, CreateOrderRequest request) {
@@ -66,7 +66,7 @@ public class OrderService {
                 savedOrder.getId(), savedOrder.getOrderNumber());
 
         OrderCreatedEvent event = createOrderCreatedEvent(savedOrder);
-        orderEventProducer.sendOrderCreatedEvent(event);
+        outboxEventPublisher.publishOrderCreatedEvent(event);
 
         return OrderResponse.from(savedOrder);
     }
@@ -141,7 +141,7 @@ public class OrderService {
                 .items(items)
                 .build();
 
-        orderEventProducer.sendOrderCancelledEvent(event);
+        outboxEventPublisher.publishOrderCancelledEvent(event);
         log.info("주문 취소 완료: orderId={}", orderId);
 
         return OrderResponse.from(order);
