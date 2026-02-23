@@ -6,6 +6,7 @@ import com.ecommerce.refundservice.enums.RefundReason;
 import com.ecommerce.refundservice.event.CancelApprovedEvent;
 import com.ecommerce.refundservice.event.RefundCompletedEvent;
 import com.ecommerce.refundservice.event.RefundFailedEvent;
+import com.ecommerce.refundservice.outbox.OutboxEventPublisher;
 import com.ecommerce.refundservice.repository.ProcessedEventRepository;
 import com.ecommerce.refundservice.repository.RefundRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +24,7 @@ import java.util.UUID;
 public class RefundEventConsumer {
 
         private final RefundRepository refundRepository;
-        private final RefundEventProducer refundEventProducer;
+        private final OutboxEventPublisher outboxEventPublisher;
         private final ProcessedEventRepository processedEventRepository;
 
         @KafkaListener(topics = "cancel-approved", groupId = "refund-service")
@@ -66,7 +67,7 @@ public class RefundEventConsumer {
                                         .amount(savedRefund.getAmount())
                                         .build();
 
-                        refundEventProducer.sendRefundCompletedEvent(completedEvent);
+                        outboxEventPublisher.publishRefundCompletedEvent(completedEvent);
                         log.info("Refund completed: refundId={}", savedRefund.getId());
 
                         markProcessed(event.getEventId(), "cancel-approved");
@@ -97,7 +98,7 @@ public class RefundEventConsumer {
                                         .reason(e.getMessage())
                                         .build();
 
-                        refundEventProducer.sendRefundFailedEvent(failedEvent);
+                        outboxEventPublisher.publishRefundFailedEvent(failedEvent);
                 }
         }
 
