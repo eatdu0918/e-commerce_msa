@@ -7,6 +7,7 @@ import com.ecommerce.paymentservice.event.OrderCancelledEvent;
 import com.ecommerce.paymentservice.event.PaymentCancelledEvent;
 import com.ecommerce.paymentservice.event.PaymentCompletedEvent;
 import com.ecommerce.paymentservice.event.PaymentFailedEvent;
+import com.ecommerce.paymentservice.outbox.OutboxEventPublisher;
 import com.ecommerce.paymentservice.repository.PaymentRepository;
 import com.ecommerce.paymentservice.repository.ProcessedEventRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +24,7 @@ import java.util.UUID;
 public class PaymentEventConsumer {
 
     private final PaymentRepository paymentRepository;
-    private final PaymentEventProducer paymentEventProducer;
+    private final OutboxEventPublisher outboxEventPublisher;
     private final ProcessedEventRepository processedEventRepository;
 
     @KafkaListener(topics = "coupon-used", groupId = "payment-service")
@@ -50,7 +51,7 @@ public class PaymentEventConsumer {
                         .paymentMethod(payment.getPaymentMethod().name())
                         .build();
 
-                paymentEventProducer.sendPaymentCompletedEvent(completedEvent);
+                outboxEventPublisher.publishPaymentCompletedEvent(completedEvent);
 
                 markProcessed(event.getEventId(), "coupon-used");
             } catch (Exception e) {
@@ -68,7 +69,7 @@ public class PaymentEventConsumer {
                         .reason(e.getMessage())
                         .build();
 
-                paymentEventProducer.sendPaymentFailedEvent(failedEvent);
+                outboxEventPublisher.publishPaymentFailedEvent(failedEvent);
             }
         });
     }
@@ -95,7 +96,7 @@ public class PaymentEventConsumer {
                     .amount(payment.getAmount())
                     .build();
 
-            paymentEventProducer.sendPaymentCancelledEvent(cancelledEvent);
+            outboxEventPublisher.publishPaymentCancelledEvent(cancelledEvent);
 
             markProcessed(event.getEventId(), "order-cancelled");
         });
