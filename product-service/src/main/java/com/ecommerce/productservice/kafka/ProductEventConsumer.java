@@ -3,6 +3,7 @@ package com.ecommerce.productservice.kafka;
 import com.ecommerce.productservice.entity.Product;
 import com.ecommerce.productservice.entity.ProcessedEvent;
 import com.ecommerce.productservice.event.*;
+import com.ecommerce.productservice.outbox.OutboxEventPublisher;
 import com.ecommerce.productservice.repository.ProductRepository;
 import com.ecommerce.productservice.repository.ProcessedEventRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +23,7 @@ import java.util.UUID;
 public class ProductEventConsumer {
 
     private final ProductRepository productRepository;
-    private final ProductEventProducer productEventProducer;
+    private final OutboxEventPublisher outboxEventPublisher;
     private final ProcessedEventRepository processedEventRepository;
 
     @KafkaListener(topics = "order-created", groupId = "product-service")
@@ -77,7 +78,7 @@ public class ProductEventConsumer {
                     .items(decreasedItems)
                     .build();
 
-            productEventProducer.sendStockDecreasedEvent(successEvent);
+            outboxEventPublisher.publishStockDecreasedEvent(successEvent);
             log.info("Stock decreased successfully for order: orderId={}", event.getOrderId());
 
             markProcessed(event.getEventId(), "order-created");
@@ -108,7 +109,7 @@ public class ProductEventConsumer {
                 .productId(productId)
                 .reason(reason)
                 .build();
-        productEventProducer.sendStockDecreaseFailedEvent(failedEvent);
+        outboxEventPublisher.publishStockDecreaseFailedEvent(failedEvent);
     }
 
     @KafkaListener(topics = "order-cancelled", groupId = "product-service")

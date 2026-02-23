@@ -1,0 +1,76 @@
+package com.ecommerce.productservice.outbox;
+
+import com.ecommerce.productservice.entity.OutboxEvent;
+import com.ecommerce.productservice.enums.OutboxStatus;
+import com.ecommerce.productservice.repository.OutboxEventRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class OutboxProcessor {
+
+    private static final int BATCH_SIZE = 100;
+    private static final int MAX_RETRY_COUNT = 3;
+    private static final int CLEANUP_DAYS = 7;
+
+    private final OutboxEventRepository outboxEventRepository;
+    private final KafkaTemplate<String, String> kafkaTemplate;
+
+    @Scheduled(fixedDelay = 1000)
+    @Transactional
+    public void processOutboxEvents() {
+        List<OutboxEvent> events = outboxEventRepository.findByStatusWithLimit(OutboxStatus.PENDING, BATCH_SIZE);
+
+        for (OutboxEvent event : events) {
+            try {
+                kafkaTemplate.send(event.getTopic(), event.getAggregateId(), event.getPayload())
+                        .whenComplete((result, ex) -> {
+                            if (ex != null) {
+                                log.error("Kafka 발행 실패: eventId={}, topic={}", event.getId(), event.getTopic(), ex);
+                            }
+                        });
+
+                event.markAsProcessed();
+                log.debug("Outbox 이벤트 처리 완료: eventId={}, eventType={}", event.getId(), event.getEventType());
+
+            } catch (Exception e) {
+                log.error("Outbox 이벤트 처리 실패: eventId={}, eventType={}", event.getId(), event.getEventType(), e);
+                event.markAsFailed();
+
+                if (!event.canRetry(MAX_RETRY_COUNT)) {
+                    log.warn("Outbox 이벤트 최대 재시도 초과: eventId={}, retryCount={}", event.getId(), event.getRetryCount());
+                }
+            }
+        }
+    }
+
+    @Scheduled(cron = "0 0 3 * * *")
+    @Transactional
+    public void cleanupProcessedEvents() {
+        LocalDateTime cutoffDate = LocalDateTime.now().minusDays(CLEANUP_DAYS);
+        int deletedCount = outboxEventRepository.deleteProcessedEventsBefore(OutboxStatus.PROCESSED, cutoffDate);
+        log.info("Outbox 이벤트 정리 완료: 삭제된 이벤트 수={}", deletedCount);
+    }
+
+    @Scheduled(fixedDelay = 60000)
+    @Transactional
+    public void retryFailedEvents() {
+        List<OutboxEvent> failedEvents = outboxEventRepository.findByStatusOrderByCreatedAtAsc(OutboxStatus.FAILED);
+
+        for (OutboxEvent event : failedEvents) {
+            if (event.canRetry(MAX_RETRY_COUNT)) {
+                event.retry();
+                log.info("Outbox 이벤트 재시도 대기열 추가: eventId={}, retryCount={}", event.getId(), event.getRetryCount());
+            }
+        }
+    }
+}
