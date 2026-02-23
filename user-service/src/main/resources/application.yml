@@ -64,6 +64,18 @@ springdoc:
   paths-to-match: /**
   packages-to-scan: com.ecommerce.userservice
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
 logging:
   level:
     org.hibernate.SQL: DEBUG
