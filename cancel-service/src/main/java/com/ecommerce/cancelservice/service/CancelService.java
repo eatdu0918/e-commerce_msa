@@ -12,7 +12,7 @@ import com.ecommerce.cancelservice.event.CancelRejectedEvent;
 import com.ecommerce.cancelservice.event.CancelRequestedEvent;
 import com.ecommerce.cancelservice.exception.CancelDomainException;
 import com.ecommerce.cancelservice.exception.CancelDomainExceptionCode;
-import com.ecommerce.cancelservice.kafka.CancelEventProducer;
+import com.ecommerce.cancelservice.outbox.OutboxEventPublisher;
 import com.ecommerce.cancelservice.repository.CancelRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +30,7 @@ import java.util.UUID;
 public class CancelService {
 
     private final CancelRepository cancelRepository;
-    private final CancelEventProducer cancelEventProducer;
+    private final OutboxEventPublisher outboxEventPublisher;
 
     @Transactional
     public CancelResponse createCancel(Long userId, CreateCancelRequest request) {
@@ -63,7 +63,7 @@ public class CancelService {
                 savedCancel.getId(), savedCancel.getCancelNumber());
 
         CancelRequestedEvent event = createCancelRequestedEvent(savedCancel);
-        cancelEventProducer.sendCancelRequestedEvent(event);
+        outboxEventPublisher.publishCancelRequestedEvent(event);
 
         return CancelResponse.from(savedCancel);
     }
@@ -157,7 +157,7 @@ public class CancelService {
                 .items(items)
                 .build();
 
-        cancelEventProducer.sendCancelApprovedEvent(event);
+        outboxEventPublisher.publishCancelApprovedEvent(event);
         log.info("취소 승인 완료: cancelId={}", cancelId);
 
         return CancelResponse.from(cancel);
@@ -186,7 +186,7 @@ public class CancelService {
                 .rejectedReason(rejectedReason)
                 .build();
 
-        cancelEventProducer.sendCancelRejectedEvent(event);
+        outboxEventPublisher.publishCancelRejectedEvent(event);
         log.info("취소 거부 완료: cancelId={}", cancelId);
 
         return CancelResponse.from(cancel);
