@@ -85,6 +85,18 @@ feign:
     payment-service:
        url: "${PAYMENT_SERVICE_URL:http://localhost:8084}"
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
 logging:
   level:
     org.hibernate.SQL: DEBUG
