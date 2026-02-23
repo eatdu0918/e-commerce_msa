@@ -3,6 +3,7 @@ package com.ecommerce.discountservice.kafka;
 import com.ecommerce.discountservice.entity.ProcessedEvent;
 import com.ecommerce.discountservice.entity.UserCoupon;
 import com.ecommerce.discountservice.event.*;
+import com.ecommerce.discountservice.outbox.OutboxEventPublisher;
 import com.ecommerce.discountservice.repository.ProcessedEventRepository;
 import com.ecommerce.discountservice.repository.UserCouponRepository;
 import com.ecommerce.discountservice.service.CouponService;
@@ -21,7 +22,7 @@ public class DiscountEventConsumer {
 
     private final CouponService couponService;
     private final UserCouponRepository userCouponRepository;
-    private final DiscountEventProducer discountEventProducer;
+    private final OutboxEventPublisher outboxEventPublisher;
     private final ProcessedEventRepository processedEventRepository;
 
     @KafkaListener(topics = "stock-decreased", groupId = "discount-service")
@@ -43,7 +44,7 @@ public class DiscountEventConsumer {
                     .couponId(null)
                     .discountAmount(null)
                     .build();
-            discountEventProducer.sendCouponUsedEvent(couponUsedEvent);
+            outboxEventPublisher.publishCouponUsedEvent(couponUsedEvent);
             markProcessed(event.getEventId(), "stock-decreased");
             return;
         }
@@ -70,7 +71,7 @@ public class DiscountEventConsumer {
                     .discountAmount(discountAmount)
                     .build();
 
-            discountEventProducer.sendCouponUsedEvent(couponUsedEvent);
+            outboxEventPublisher.publishCouponUsedEvent(couponUsedEvent);
             log.info("Coupon used successfully: orderId={}, discountAmount={}",
                     event.getOrderId(), discountAmount);
 
@@ -89,7 +90,7 @@ public class DiscountEventConsumer {
                     .reason(e.getMessage())
                     .build();
 
-            discountEventProducer.sendCouponUseFailedEvent(failedEvent);
+            outboxEventPublisher.publishCouponUseFailedEvent(failedEvent);
         }
     }
 
@@ -118,7 +119,7 @@ public class DiscountEventConsumer {
                     .userCouponId(event.getUserCouponId())
                     .build();
 
-            discountEventProducer.sendCouponRestoredEvent(restoredEvent);
+            outboxEventPublisher.publishCouponRestoredEvent(restoredEvent);
             log.info("Coupon restored successfully: orderId={}", event.getOrderId());
 
             markProcessed(event.getEventId(), "order-cancelled");
