@@ -8,6 +8,7 @@ import { addToWishlist, removeFromWishlist, isInWishlist } from '../../api/servi
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate, useOutletContext } from 'react-router-dom';
 import { getProduct } from '../../api/services/product';
+import { getStock } from '../../api/services/stock';
 import ReviewList from '../review/ReviewList';
 import ReviewForm from '../review/ReviewForm';
 import { Helmet } from 'react-helmet-async';
@@ -32,6 +33,12 @@ export default function ProductDetailPage() {
     const { data: product, isLoading } = useQuery({
         queryKey: ['product', id],
         queryFn: () => getProduct(Number(id)),
+        enabled: !!id,
+    });
+
+    const { data: stockInfo } = useQuery({
+        queryKey: ['stock', id],
+        queryFn: () => getStock(Number(id)),
         enabled: !!id,
     });
 
@@ -130,7 +137,24 @@ export default function ProductDetailPage() {
                     <div className="text-left">
                         <p className="text-xs text-stone-400 uppercase tracking-widest mb-2 font-bold">{product.category}</p>
                         <h2 className="text-4xl font-bold mb-4 tracking-tight text-stone-900">{product.name}</h2>
-                        <p className="text-2xl font-light mb-8 text-stone-800">₩{product.price.toLocaleString()}</p>
+                        <p className="text-2xl font-light mb-4 text-stone-800">₩{product.price.toLocaleString()}</p>
+                        {stockInfo && (
+                            <div className="mb-6">
+                                {stockInfo.quantity > 10 ? (
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
+                                        In Stock ({stockInfo.quantity})
+                                    </span>
+                                ) : stockInfo.quantity > 0 ? (
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700">
+                                        Low Stock - Only {stockInfo.quantity} left
+                                    </span>
+                                ) : (
+                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">
+                                        Out of Stock
+                                    </span>
+                                )}
+                            </div>
+                        )}
                         <p className="text-stone-500 mb-12 leading-relaxed max-w-md">{product.description}</p>
 
                         <div className="space-y-8 mb-12">
