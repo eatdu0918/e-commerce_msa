@@ -33,6 +33,7 @@ const OrderDetailView = lazy(() => import('./components/order/OrderDetailView'))
 const CouponView = lazy(() => import('./components/profile/CouponView'));
 const CancelRefundView = lazy(() => import('./components/profile/CancelRefundView'));
 const PaymentHistoryView = lazy(() => import('./components/profile/PaymentHistoryView'));
+const MyReviewsView = lazy(() => import('./components/profile/MyReviewsView'));
 
 function App() {
   useTranslation();
@@ -67,6 +68,7 @@ function App() {
             <Route path="/me/coupons" element={<CouponView />} />
             <Route path="/me/cancel-refund" element={<CancelRefundView />} />
             <Route path="/me/payments" element={<PaymentHistoryView />} />
+            <Route path="/me/reviews" element={<MyReviewsView />} />
           </Route>
 
         </Route>
