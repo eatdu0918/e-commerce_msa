@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { getProductReviews } from '../../api/services/review';
 import { Star, User } from 'lucide-react';
-import { format } from 'date-fns';
+import dayjs from 'dayjs';
 
 interface ReviewListProps {
     productId: number;
@@ -51,7 +51,7 @@ export default function ReviewList({ productId }: ReviewListProps) {
                                 </div>
                             </div>
                             <span className="text-xs text-stone-400">
-                                {format(new Date(review.createdAt), 'yyyy-MM-dd')}
+                                {dayjs(review.createdAt).format('YYYY-MM-DD')}
                             </span>
                         </div>
                         <p className="text-stone-600 text-sm mt-3 leading-relaxed">{review.content}</p>
