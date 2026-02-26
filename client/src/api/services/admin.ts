@@ -131,11 +131,72 @@ export interface UpdateCouponRequest {
   isActive: boolean;
 }
 
+export interface Product {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  stockQuantity: number;
+  categoryId: number;
+  categoryName: string;
+  imageUrl: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateProductRequest {
+  name: string;
+  description: string;
+  price: number;
+  stockQuantity: number;
+  categoryId: number;
+  imageUrl?: string;
+}
+
+export interface UpdateProductRequest {
+  name: string;
+  description: string;
+  price: number;
+  stockQuantity: number;
+  categoryId: number;
+  imageUrl?: string;
+}
+
 // ============================================================
 // API Services
 // ============================================================
 
 export const adminApi = {
+  // Products
+  getProducts: async (page = 0, size = 10, keyword?: string) => {
+    const keywordParam = keyword ? `&keyword=${encodeURIComponent(keyword)}` : '';
+    const response = await api.get<ApiResponse<PageResponse<Product>>>(
+      `/api/products?page=${page}&size=${size}${keywordParam}`
+    );
+    return response.data;
+  },
+
+  getProduct: async (id: number) => {
+    const response = await api.get<ApiResponse<Product>>(`/api/products/${id}`);
+    return response.data;
+  },
+
+  createProduct: async (data: CreateProductRequest) => {
+    const response = await api.post<ApiResponse<Product>>('/api/products', data);
+    return response.data;
+  },
+
+  updateProduct: async (id: number, data: UpdateProductRequest) => {
+    const response = await api.put<ApiResponse<Product>>(`/api/products/${id}`, data);
+    return response.data;
+  },
+
+  deleteProduct: async (id: number) => {
+    const response = await api.delete<ApiResponse<void>>(`/api/products/${id}`);
+    return response.data;
+  },
+
   // Users
   getUsers: async (page = 0, size = 10) => {
     const response = await api.get<ApiResponse<PageResponse<User>>>(
