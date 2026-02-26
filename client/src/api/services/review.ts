@@ -43,3 +43,18 @@ export const getMyReviews = async (page = 0, size = 10): Promise<ReviewPageRespo
     });
     return response.data.data;
 };
+
+export interface UpdateReviewRequest {
+    score: number;
+    content: string;
+    imageUrl?: string;
+}
+
+export const updateReview = async (reviewId: number, data: UpdateReviewRequest): Promise<ReviewResponse> => {
+    const response = await api.put<{ data: ReviewResponse }>(`/api/reviews/${reviewId}`, data);
+    return response.data.data;
+};
+
+export const deleteReview = async (reviewId: number): Promise<void> => {
+    await api.delete(`/api/reviews/${reviewId}`);
+};
