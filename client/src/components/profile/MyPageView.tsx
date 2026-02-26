@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { User, Package, Heart, CreditCard, RotateCcw, Ticket, ChevronRight } from 'lucide-react';
+import { User, Package, Heart, CreditCard, RotateCcw, Ticket, ChevronRight, MessageSquare } from 'lucide-react';
 import type { UserResponse } from '../../api/services/user';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
@@ -17,6 +17,7 @@ export default function MyPageView() {
     const menuItems = [
         { id: 'orders', label: t('common.order_tracking'), icon: <Package size={24} className="text-blue-500" />, path: '/me/orders', desc: 'Check shipping status' },
         { id: 'wishlist', label: t('common.wishlist'), icon: <Heart size={24} className="text-red-500" />, path: '/me/wishlist', desc: 'Your saved items' },
+        { id: 'reviews', label: 'My Reviews', icon: <MessageSquare size={24} className="text-green-500" />, path: '/me/reviews', desc: 'Manage your reviews' },
         { id: 'coupons', label: 'My Coupons', icon: <Ticket size={24} className="text-purple-500" />, path: '/me/coupons', desc: 'Available coupons' },
         { id: 'payments', label: 'Payment History', icon: <CreditCard size={24} className="text-indigo-500" />, path: '/me/payments', desc: 'Transaction history' },
         { id: 'cancel-refund', label: 'Cancel/Refund', icon: <RotateCcw size={24} className="text-orange-500" />, path: '/me/cancel-refund', desc: 'Returns and refunds' },
