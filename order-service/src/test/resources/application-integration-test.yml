@@ -1,0 +1,84 @@
+spring:
+  application:
+    name: order-service-integration-test
+  main:
+    allow-bean-definition-overriding: true
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration
+  datasource:
+    url: jdbc:h2:mem:order_db;MODE=MySQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+  flyway:
+    enabled: false
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  kafka:
+    bootstrap-servers: ${spring.embedded.kafka.brokers}
+    consumer:
+      group-id: order-service-integration-test
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+        spring.json.type.mapping: >-
+          OrderCreatedEvent:com.ecommerce.orderservice.event.OrderCreatedEvent,
+          OrderCancelledEvent:com.ecommerce.orderservice.event.OrderCancelledEvent,
+          StockDecreasedEvent:com.ecommerce.orderservice.event.StockDecreasedEvent,
+          StockDecreaseFailedEvent:com.ecommerce.orderservice.event.StockDecreaseFailedEvent,
+          CouponUsedEvent:com.ecommerce.orderservice.event.CouponUsedEvent,
+          CouponUseFailedEvent:com.ecommerce.orderservice.event.CouponUseFailedEvent,
+          PaymentFailedEvent:com.ecommerce.orderservice.event.PaymentFailedEvent,
+          CancelApprovedEvent:com.ecommerce.orderservice.event.CancelApprovedEvent
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.type.mapping: >-
+          OrderCreatedEvent:com.ecommerce.orderservice.event.OrderCreatedEvent,
+          OrderCancelledEvent:com.ecommerce.orderservice.event.OrderCancelledEvent,
+          StockDecreasedEvent:com.ecommerce.orderservice.event.StockDecreasedEvent,
+          StockDecreaseFailedEvent:com.ecommerce.orderservice.event.StockDecreaseFailedEvent,
+          CouponUsedEvent:com.ecommerce.orderservice.event.CouponUsedEvent,
+          CouponUseFailedEvent:com.ecommerce.orderservice.event.CouponUseFailedEvent,
+          PaymentFailedEvent:com.ecommerce.orderservice.event.PaymentFailedEvent,
+          CancelApprovedEvent:com.ecommerce.orderservice.event.CancelApprovedEvent
+
+jwt:
+  secret: "test-secret-key-minimum-32-characters-required-for-testing"
+
+server:
+  port: 0
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+    product-service:
+      url: "http://localhost:8081"
+    payment-service:
+      url: "http://localhost:8084"
+
+logging:
+  level:
+    org.hibernate.SQL: DEBUG
+    org.springframework.kafka: INFO
+    root: INFO
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
