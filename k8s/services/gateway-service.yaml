@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway-service
+  namespace: sparta-msa
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gateway-service
+  template:
+    metadata:
+      labels:
+        app: gateway-service
+    spec:
+      containers:
+      - name: gateway-service
+        image: gateway-service:latest # 로컬 빌드 이미지 사용 가정
+        ports:
+        - containerPort: 8000
+        env:
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: sparta-msa-config
+              key: REDIS_HOST
+        - name: REDIS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: sparta-msa-config
+              key: REDIS_PORT
+        - name: USER_SERVICE_URL
+          value: "http://user-service:8080"
+        - name: PRODUCT_SERVICE_URL
+          value: "http://product-service:8081"
+        - name: ORDER_SERVICE_URL
+          value: "http://order-service:8082"
+        - name: DISCOUNT_SERVICE_URL
+          value: "http://discount-service:8083"
+        - name: PAYEMNT_SERVICE_URL
+          value: "http://payment-service:8084"
+        - name: CANCEL_SERVICE_URL
+          value: "http://cancel-service:8085"
+        - name: REFUND_SERVICE_URL
+          value: "http://refund-service:8086"
+        - name: JWT_SECRET
+          valueFrom:
+            configMapKeyRef:
+              name: sparta-msa-config
+              key: JWT_SECRET
+        resources:
+          limits:
+            memory: "512Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway-service
+  namespace: sparta-msa
+spec:
+  type: LoadBalancer # Minikube에서 외부 접속 유도
+  ports:
+  - port: 8000
+    targetPort: 8000
+  selector:
+    app: gateway-service
