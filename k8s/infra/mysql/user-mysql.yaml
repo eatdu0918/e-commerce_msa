@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-mysql
+  namespace: sparta-msa
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user-mysql
+  template:
+    metadata:
+      labels:
+        app: user-mysql
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:8.0
+        ports:
+        - containerPort: 3306
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            configMapKeyRef:
+              name: sparta-msa-config
+              key: MYSQL_ROOT_PASSWORD
+        - name: MYSQL_DATABASE
+          value: user_db
+        resources:
+          limits:
+            memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-mysql
+  namespace: sparta-msa
+spec:
+  ports:
+  - port: 3306
+    targetPort: 3306
+  selector:
+    app: user-mysql
