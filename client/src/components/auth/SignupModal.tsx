@@ -38,8 +38,14 @@ export default function SignupModal({ isOpen, onClose, onSwitchToLogin }: Signup
     };
 
     return (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl relative">
+        <div
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm cursor-pointer"
+            onClick={onClose}
+        >
+            <div
+                className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl relative cursor-default"
+                onClick={(e) => e.stopPropagation()}
+            >
                 <button
                     onClick={onClose}
                     className="absolute top-6 right-6 text-stone-400 hover:text-black transition-colors"

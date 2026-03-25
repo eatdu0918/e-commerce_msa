@@ -31,8 +31,14 @@ export default function AddressSearchModal({ isOpen, onClose, onComplete }: Addr
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden relative shadow-2xl">
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm cursor-pointer"
+            onClick={onClose}
+        >
+            <div
+                className="bg-white rounded-2xl w-full max-w-md overflow-hidden relative shadow-2xl cursor-default"
+                onClick={(e) => e.stopPropagation()}
+            >
                 <div className="flex justify-between items-center p-4 border-b border-gray-100">
                     <h3 className="font-bold text-lg">주소 검색</h3>
                     <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
