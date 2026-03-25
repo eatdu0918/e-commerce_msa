@@ -4,8 +4,11 @@ import { getMyReviews, updateReview, deleteReview } from '../../api/services/rev
 import type { ReviewResponse } from '../../api/services/review';
 import { Star, Edit2, Trash2, X, Check } from 'lucide-react';
 import dayjs from 'dayjs';
+import { useTranslation } from 'react-i18next';
+import toast from 'react-hot-toast';
 
 export default function MyReviewsView() {
+    const { t } = useTranslation();
     const [page, setPage] = useState(0);
     const [editingReview, setEditingReview] = useState<ReviewResponse | null>(null);
     const [editScore, setEditScore] = useState(5);
@@ -23,6 +26,7 @@ export default function MyReviewsView() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['my-reviews'] });
             setEditingReview(null);
+            toast.success(t('review.success'));
         },
     });
 
@@ -30,6 +34,7 @@ export default function MyReviewsView() {
         mutationFn: deleteReview,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['my-reviews'] });
+            toast.success(t('common.delete_success') || 'Deleted successfully');
         },
     });
 
@@ -48,14 +53,14 @@ export default function MyReviewsView() {
     };
 
     const handleDelete = (reviewId: number) => {
-        if (window.confirm('Are you sure you want to delete this review?')) {
+        if (window.confirm(t('review.delete_confirm'))) {
             deleteMutation.mutate(reviewId);
         }
     };
 
     if (isLoading) {
         return (
-            <div className="space-y-4">
+            <div className="max-w-5xl mx-auto px-6 py-12 space-y-4">
                 {[...Array(3)].map((_, i) => (
                     <div key={i} className="bg-white rounded-2xl p-6 animate-pulse">
                         <div className="h-4 bg-stone-100 rounded w-1/3 mb-3" />
@@ -70,34 +75,34 @@ export default function MyReviewsView() {
     const reviews = data?.content || [];
 
     return (
-        <div className="space-y-6">
+        <div className="max-w-5xl mx-auto px-6 py-12 space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-2xl font-bold">My Reviews</h1>
-                    <p className="text-stone-500 text-sm mt-1">Manage your product reviews</p>
+                    <h1 className="text-2xl font-bold">{t('review.my_reviews_title')}</h1>
+                    <p className="text-stone-500 text-sm mt-1">{t('review.my_reviews_subtitle')}</p>
                 </div>
                 <span className="text-sm text-stone-400">
-                    Total {data?.totalElements || 0} reviews
+                    {t('review.total_count', { count: data?.totalElements || 0 })}
                 </span>
             </div>
 
             {reviews.length === 0 ? (
                 <div className="bg-white rounded-2xl p-12 text-center border border-stone-100">
-                    <p className="text-stone-400">You haven't written any reviews yet.</p>
+                    <p className="text-stone-400">{t('review.empty_msg')}</p>
                 </div>
             ) : (
                 <div className="space-y-4">
                     {reviews.map((review) => (
                         <div
                             key={review.id}
-                            className="bg-white rounded-2xl p-6 border border-stone-100 shadow-sm"
+                            className="bg-white rounded-2xl p-6 border border-stone-100 shadow-sm text-left"
                         >
                             {editingReview?.id === review.id ? (
                                 // Edit Mode
                                 <div className="space-y-4">
                                     <div>
                                         <label className="text-xs font-bold text-stone-400 uppercase mb-2 block">
-                                            Rating
+                                            {t('review.rating')}
                                         </label>
                                         <div className="flex space-x-1">
                                             {[1, 2, 3, 4, 5].map((star) => (
@@ -117,7 +122,7 @@ export default function MyReviewsView() {
                                     </div>
                                     <div>
                                         <label className="text-xs font-bold text-stone-400 uppercase mb-2 block">
-                                            Content
+                                            {t('review.content')}
                                         </label>
                                         <textarea
                                             value={editContent}
@@ -132,7 +137,7 @@ export default function MyReviewsView() {
                                             className="px-4 py-2 text-sm text-stone-500 hover:bg-stone-100 rounded-lg transition-colors flex items-center space-x-1"
                                         >
                                             <X size={16} />
-                                            <span>Cancel</span>
+                                            <span>{t('review.cancel')}</span>
                                         </button>
                                         <button
                                             onClick={handleUpdate}
@@ -140,7 +145,7 @@ export default function MyReviewsView() {
                                             className="px-4 py-2 text-sm bg-black text-white rounded-lg hover:bg-stone-800 transition-colors flex items-center space-x-1 disabled:opacity-50"
                                         >
                                             <Check size={16} />
-                                            <span>{updateMutation.isPending ? 'Saving...' : 'Save'}</span>
+                                            <span>{updateMutation.isPending ? t('review.saving') : t('review.save')}</span>
                                         </button>
                                     </div>
                                 </div>
@@ -150,7 +155,7 @@ export default function MyReviewsView() {
                                     <div className="flex justify-between items-start mb-3">
                                         <div>
                                             <p className="text-xs text-stone-400 mb-1">
-                                                Product #{review.productId}
+                                                {t('review.product_no', { id: review.productId })}
                                             </p>
                                             <div className="flex items-center space-x-2">
                                                 <div className="flex">
@@ -209,17 +214,17 @@ export default function MyReviewsView() {
                         disabled={page === 0}
                         className="px-4 py-2 rounded-lg border border-stone-200 text-sm disabled:opacity-30 hover:bg-stone-50 transition-colors"
                     >
-                        Previous
+                        {t('review.prev')}
                     </button>
                     <span className="px-4 py-2 text-sm text-stone-500">
-                        Page {page + 1} of {data.totalPages}
+                        {t('review.page_info', { current: page + 1, total: data.totalPages })}
                     </span>
                     <button
                         onClick={() => setPage((p) => Math.min(data.totalPages - 1, p + 1))}
                         disabled={page >= data.totalPages - 1}
                         className="px-4 py-2 rounded-lg border border-stone-200 text-sm disabled:opacity-30 hover:bg-stone-50 transition-colors"
                     >
-                        Next
+                        {t('review.next')}
                     </button>
                 </div>
             )}
