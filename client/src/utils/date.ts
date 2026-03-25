@@ -24,3 +24,8 @@ export const formatRelative = (date: string | Date | undefined) => {
     if (diff < 7) return `${diff}일 전`;
     return target.format('YYYY.MM.DD');
 };
+
+export const getEstimatedArrivalDate = (date: string | Date | undefined) => {
+    if (!date) return '';
+    return dayjs(date).add(2, 'day').format('M월 D일');
+};
