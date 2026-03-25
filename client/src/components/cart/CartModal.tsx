@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getCart, updateCartItem, removeFromCart } from '../../api/services/cart';
 import type { CartResponse } from '../../api/services/cart';
 import { useTranslation } from 'react-i18next';
+import { useScrollLock } from '../../hooks/useScrollLock';
 
 interface CartModalProps {
     isOpen: boolean;
@@ -13,6 +14,8 @@ interface CartModalProps {
 export default function CartModal({ isOpen, onClose, onCheckout }: CartModalProps) {
     const { t } = useTranslation();
     const queryClient = useQueryClient();
+
+    useScrollLock(isOpen);
 
     const { data: cart, isLoading } = useQuery<CartResponse>({
         queryKey: ['cart'],

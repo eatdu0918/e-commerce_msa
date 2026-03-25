@@ -3,6 +3,7 @@ import { createOrder } from '../../api/services/order';
 import type { UserResponse } from '../../api/services/user';
 import type { Product } from '../../types/product';
 import { X } from 'lucide-react';
+import { useScrollLock } from '../../hooks/useScrollLock';
 
 interface OrderModalProps {
     isOpen: boolean;
@@ -19,6 +20,8 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
     const [recipientPhone, setRecipientPhone] = useState(user.phoneNumber || '');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+
+    useScrollLock(isOpen);
 
     if (!isOpen) return null;
 

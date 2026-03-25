@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { signup } from '../../api/services/user';
 import { X } from 'lucide-react';
+import { useScrollLock } from '../../hooks/useScrollLock';
 
 interface SignupModalProps {
     isOpen: boolean;
@@ -17,6 +18,8 @@ export default function SignupModal({ isOpen, onClose, onSwitchToLogin }: Signup
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
+    useScrollLock(isOpen);
+
     if (!isOpen) return null;
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -24,7 +27,7 @@ export default function SignupModal({ isOpen, onClose, onSwitchToLogin }: Signup
         setError('');
         setLoading(true);
         try {
-            await signup({ email, password, name, phoneNumber, gender });
+            await signup({ email, password, name, phoneNumber, gender, address: '', role: 'USER' });
             alert('회원가입이 완료되었습니다. 로그인해주세요.');
             onSwitchToLogin();
         } catch (_err: any) {

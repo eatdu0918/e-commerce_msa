@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useState } from 'react';
+import { useScrollLock } from '../../hooks/useScrollLock';
 
 interface LoginModalProps {
     isOpen: boolean;
@@ -24,6 +25,8 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, onSignupCl
     const { register, handleSubmit, formState: { errors }, setError } = useForm<LoginFormValues>({
         resolver: zodResolver(loginSchema)
     });
+
+    useScrollLock(isOpen);
 
     if (!isOpen) return null;
 

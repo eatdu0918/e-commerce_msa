@@ -1,5 +1,6 @@
 import DaumPostcode from 'react-daum-postcode';
 import { X } from 'lucide-react';
+import { useScrollLock } from '../../hooks/useScrollLock';
 
 interface AddressSearchModalProps {
     isOpen: boolean;
@@ -8,6 +9,7 @@ interface AddressSearchModalProps {
 }
 
 export default function AddressSearchModal({ isOpen, onClose, onComplete }: AddressSearchModalProps) {
+    useScrollLock(isOpen);
     if (!isOpen) return null;
 
     const handleComplete = (data: any) => {
