@@ -13,11 +13,14 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { useScrollLock } from '../../hooks/useScrollLock';
 
 export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useScrollLock(sidebarOpen);
 
   useEffect(() => {
     const userRole = sessionStorage.getItem('role');

@@ -5,6 +5,7 @@ import type { Product, CreateProductRequest, UpdateProductRequest } from '../../
 import { getAllCategories } from '../../api/services/category';
 import type { CategoryResponse } from '../../api/services/category';
 import { Plus, Edit2, Trash2, Search, X } from 'lucide-react';
+import { useScrollLock } from '../../hooks/useScrollLock';
 
 interface ProductFormData {
     name: string;
@@ -31,6 +32,8 @@ export default function AdminProductList() {
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const [formData, setFormData] = useState<ProductFormData>(initialFormData);
     const queryClient = useQueryClient();
+
+    useScrollLock(isModalOpen);
 
     const { data, isLoading } = useQuery({
         queryKey: ['admin-products', page, keyword],
