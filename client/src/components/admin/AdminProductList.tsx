@@ -278,8 +278,14 @@ export default function AdminProductList() {
 
             {/* Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                <div
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 cursor-pointer"
+                    onClick={closeModal}
+                >
+                    <div
+                        className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto cursor-default"
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         <div className="p-6 border-b border-stone-100 flex justify-between items-center">
                             <h2 className="text-xl font-bold">
                                 {editingProduct ? 'Edit Product' : 'Add New Product'}
