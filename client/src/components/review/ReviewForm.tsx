@@ -34,21 +34,28 @@ export default function ReviewForm({ productId, onCancel }: ReviewFormProps) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!content.trim()) return;
+        const trimmedContent = content.trim();
+        
+        if (!trimmedContent) return;
+
+        if (trimmedContent.length < 5) {
+            toast.error(t('review.content_length_error'));
+            return;
+        }
 
         mutation.mutate({
             productId,
             score,
-            content
+            content: trimmedContent
         });
     };
 
     return (
         <form onSubmit={handleSubmit} className="bg-stone-50 p-6 rounded-2xl border border-stone-100 mb-8">
-            <h4 className="font-bold mb-4">{t('review.write_title') || 'Write a Review'}</h4>
+            <h4 className="font-bold mb-4">{t('review.write_title')}</h4>
 
             <div className="mb-4">
-                <label className="block text-xs font-bold text-stone-400 uppercase mb-2">Rating</label>
+                <label className="block text-xs font-bold text-stone-400 uppercase mb-2">{t('review.rating')}</label>
                 <div className="flex space-x-1">
                     {[1, 2, 3, 4, 5].map((star) => (
                         <button
@@ -70,11 +77,11 @@ export default function ReviewForm({ productId, onCancel }: ReviewFormProps) {
             </div>
 
             <div className="mb-4">
-                <label className="block text-xs font-bold text-stone-400 uppercase mb-2">Review</label>
+                <label className="block text-xs font-bold text-stone-400 uppercase mb-2">{t('review.content')}</label>
                 <textarea
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
-                    placeholder="Share your thoughts about this product..."
+                    placeholder={t('review.placeholder')}
                     className="w-full bg-white border border-stone-200 rounded-xl p-4 text-sm focus:ring-2 focus:ring-black/5 focus:border-black transition-all outline-none resize-none h-32"
                     required
                 />
@@ -87,7 +94,7 @@ export default function ReviewForm({ productId, onCancel }: ReviewFormProps) {
                         onClick={onCancel}
                         className="px-6 py-2 bg-stone-200 text-stone-600 rounded-xl text-sm font-bold hover:bg-stone-300 transition-colors"
                     >
-                        Cancel
+                        {t('review.cancel')}
                     </button>
                 )}
                 <button
@@ -95,7 +102,7 @@ export default function ReviewForm({ productId, onCancel }: ReviewFormProps) {
                     disabled={mutation.isPending || !content.trim()}
                     className="px-6 py-2 bg-black text-white rounded-xl text-sm font-bold hover:bg-stone-800 transition-colors disabled:opacity-50"
                 >
-                    {mutation.isPending ? 'Submitting...' : 'Submit Review'}
+                    {mutation.isPending ? '...' : t('review.submit')}
                 </button>
             </div>
         </form>
