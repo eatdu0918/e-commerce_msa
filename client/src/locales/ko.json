@@ -16,6 +16,11 @@
         "my_shopping": "MY 쇼핑",
         "my_info": "MY 정보",
         "order_tracking": "주문목록/배송조회",
+        "wishlist": "관심 상품",
+        "my_reviews": "나의 리뷰",
+        "my_coupons": "나의 쿠폰",
+        "payment_history": "결제 내역",
+        "cancel_refund": "취소/반품",
         "edit_profile": "개인정보확인/수정",
         "products_count": "{{count}} Products",
         "no_products": "상품이 없습니다.",
@@ -107,6 +112,17 @@
         "cancel": "취소",
         "success": "리뷰가 성공적으로 등록되었습니다.",
         "error": "리뷰 등록에 실패했습니다.",
-        "content_length_error": "리뷰 내용은 최소 5자 이상이어야 합니다."
+        "content_length_error": "리뷰 내용은 최소 5자 이상이어야 합니다.",
+        "my_reviews_title": "나의 리뷰",
+        "my_reviews_subtitle": "내가 작성한 상품 리뷰를 관리합니다.",
+        "total_count": "총 {{count}}건",
+        "empty_msg": "작성한 리뷰가 없습니다.",
+        "delete_confirm": "이 리뷰를 삭제하시겠습니까?",
+        "save": "저장",
+        "saving": "저장 중...",
+        "product_no": "상품 번호 #{{id}}",
+        "prev": "이전",
+        "next": "다음",
+        "page_info": "{{total}}페이지 중 {{current}}페이지"
     }
 }
