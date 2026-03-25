@@ -97,5 +97,16 @@
         "title": "알림",
         "empty": "새로운 알림이 없습니다.",
         "view_all": "전체 보기"
+    },
+    "review": {
+        "write_title": "리뷰 작성하기",
+        "rating": "평점",
+        "content": "후기 내용",
+        "placeholder": "이 상품에 대한 생각을 공유해 주세요...",
+        "submit": "리뷰 등록하기",
+        "cancel": "취소",
+        "success": "리뷰가 성공적으로 등록되었습니다.",
+        "error": "리뷰 등록에 실패했습니다.",
+        "content_length_error": "리뷰 내용은 최소 5자 이상이어야 합니다."
     }
 }

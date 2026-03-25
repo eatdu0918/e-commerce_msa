@@ -98,5 +98,16 @@
         "title": "Notifications",
         "empty": "No new notifications.",
         "view_all": "View All"
+    },
+    "review": {
+        "write_title": "Write a Review",
+        "rating": "Rating",
+        "content": "Review content",
+        "placeholder": "Share your thoughts about this product...",
+        "submit": "Submit Review",
+        "cancel": "Cancel",
+        "success": "Review submitted successfully!",
+        "error": "Failed to submit review.",
+        "content_length_error": "Review content must be at least 5 characters long."
     }
 }
