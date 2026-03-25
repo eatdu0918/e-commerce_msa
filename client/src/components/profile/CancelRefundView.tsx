@@ -39,7 +39,7 @@ export default function CancelRefundView() {
     const isLoading = loadingCancels || loadingRefunds;
 
     return (
-        <div className="space-y-8">
+        <div className="max-w-5xl mx-auto px-6 py-12 space-y-8">
             {/* Stats */}
             <div className="grid grid-cols-2 gap-4">
                 <div className="bg-orange-50 p-5 rounded-2xl border border-orange-100 text-center">

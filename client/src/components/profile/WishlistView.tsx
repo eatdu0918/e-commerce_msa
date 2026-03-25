@@ -52,7 +52,7 @@ export default function WishlistView() {
     }
 
     return (
-        <div className="grid gap-6">
+        <div className="max-w-5xl mx-auto px-6 py-12 grid gap-6">
             {wishlistItems.map((item) => (
                 <div
                     key={item.wishlistItemId}

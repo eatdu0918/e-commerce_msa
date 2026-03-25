@@ -57,7 +57,7 @@ export default function CouponView() {
     };
 
     return (
-        <div className="space-y-8">
+        <div className="max-w-5xl mx-auto px-6 py-12 space-y-8">
             {/* Coupon Stats */}
             <div className="grid grid-cols-2 gap-4">
                 <div className="bg-stone-50 p-6 rounded-2xl border border-stone-100 text-center">

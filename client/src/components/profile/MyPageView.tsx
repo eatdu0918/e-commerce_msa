@@ -17,14 +17,14 @@ export default function MyPageView() {
     const menuItems = [
         { id: 'orders', label: t('common.order_tracking'), icon: <Package size={24} className="text-blue-500" />, path: '/me/orders', desc: 'Check shipping status' },
         { id: 'wishlist', label: t('common.wishlist'), icon: <Heart size={24} className="text-red-500" />, path: '/me/wishlist', desc: 'Your saved items' },
-        { id: 'reviews', label: 'My Reviews', icon: <MessageSquare size={24} className="text-green-500" />, path: '/me/reviews', desc: 'Manage your reviews' },
-        { id: 'coupons', label: 'My Coupons', icon: <Ticket size={24} className="text-purple-500" />, path: '/me/coupons', desc: 'Available coupons' },
-        { id: 'payments', label: 'Payment History', icon: <CreditCard size={24} className="text-indigo-500" />, path: '/me/payments', desc: 'Transaction history' },
-        { id: 'cancel-refund', label: 'Cancel/Refund', icon: <RotateCcw size={24} className="text-orange-500" />, path: '/me/cancel-refund', desc: 'Returns and refunds' },
+        { id: 'reviews', label: t('common.my_reviews'), icon: <MessageSquare size={24} className="text-green-500" />, path: '/me/reviews', desc: 'Manage your reviews' },
+        { id: 'coupons', label: t('common.my_coupons'), icon: <Ticket size={24} className="text-purple-500" />, path: '/me/coupons', desc: 'Available coupons' },
+        { id: 'payments', label: t('common.payment_history'), icon: <CreditCard size={24} className="text-indigo-500" />, path: '/me/payments', desc: 'Transaction history' },
+        { id: 'cancel-refund', label: t('common.cancel_refund'), icon: <RotateCcw size={24} className="text-orange-500" />, path: '/me/cancel-refund', desc: 'Returns and refunds' },
     ];
 
     return (
-        <div className="space-y-10">
+        <div className="max-w-5xl mx-auto px-6 py-12 space-y-10">
             {/* Profile Summary Card */}
             <div className="bg-stone-50 rounded-[30px] p-8 flex flex-col md:flex-row items-center md:items-start space-y-6 md:space-y-0 md:space-x-8 border border-stone-100">
                 <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center text-stone-300 border border-stone-200 shadow-inner">

@@ -45,7 +45,7 @@ export default function PaymentHistoryView() {
     }
 
     return (
-        <div className="space-y-8">
+        <div className="max-w-5xl mx-auto px-6 py-12 space-y-8">
             {/* Summary */}
             <div className="bg-stone-50 p-6 rounded-2xl border border-stone-100">
                 <p className="text-xs font-bold text-stone-400 uppercase mb-2">총 결제 건수</p>
