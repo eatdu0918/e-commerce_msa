@@ -9,7 +9,7 @@ import { Search } from 'lucide-react';
 
 export default function SearchResultPage() {
     const [searchParams] = useSearchParams();
-    const query = searchParams.get('q') || '';
+    const query = searchParams.get('keyword') || ''; // Changed from 'q' to 'keyword' to match ProductListPage and App.tsx search logic
     const { t } = useTranslation();
     const [page, setPage] = useState(0);
 
@@ -29,8 +29,8 @@ export default function SearchResultPage() {
         return (
             <div className="min-h-screen pt-24 pb-12 flex flex-col items-center justify-center text-center px-4">
                 <Search size={48} className="text-stone-300 mb-4" />
-                <h2 className="text-2xl font-bold mb-2">{t('search.enter_keyword') || 'Please enter a keyword'}</h2>
-                <p className="text-stone-500">{t('search.enter_keyword_desc') || 'Type something in the search bar to find products.'}</p>
+                <h2 className="text-2xl font-bold mb-2">{t('search.enter_keyword')}</h2>
+                <p className="text-stone-500">{t('search.enter_keyword_desc')}</p>
             </div>
         );
     }
@@ -44,10 +44,10 @@ export default function SearchResultPage() {
             <div className="max-w-7xl mx-auto px-6">
                 <div className="mb-8">
                     <h2 className="text-3xl font-bold">
-                        "{query}" {t('search.results_for') || 'Search Results'}
+                        "{query}" {t('search.results_for')}
                     </h2>
                     <p className="text-stone-500 mt-2">
-                        {isLoading ? 'Searching...' : `${data?.totalElements || 0} products found`}
+                        {isLoading ? t('search.searching') : t('search.products_found', { count: data?.totalElements || 0 })}
                     </p>
                 </div>
 
@@ -63,13 +63,13 @@ export default function SearchResultPage() {
                     </div>
                 ) : isError ? (
                     <div className="text-center py-20">
-                        <p className="text-red-500">{t('common.error_occurred') || 'An error occurred while searching.'}</p>
+                        <p className="text-red-500">{t('common.error_occurred')}</p>
                     </div>
                 ) : data?.content.length === 0 ? (
                     <div className="text-center py-32 bg-white rounded-[30px] border border-stone-100">
                         <Search size={48} className="text-stone-200 mx-auto mb-4" />
-                        <h3 className="text-xl font-bold mb-2">{t('search.no_results') || 'No results found'}</h3>
-                        <p className="text-stone-400">Try checking your spelling or use different keywords.</p>
+                        <h3 className="text-xl font-bold mb-2">{t('search.no_results')}</h3>
+                        <p className="text-stone-400">{t('search.try_different_keyword')}</p>
                     </div>
                 ) : (
                     <>
@@ -87,7 +87,7 @@ export default function SearchResultPage() {
                                     disabled={page === 0}
                                     className="px-4 py-2 rounded-lg border border-stone-200 disabled:opacity-30 hover:bg-stone-50 transition-colors"
                                 >
-                                    Previous
+                                    {t('review.prev')}
                                 </button>
                                 <span className="px-4 py-2 font-medium">
                                     {page + 1} / {data.totalPages}
@@ -97,7 +97,7 @@ export default function SearchResultPage() {
                                     disabled={page >= data.totalPages - 1}
                                     className="px-4 py-2 rounded-lg border border-stone-200 disabled:opacity-30 hover:bg-stone-50 transition-colors"
                                 >
-                                    Next
+                                    {t('review.next')}
                                 </button>
                             </div>
                         )}

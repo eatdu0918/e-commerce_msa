@@ -30,7 +30,7 @@ export default function ProductDetailPage() {
     const [isReviewFormOpen, setIsReviewFormOpen] = useState(false);
     const queryClient = useQueryClient();
 
-    const { data: product, isLoading } = useQuery({
+    const { data: product, isLoading, isError } = useQuery({
         queryKey: ['product', id],
         queryFn: () => getProduct(Number(id)),
         enabled: !!id,
@@ -106,10 +106,25 @@ export default function ProductDetailPage() {
         setIsOrderModalOpen(true);
     };
 
-    if (isLoading || !product) {
+    if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
+            </div>
+        );
+    }
+
+    if (isError || !product) {
+        return (
+            <div className="min-h-screen pt-32 pb-12 flex flex-col items-center justify-center text-center px-4 bg-[#f9f7f2]">
+                <h2 className="text-3xl font-bold mb-4">{t('product.not_found')}</h2>
+                <p className="text-stone-500 mb-8">{t('product.not_found_desc')}</p>
+                <button
+                    onClick={() => navigate('/shop')}
+                    className="bg-black text-white px-8 py-3 rounded-full font-bold hover:bg-stone-800 transition-all"
+                >
+                    {t('common.shop_all')}
+                </button>
             </div>
         );
     }
@@ -126,7 +141,7 @@ export default function ProductDetailPage() {
                     className="flex items-center text-stone-400 hover:text-black transition-colors mb-12 group"
                 >
                     <ChevronLeft size={20} className="mr-2 transition-transform group-hover:-translate-x-1" />
-                    <span className="text-sm font-medium">돌아가기</span>
+                    <span className="text-sm font-medium">{t('product.back')}</span>
                 </button>
 
                 <div className="grid md:grid-cols-2 gap-16 items-start">
@@ -142,15 +157,15 @@ export default function ProductDetailPage() {
                             <div className="mb-6">
                                 {stockInfo.quantity > 10 ? (
                                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
-                                        In Stock ({stockInfo.quantity})
+                                        {t('product.in_stock', { count: stockInfo.quantity })}
                                     </span>
                                 ) : stockInfo.quantity > 0 ? (
                                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700">
-                                        Low Stock - Only {stockInfo.quantity} left
+                                        {t('product.low_stock', { count: stockInfo.quantity })}
                                     </span>
                                 ) : (
                                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">
-                                        Out of Stock
+                                        {t('product.out_of_stock')}
                                     </span>
                                 )}
                             </div>
@@ -159,7 +174,7 @@ export default function ProductDetailPage() {
 
                         <div className="space-y-8 mb-12">
                             <div>
-                                <p className="text-xs font-bold mb-4 uppercase tracking-wider text-stone-400">SIZE</p>
+                                <p className="text-xs font-bold mb-4 uppercase tracking-wider text-stone-400">{t('product.size')}</p>
                                 <div className="flex space-x-3">
                                     {sizes.map(size => (
                                         <button
@@ -177,7 +192,7 @@ export default function ProductDetailPage() {
                             </div>
 
                             <div>
-                                <p className="text-xs font-bold mb-4 uppercase tracking-wider text-stone-400">QUANTITY</p>
+                                <p className="text-xs font-bold mb-4 uppercase tracking-wider text-stone-400">{t('product.quantity')}</p>
                                 <div className="flex items-center space-x-4 border border-stone-200 w-fit rounded-full px-4 py-2 bg-white">
                                     <button
                                         onClick={() => setQuantity((prev: number) => Math.max(1, prev - 1))}
@@ -223,13 +238,13 @@ export default function ProductDetailPage() {
 
                 <div className="mt-20 border-t border-stone-200 pt-16">
                     <div className="flex justify-between items-center mb-8">
-                        <h3 className="text-2xl font-bold text-left">Reviews</h3>
+                        <h3 className="text-2xl font-bold text-left">{t('product.reviews')}</h3>
                         {user && !isReviewFormOpen && (
                             <button
                                 onClick={() => setIsReviewFormOpen(true)}
                                 className="px-6 py-2 bg-black text-white rounded-xl text-sm font-bold hover:bg-stone-800 transition-all"
                             >
-                                Write a Review
+                                {t('product.write_review')}
                             </button>
                         )}
                     </div>

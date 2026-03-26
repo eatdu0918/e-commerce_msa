@@ -70,13 +70,25 @@ export default function ProductListPage() {
         }
     };
 
-    const { data: productsPage, isLoading } = useQuery({
+    const { data: productsPage, isLoading, isError, refetch } = useQuery({
         queryKey: ['products', page, currentFilter, currentSort, keyword],
         queryFn: () => fetchProducts(page, pageSize, getCategoryId(currentFilter), getBackendSort(currentSort), keyword),
     });
 
     const products = productsPage?.content || [];
     const totalPages = productsPage?.totalPages || 0;
+
+    if (isError) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-[#f9f7f2]">
+                <div className="text-center p-8 bg-white rounded-3xl shadow-xl max-w-md">
+                    <h2 className="text-2xl font-bold text-red-500 mb-4">앗! 문제가 발생했습니다</h2>
+                    <p className="text-stone-500 mb-6">상품 정보를 불러오는 중 오류가 발생했습니다. 다시 시도해 주세요.</p>
+                    <Button onClick={() => refetch()} variant="primary" className="w-full">다시 시도</Button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen py-20 bg-[#f9f7f2]">
