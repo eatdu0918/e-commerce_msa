@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
+import * as PortOne from '@portone/browser-sdk/v2';
+import { v4 as uuidv4 } from 'uuid';
 import { createOrder } from '../../api/services/order';
+import { createPayment } from '../../api/services/payment';
 import type { UserResponse } from '../../api/services/user';
 import type { Product } from '../../types/product';
 import { X } from 'lucide-react';
@@ -19,6 +22,7 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
     const [address, setAddress] = useState('');
     const [recipientName, setRecipientName] = useState(user.name || '');
     const [recipientPhone, setRecipientPhone] = useState(user.phoneNumber || '');
+    const [paymentMethod, setPaymentMethod] = useState('CREDIT_CARD');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     
@@ -57,7 +61,58 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
         setLoading(true);
         setError('');
 
+        const paymentId = `ORD-${Date.now()}-${uuidv4().slice(0, 8)}`;
+
+        let portonePayMethod: any = "CARD";
+        let easyPayProvider: any = undefined;
+
+        switch (paymentMethod) {
+            case 'CREDIT_CARD':
+                portonePayMethod = 'CARD';
+                break;
+            case 'BANK_TRANSFER':
+                portonePayMethod = 'TRANSFER';
+                break;
+            case 'KAKAOPAY':
+                portonePayMethod = 'EASY_PAY';
+                easyPayProvider = 'KAKAOPAY';
+                break;
+            case 'TOSSPAY':
+                portonePayMethod = 'EASY_PAY';
+                easyPayProvider = 'TOSSPAY';
+                break;
+        }
+
+        const paymentRequest: any = {
+            storeId: "store-4ff4af41-85e3-4573-9e96-e5616a354316",
+            channelKey: "channel-key-3b3d3f9b-640c-4384-8271-970183211516",
+            paymentId: paymentId,
+            orderName: product.name,
+            totalAmount: totalAmount,
+            currency: "CURRENCY_KRW",
+            payMethod: portonePayMethod,
+            customer: {
+                fullName: recipientName,
+                phoneNumber: recipientPhone,
+                address: {
+                    addressLine1: address
+                }
+            },
+        };
+
+        if (easyPayProvider) {
+            paymentRequest.easyPay = { easyPayProvider };
+        }
+
         try {
+            const response = await PortOne.requestPayment(paymentRequest);
+
+            if (response.code != null) {
+                setError(response.message || '결제에 실패했습니다.');
+                setLoading(false);
+                return;
+            }
+
             const newOrder = await createOrder({
                 items: [{
                     productId: product.id,
@@ -70,10 +125,16 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
                 recipientName,
                 recipientPhone,
             });
+
+            await createPayment({
+                orderId: newOrder.id,
+                paymentMethod,
+            });
+
             onOrderSuccess(newOrder.id);
             onClose();
         } catch (_err: any) {
-            setError('주문 생성에 실패했습니다.');
+            setError('주문 및 결제 처리에 실패했습니다.');
         } finally {
             setLoading(false);
         }
@@ -161,6 +222,27 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
                             placeholder="상세 주소를 입력하세요 (예: 101동 1201호)"
                             className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-black transition-all"
                         />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-bold text-stone-700 mb-2">결제 수단</label>
+                        <div className="grid grid-cols-2 gap-2 mb-2">
+                            {[
+                                { value: 'CREDIT_CARD', label: '신용카드' },
+                                { value: 'BANK_TRANSFER', label: '계좌이체' },
+                                { value: 'KAKAOPAY', label: '카카오페이' },
+                                { value: 'TOSSPAY', label: '토스페이' },
+                            ].map((method) => (
+                                <button
+                                    key={method.value}
+                                    type="button"
+                                    onClick={() => setPaymentMethod(method.value)}
+                                    className={`p-3 rounded-xl border text-xs font-bold transition-all ${paymentMethod === method.value ? 'border-black bg-stone-50' : 'border-stone-100 hover:border-stone-200'}`}
+                                >
+                                    {method.label}
+                                </button>
+                            ))}
+                        </div>
                     </div>
 
                     <div className="pt-4 border-t border-stone-100 flex justify-between items-center font-bold">

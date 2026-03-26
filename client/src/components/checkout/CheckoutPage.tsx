@@ -120,23 +120,56 @@ export default function CheckoutPage() {
 
         const paymentId = `ORD-${Date.now()}-${uuidv4().slice(0, 8)}`;
 
+        let portonePayMethod: any = "CARD";
+        let easyPayProvider: any = undefined;
+
+        switch (paymentMethod) {
+            case 'CREDIT_CARD':
+                portonePayMethod = 'CARD';
+                break;
+            case 'BANK_TRANSFER':
+                portonePayMethod = 'TRANSFER';
+                break;
+            case 'VIRTUAL_ACCOUNT':
+                portonePayMethod = 'VIRTUAL_ACCOUNT';
+                break;
+            case 'KAKAOPAY':
+                portonePayMethod = 'EASY_PAY';
+                easyPayProvider = 'KAKAOPAY';
+                break;
+            case 'TOSSPAY':
+                portonePayMethod = 'EASY_PAY';
+                easyPayProvider = 'TOSSPAY';
+                break;
+            case 'NAVERPAY':
+                portonePayMethod = 'EASY_PAY';
+                easyPayProvider = 'NAVERPAY';
+                break;
+        }
+
+        const paymentRequest: any = {
+            storeId: "store-4ff4af41-85e3-4573-9e96-e5616a354316",
+            channelKey: "channel-key-3b3d3f9b-640c-4384-8271-970183211516",
+            paymentId: paymentId,
+            orderName: items.length > 1 ? `${items[0].productName} 외 ${items.length - 1}건` : items[0].productName,
+            totalAmount: finalAmount,
+            currency: "CURRENCY_KRW",
+            payMethod: portonePayMethod,
+            customer: {
+                fullName: recipientName,
+                phoneNumber: recipientPhone,
+                address: {
+                    addressLine1: shippingAddress
+                }
+            },
+        };
+
+        if (easyPayProvider) {
+            paymentRequest.easyPay = { easyPayProvider };
+        }
+
         try {
-            const response = await PortOne.requestPayment({
-                storeId: "store-4ff4af41-85e3-4573-9e96-e5616a354316",
-                channelKey: "channel-key-3b3d3f9b-640c-4384-8271-970183211516",
-                paymentId: paymentId,
-                orderName: items.length > 1 ? `${items[0].productName} 외 ${items.length - 1}건` : items[0].productName,
-                totalAmount: finalAmount,
-                currency: "CURRENCY_KRW",
-                payMethod: "CARD",
-                customer: {
-                    fullName: recipientName,
-                    phoneNumber: recipientPhone,
-                    address: {
-                        addressLine1: shippingAddress
-                    }
-                },
-            });
+            const response = await PortOne.requestPayment(paymentRequest);
 
             if (response.code != null) {
                 setError(response.message || '결제에 실패했습니다.');
@@ -341,10 +374,11 @@ export default function CheckoutPage() {
                                     <div className="grid grid-cols-2 gap-3">
                                         {[
                                             { value: 'CREDIT_CARD', label: '신용카드' },
-                                            { value: 'DEBIT_CARD', label: '체크카드' },
                                             { value: 'BANK_TRANSFER', label: '계좌이체' },
                                             { value: 'VIRTUAL_ACCOUNT', label: '가상계좌' },
-                                            { value: 'MOBILE_PAY', label: '모바일결제' },
+                                            { value: 'KAKAOPAY', label: '카카오페이' },
+                                            { value: 'TOSSPAY', label: '토스페이' },
+                                            { value: 'NAVERPAY', label: '네이버페이' },
                                         ].map((method) => (
                                             <button
                                                 key={method.value}
