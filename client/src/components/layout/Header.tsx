@@ -70,7 +70,7 @@ export default function Header({ category, setCategory, categories, user, onLogi
                         onClick={() => handleNavigate('/shop')}
                         className={`hover:text-black transition-colors ${isActive('/shop') ? 'text-black font-bold' : ''}`}
                     >
-                        SHOP ALL
+                        {t('common.shop_all')}
                     </button>
                     {categories.map((cat) => (
                         <button
@@ -117,7 +117,7 @@ export default function Header({ category, setCategory, categories, user, onLogi
                                                     {user.name?.substring(0, 2).toUpperCase() || '??'}
                                                 </div>
                                                 <div className="text-left">
-                                                    <p className="font-bold text-sm">{user.name} 님</p>
+                                                    <p className="font-bold text-sm">{user.name}{t('common.welcome_suffix') || ''}</p>
                                                     <p className="text-xs text-stone-400">{user.role}</p>
                                                 </div>
                                             </div>
@@ -138,13 +138,13 @@ export default function Header({ category, setCategory, categories, user, onLogi
                                                         onClick={() => handleNavigate('/me/orders')}
                                                     >
                                                         <span>{t('common.order_tracking')}</span>
-                                                        <span className="text-xs bg-stone-100 px-2 py-0.5 rounded text-stone-500 font-medium">3건</span>
+                                                        <span className="text-xs bg-stone-100 px-2 py-0.5 rounded text-stone-500 font-medium">{t('common.view_all')}</span>
                                                     </li>
                                                     <li
                                                         className="flex justify-between items-center cursor-pointer hover:text-red-600 transition-colors"
                                                         onClick={() => handleNavigate('/me/wishlist')}
                                                     >
-                                                        <span>{t('common.wishlist') || '찜한 상품'}</span>
+                                                        <span>{t('common.wishlist')}</span>
                                                         <span className="text-xs bg-stone-100 px-2 py-0.5 rounded text-stone-500 font-medium">{cartCount > 0 ? '●' : ''}</span>
                                                     </li>
                                                 </ul>
@@ -196,7 +196,7 @@ export default function Header({ category, setCategory, categories, user, onLogi
                             <div className="absolute right-0 mt-3 w-80 bg-white border border-stone-200 rounded-2xl shadow-xl overflow-hidden z-[110]">
                                 <div className="p-5 border-b border-stone-100 bg-stone-50/50 flex justify-between items-center">
                                     <h3 className="font-bold text-sm tracking-tight">{t('notification.title')}</h3>
-                                    <button className="text-[10px] font-bold text-stone-400 hover:text-black transition-colors">
+                                    <button className="text-[10px] font-bold text-stone-400 hover:text-black transition-colors" onClick={() => handleNavigate('/me/notifications')}>
                                         {t('notification.view_all')}
                                     </button>
                                 </div>
@@ -239,9 +239,9 @@ export default function Header({ category, setCategory, categories, user, onLogi
                     <div className="flex flex-col space-y-4 text-sm font-medium text-stone-600 text-left">
                         <button
                             onClick={() => handleNavigate('/shop')}
-                            className={`hover:text-black transition-colors ${isActive('/shop') ? 'text-black' : ''}`}
+                            className={`hover:text-black transition-colors ${isActive('/shop') ? 'text-black font-bold' : ''}`}
                         >
-                            SHOP ALL
+                            {t('common.shop_all')}
                         </button>
                         {categories.map((cat) => (
                             <button

@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useState } from 'react';
 import { useScrollLock } from '../../hooks/useScrollLock';
+import { useTranslation } from 'react-i18next';
 
 interface LoginModalProps {
     isOpen: boolean;
@@ -13,15 +14,17 @@ interface LoginModalProps {
     onSignupClick: () => void;
 }
 
-const loginSchema = z.object({
-    email: z.string().email('이메일을 입력해주세요.'),
-    password: z.string().min(1, '비밀번호를 입력해주세요.'),
-});
-
-type LoginFormValues = z.infer<typeof loginSchema>;
-
 export default function LoginModal({ isOpen, onClose, onLoginSuccess, onSignupClick }: LoginModalProps) {
+    const { t } = useTranslation();
     const [loading, setLoading] = useState(false);
+
+    const loginSchema = z.object({
+        email: z.string().email(t('auth.email_required')),
+        password: z.string().min(1, t('auth.password_required')),
+    });
+
+    type LoginFormValues = z.infer<typeof loginSchema>;
+
     const { register, handleSubmit, formState: { errors }, setError } = useForm<LoginFormValues>({
         resolver: zodResolver(loginSchema)
     });
@@ -42,7 +45,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, onSignupCl
             onLoginSuccess();
             onClose();
         } catch (_err: any) {
-            setError('root', { message: '로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.' });
+            setError('root', { message: t('auth.login_failed') });
         } finally {
             setLoading(false);
         }
@@ -64,12 +67,12 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, onSignupCl
                     <X size={24} />
                 </button>
 
-                <h2 className="text-3xl font-bold mb-2">Welcome Back</h2>
-                <p className="text-stone-500 mb-8">URBAN THREADS에 오신 것을 환영합니다.</p>
+                <h2 className="text-3xl font-bold mb-2">{t('auth.welcome_back')}</h2>
+                <p className="text-stone-500 mb-8">{t('auth.welcome_to')}</p>
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                     <div className="relative">
-                        <label className="block text-sm font-bold text-stone-700 mb-2">Email</label>
+                        <label className="block text-sm font-bold text-stone-700 mb-2">{t('auth.email')}</label>
                         <div className="relative">
                             <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" size={20} />
                             <input
@@ -77,13 +80,13 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, onSignupCl
                                 {...register('email')}
                                 className={`w-full pl-12 pr-4 py-3 rounded-xl border focus:outline-none focus:ring-2 transition-all ${errors.email ? 'border-red-300 focus:ring-red-200' : 'border-stone-200 focus:ring-black'
                                     }`}
-                                placeholder="hello@example.com"
+                                placeholder={t('auth.email_placeholder')}
                             />
                         </div>
                         {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>}
                     </div>
                     <div>
-                        <label className="block text-sm font-bold text-stone-700 mb-2">Password</label>
+                        <label className="block text-sm font-bold text-stone-700 mb-2">{t('auth.password')}</label>
                         <div className="relative">
                             <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" size={20} />
                             <input
@@ -91,7 +94,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, onSignupCl
                                 {...register('password')}
                                 className={`w-full pl-12 pr-4 py-3 rounded-xl border focus:outline-none focus:ring-2 transition-all ${errors.password ? 'border-red-300 focus:ring-red-200' : 'border-stone-200 focus:ring-black'
                                     }`}
-                                placeholder="••••••••"
+                                placeholder={t('auth.password_placeholder')}
                             />
                         </div>
                         {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password.message}</p>}
@@ -104,12 +107,12 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, onSignupCl
                         disabled={loading}
                         className="w-full bg-black text-white py-4 rounded-xl font-bold text-lg hover:bg-stone-800 transition-colors disabled:opacity-50"
                     >
-                        {loading ? 'Processing...' : 'Login'}
+                        {loading ? t('auth.processing') : t('auth.login')}
                     </button>
                 </form>
 
                 <div className="mt-6 text-center text-sm text-stone-500">
-                    계정이 없으신가요? <button onClick={onSignupClick} className="font-bold text-black underline">회원가입</button>
+                    {t('auth.no_account')} <button onClick={onSignupClick} className="font-bold text-black underline">{t('auth.signup')}</button>
                 </div>
             </div>
         </div>
