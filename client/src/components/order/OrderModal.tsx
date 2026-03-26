@@ -88,7 +88,7 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
             channelKey: "channel-key-105a265f-d034-4b42-a586-76fb87979796",
             paymentId: paymentId,
             orderName: product.name,
-            totalAmount: totalAmount,
+            totalAmount: Math.round(totalAmount),
             currency: "CURRENCY_KRW",
             payMethod: portonePayMethod,
             customer: {

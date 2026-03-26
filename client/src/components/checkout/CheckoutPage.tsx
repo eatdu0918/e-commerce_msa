@@ -152,7 +152,7 @@ export default function CheckoutPage() {
             channelKey: "channel-key-105a265f-d034-4b42-a586-76fb87979796",
             paymentId: paymentId,
             orderName: items.length > 1 ? `${items[0].productName} 외 ${items.length - 1}건` : items[0].productName,
-            totalAmount: finalAmount,
+            totalAmount: Math.round(finalAmount),
             currency: "CURRENCY_KRW",
             payMethod: portonePayMethod,
             customer: {
