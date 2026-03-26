@@ -155,13 +155,13 @@ export default function ProductDetailPage() {
                         <p className="text-2xl font-light mb-4 text-stone-800">${product.price.toLocaleString()}</p>
                         {stockInfo && (
                             <div className="mb-6">
-                                {stockInfo.quantity > 10 ? (
+                                {stockInfo.stockQuantity > 10 ? (
                                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
-                                        {t('product.in_stock', { count: stockInfo.quantity })}
+                                        {t('product.in_stock', { count: stockInfo.stockQuantity })}
                                     </span>
-                                ) : stockInfo.quantity > 0 ? (
+                                ) : stockInfo.stockQuantity > 0 ? (
                                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700">
-                                        {t('product.low_stock', { count: stockInfo.quantity })}
+                                        {t('product.low_stock', { count: stockInfo.stockQuantity })}
                                     </span>
                                 ) : (
                                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">
@@ -193,10 +193,10 @@ export default function ProductDetailPage() {
 
                             <div>
                                 <p className="text-xs font-bold mb-4 uppercase tracking-wider text-stone-400">{t('product.quantity')}</p>
-                                <div className={`flex items-center space-x-4 border border-stone-200 w-fit rounded-full px-4 py-2 bg-white ${(!stockInfo || stockInfo.quantity === 0) ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                                <div className={`flex items-center space-x-4 border border-stone-200 w-fit rounded-full px-4 py-2 bg-white ${(!stockInfo || stockInfo.stockQuantity === 0) ? 'opacity-50 cursor-not-allowed' : ''}`}>
                                     <button
                                         onClick={() => setQuantity((prev: number) => Math.max(1, prev - 1))}
-                                        disabled={!stockInfo || stockInfo.quantity === 0 || quantity <= 1}
+                                        disabled={!stockInfo || stockInfo.stockQuantity === 0 || quantity <= 1}
                                         className="text-stone-400 hover:text-black transition-colors disabled:cursor-not-allowed"
                                     >
                                         <Minus size={16} />
@@ -204,7 +204,7 @@ export default function ProductDetailPage() {
                                     <span className="text-sm font-bold w-6 text-center">{quantity}</span>
                                     <button
                                         onClick={() => setQuantity((prev: number) => prev + 1)}
-                                        disabled={!stockInfo || stockInfo.quantity === 0 || quantity >= (stockInfo?.quantity || 0)}
+                                        disabled={!stockInfo || stockInfo.stockQuantity === 0 || quantity >= (stockInfo?.stockQuantity || 0)}
                                         className="text-stone-400 hover:text-black transition-colors disabled:cursor-not-allowed"
                                     >
                                         <Plus size={16} />
@@ -222,7 +222,7 @@ export default function ProductDetailPage() {
                             </button>
                             <button
                                 onClick={handleAddToCart}
-                                disabled={addCartMutation.isPending || !stockInfo || stockInfo.quantity === 0 || quantity > stockInfo.quantity}
+                                disabled={addCartMutation.isPending || !stockInfo || stockInfo.stockQuantity === 0 || quantity > stockInfo.stockQuantity}
                                 className="flex-1 bg-stone-100 py-5 rounded-2xl font-bold hover:bg-stone-200 transition-colors text-stone-900 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {addCartMutation.isPending && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black mr-2"></div>}
@@ -230,7 +230,7 @@ export default function ProductDetailPage() {
                             </button>
                             <button
                                 onClick={handleBuyClick}
-                                disabled={!stockInfo || stockInfo.quantity === 0 || quantity > stockInfo.quantity}
+                                disabled={!stockInfo || stockInfo.stockQuantity === 0 || quantity > stockInfo.stockQuantity}
                                 className="flex-1 bg-black text-white py-5 rounded-2xl font-bold hover:bg-stone-800 transition-all shadow-lg shadow-black/10 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {t('common.buy_now') || 'BUY NOW'}

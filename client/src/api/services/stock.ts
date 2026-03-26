@@ -2,8 +2,9 @@ import api from '../axios';
 
 export interface StockResponse {
     productId: number;
-    quantity: number;
-    updatedAt: string;
+    productName: string;
+    stockQuantity: number;
+    message: string;
 }
 
 export interface StockCheckResponse {
