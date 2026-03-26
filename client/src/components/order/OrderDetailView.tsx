@@ -35,7 +35,7 @@ const FALLBACK_IMAGES = {
     sneaker: 'https://images.unsplash.com/photo-1491553895911-0055eca6402d?auto=format&fit=crop&q=80&w=400&h=400',
     camera: 'https://images.unsplash.com/photo-1585333127302-e29f1163398c?auto=format&fit=crop&q=80&w=400&h=400',
     laptop: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&q=80&w=400&h=400',
-    default: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=400&h=400'
+    default: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&q=80&w=400&h=400'
 };
 
 const getFallbackImage = (name: string = '') => {
@@ -45,7 +45,7 @@ const getFallbackImage = (name: string = '') => {
     if (lowerName.includes('watch') || lowerName.includes('시계')) return FALLBACK_IMAGES.watch;
     if (lowerName.includes('headphone') || lowerName.includes('헤드폰') || lowerName.includes('이어폰')) return FALLBACK_IMAGES.headphone;
     if (lowerName.includes('camera') || lowerName.includes('카메라')) return FALLBACK_IMAGES.camera;
-    if (lowerName.includes('laptop') || lowerName.includes('노트북') || lowerName.includes('컴퓨터')) return FALLBACK_IMAGES.laptop;
+    if (lowerName.includes('laptop') || lowerName.includes('노트북') || lowerName.includes('컴퓨터') || lowerName.includes('mouse') || lowerName.includes('마우스')) return FALLBACK_IMAGES.laptop;
     return FALLBACK_IMAGES.default;
 };
 
@@ -85,7 +85,7 @@ export default function OrderDetailView() {
                 productId: item.productId,
                 productName: item.productName || '상품 정보 없음',
                 quantity: item.quantity || 1,
-                unitPrice: item.price || 0,
+                unitPrice: item.unitPrice || 0,
             })),
         };
         cancelMutation.mutate(request);
@@ -235,9 +235,9 @@ export default function OrderDetailView() {
                                         <div className="flex justify-between items-center mt-4">
                                             <div className="flex items-center gap-2">
                                                 <span className="px-2.5 py-1 rounded-lg bg-stone-50 border border-stone-100 text-[10px] font-black uppercase tracking-wider text-stone-500">QTY: {item.quantity || 1}</span>
-                                                <span className="text-xs text-stone-300 font-medium tracking-tight">× {(item.price || 0).toLocaleString()}원</span>
+                                                <span className="text-xs text-stone-300 font-medium tracking-tight">× ${(item.unitPrice || 0).toLocaleString()}</span>
                                             </div>
-                                            <span className="font-black text-stone-900">{(item.totalPrice || (item.price * item.quantity) || 0).toLocaleString()}원</span>
+                                            <span className="font-black text-stone-900">${(item.totalPrice || (item.unitPrice * item.quantity) || 0).toLocaleString()}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -260,11 +260,11 @@ export default function OrderDetailView() {
                             <div className="space-y-4 mb-8">
                                 <div className="flex justify-between text-sm text-white/50">
                                     <span>상품 금액</span>
-                                    <span>{(order.totalAmount || 0).toLocaleString()}원</span>
+                                    <span>${(order.totalAmount || 0).toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between text-sm text-white/50">
                                     <span>할인 금액</span>
-                                    <span className="text-rose-400">-{(order.discountAmount || 0).toLocaleString()}원</span>
+                                    <span className="text-rose-400">-${(order.discountAmount || 0).toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between text-sm text-white/50">
                                     <span>배송비</span>
@@ -274,7 +274,7 @@ export default function OrderDetailView() {
                                 <div className="flex justify-between items-end">
                                     <span className="text-sm font-bold opacity-80 uppercase tracking-widest">Final Total</span>
                                     <span className="text-4xl font-black italic tracking-tighter">
-                                        {(order.finalAmount || 0).toLocaleString()}원
+                                        ${(order.finalAmount || 0).toLocaleString()}
                                     </span>
                                 </div>
                             </div>

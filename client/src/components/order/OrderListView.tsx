@@ -25,14 +25,26 @@ const STATUS_THEME: Record<string, StatusTheme> = {
     CANCEL_REQUESTED: { color: 'text-stone-500', bg: 'bg-stone-100', icon: RefreshCw, label: '취소 요청' },
 };
 
-const FALLBACK_IMAGES = [
-    'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=400&h=400', // Watch
-    'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=400&h=400', // Headphone
-    'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80&w=400&h=400', // Shoe
-    'https://images.unsplash.com/photo-1585333127302-e29f1163398c?auto=format&fit=crop&q=80&w=400&h=400', // Camera
-    'https://images.unsplash.com/photo-1491553895911-0055eca6402d?auto=format&fit=crop&q=80&w=400&h=400', // Sneaker
-    'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?auto=format&fit=crop&q=80&w=400&h=400', // Camera Lens
-];
+const FALLBACK_IMAGES = {
+    watch: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=400&h=400',
+    headphone: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&q=80&w=400&h=400',
+    shoe: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&q=80&w=400&h=400',
+    sneaker: 'https://images.unsplash.com/photo-1491553895911-0055eca6402d?auto=format&fit=crop&q=80&w=400&h=400',
+    camera: 'https://images.unsplash.com/photo-1585333127302-e29f1163398c?auto=format&fit=crop&q=80&w=400&h=400',
+    laptop: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&q=80&w=400&h=400',
+    default: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&q=80&w=400&h=400'
+};
+
+const getFallbackImage = (name: string = '') => {
+    const lowerName = name.toLowerCase();
+    if (lowerName.includes('sneaker') || lowerName.includes('운동화')) return FALLBACK_IMAGES.sneaker;
+    if (lowerName.includes('shoe') || lowerName.includes('신발') || lowerName.includes('구두')) return FALLBACK_IMAGES.shoe;
+    if (lowerName.includes('watch') || lowerName.includes('시계')) return FALLBACK_IMAGES.watch;
+    if (lowerName.includes('headphone') || lowerName.includes('헤드폰') || lowerName.includes('이어폰')) return FALLBACK_IMAGES.headphone;
+    if (lowerName.includes('camera') || lowerName.includes('카메라')) return FALLBACK_IMAGES.camera;
+    if (lowerName.includes('laptop') || lowerName.includes('노트북') || lowerName.includes('컴퓨터') || lowerName.includes('mouse') || lowerName.includes('마우스')) return FALLBACK_IMAGES.laptop;
+    return FALLBACK_IMAGES.default;
+};
 
 export default function OrderListView() {
     const { t } = useTranslation();
@@ -86,7 +98,7 @@ export default function OrderListView() {
                 </div>
                 
                 <div className="grid gap-8">
-                    {orders.map((order: OrderResponse, index: number) => {
+                    {orders.map((order: OrderResponse) => {
                         const theme = STATUS_THEME[order.status] || STATUS_THEME.PENDING;
                         const StatusIcon = theme.icon;
                         const items = order.items || [];
@@ -94,8 +106,10 @@ export default function OrderListView() {
                         const itemName = firstItem?.productName || `주문 번호 ${order.orderNumber}`;
                         const etcCount = items.length > 1 ? items.length - 1 : 0;
                         
-                        // High-quality deterministic random image
-                        const imgUrl = FALLBACK_IMAGES[(order.id + index) % FALLBACK_IMAGES.length];
+                        // Use the purchased image from the first item if available
+                        const imgUrl = (firstItem?.imageUrl && firstItem.imageUrl !== '') 
+                            ? firstItem.imageUrl 
+                            : getFallbackImage(itemName);
 
                         return (
                             <div
@@ -145,7 +159,7 @@ export default function OrderListView() {
                                         </h4>
                                         <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
                                             <span className="text-2xl font-light text-stone-900">
-                                                ₩{order.totalAmount.toLocaleString()}
+                                                ${order.totalAmount.toLocaleString()}
                                             </span>
                                             <div className="flex items-center gap-2 bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-xl border border-emerald-100">
                                                 <CheckCircle2 size={14} />

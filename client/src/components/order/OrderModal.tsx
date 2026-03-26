@@ -37,6 +37,7 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
                 items: [{
                     productId: product.id,
                     productName: product.name,
+                    imageUrl: product.image,
                     unitPrice: product.price,
                     quantity: quantity,
                 }],
@@ -44,7 +45,6 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
                 recipientName,
                 recipientPhone,
             });
-            alert('주문이 완료되었습니다!');
             onOrderSuccess(newOrder.id);
             onClose();
         } catch (_err: any) {
@@ -76,7 +76,7 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
                     <img src={product.image} alt={product.name} className="w-16 h-16 rounded-xl object-cover" />
                     <div className="text-left">
                         <h4 className="font-bold text-sm">{product.name}</h4>
-                        <p className="text-xs text-stone-500">{quantity}개 / ₩{totalAmount.toLocaleString()}</p>
+                        <p className="text-xs text-stone-500">{quantity}개 / ${totalAmount.toLocaleString()}</p>
                     </div>
                 </div>
 
@@ -117,7 +117,7 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
 
                     <div className="pt-4 border-t border-stone-100 flex justify-between items-center font-bold">
                         <span>총 결제금액</span>
-                        <span className="text-xl">₩{totalAmount.toLocaleString()}</span>
+                        <span className="text-xl">${totalAmount.toLocaleString()}</span>
                     </div>
 
                     {error && <p className="text-red-500 text-sm">{error}</p>}
