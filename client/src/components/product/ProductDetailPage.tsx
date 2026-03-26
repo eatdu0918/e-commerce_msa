@@ -182,7 +182,7 @@ export default function ProductDetailPage() {
                                             onClick={() => setSelectedSize(size)}
                                             className={`w-12 h-12 rounded-full text-xs font-bold border transition-all ${selectedSize === size
                                                 ? 'bg-black text-white border-black'
-                                                : 'border-stone-200 text-stone-600 hover:border-black'
+                                                : 'border-stone-200 text-stone600 hover:border-black'
                                                 }`}
                                         >
                                             {size}
@@ -193,17 +193,19 @@ export default function ProductDetailPage() {
 
                             <div>
                                 <p className="text-xs font-bold mb-4 uppercase tracking-wider text-stone-400">{t('product.quantity')}</p>
-                                <div className="flex items-center space-x-4 border border-stone-200 w-fit rounded-full px-4 py-2 bg-white">
+                                <div className={`flex items-center space-x-4 border border-stone-200 w-fit rounded-full px-4 py-2 bg-white ${(!stockInfo || stockInfo.quantity === 0) ? 'opacity-50 cursor-not-allowed' : ''}`}>
                                     <button
                                         onClick={() => setQuantity((prev: number) => Math.max(1, prev - 1))}
-                                        className="text-stone-400 hover:text-black transition-colors"
+                                        disabled={!stockInfo || stockInfo.quantity === 0 || quantity <= 1}
+                                        className="text-stone-400 hover:text-black transition-colors disabled:cursor-not-allowed"
                                     >
                                         <Minus size={16} />
                                     </button>
                                     <span className="text-sm font-bold w-6 text-center">{quantity}</span>
                                     <button
                                         onClick={() => setQuantity((prev: number) => prev + 1)}
-                                        className="text-stone-400 hover:text-black transition-colors"
+                                        disabled={!stockInfo || stockInfo.quantity === 0 || quantity >= (stockInfo?.quantity || 0)}
+                                        className="text-stone-400 hover:text-black transition-colors disabled:cursor-not-allowed"
                                     >
                                         <Plus size={16} />
                                     </button>
@@ -220,15 +222,16 @@ export default function ProductDetailPage() {
                             </button>
                             <button
                                 onClick={handleAddToCart}
-                                disabled={addCartMutation.isPending}
-                                className="flex-1 bg-stone-100 py-5 rounded-2xl font-bold hover:bg-stone-200 transition-colors text-stone-900 flex items-center justify-center space-x-2"
+                                disabled={addCartMutation.isPending || !stockInfo || stockInfo.quantity === 0 || quantity > stockInfo.quantity}
+                                className="flex-1 bg-stone-100 py-5 rounded-2xl font-bold hover:bg-stone-200 transition-colors text-stone-900 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {addCartMutation.isPending && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-black mr-2"></div>}
                                 <span>{addCartMutation.isPending ? t('common.adding') || 'ADDING...' : t('common.add_to_cart')}</span>
                             </button>
                             <button
                                 onClick={handleBuyClick}
-                                className="flex-1 bg-black text-white py-5 rounded-2xl font-bold hover:bg-stone-800 transition-all shadow-lg shadow-black/10"
+                                disabled={!stockInfo || stockInfo.quantity === 0 || quantity > stockInfo.quantity}
+                                className="flex-1 bg-black text-white py-5 rounded-2xl font-bold hover:bg-stone-800 transition-all shadow-lg shadow-black/10 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {t('common.buy_now') || 'BUY NOW'}
                             </button>
