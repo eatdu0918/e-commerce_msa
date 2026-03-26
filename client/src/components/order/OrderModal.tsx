@@ -84,8 +84,8 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
         }
 
         const paymentRequest: any = {
-            storeId: "store-4ff4af41-85e3-4573-9e96-e5616a354316",
-            channelKey: "channel-key-3b3d3f9b-640c-4384-8271-970183211516",
+            storeId: "store-2dd12310-9af7-47c4-8a3c-372f87d36508", // User provided store ID
+            channelKey: "channel-key-105a265f-d034-4b42-a586-76fb87979796",
             paymentId: paymentId,
             orderName: product.name,
             totalAmount: totalAmount,
