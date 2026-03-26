@@ -31,7 +31,37 @@
         "cart": "Cart",
         "adding": "Adding...",
         "buy_now": "Buy Now",
-        "go_home": "Go Back Home"
+        "go_home": "Go Back Home",
+        "shop_now": "SHOP NOW",
+        "view_all": "View All",
+        "welcome_suffix": "",
+        "error_occurred": "An error occurred."
+    },
+    "auth": {
+        "welcome_back": "Welcome Back",
+        "welcome_to": "Welcome to URBAN THREADS",
+        "email": "Email",
+        "email_placeholder": "hello@example.com",
+        "password": "Password",
+        "password_placeholder": "••••••••",
+        "login": "Login",
+        "processing": "Processing...",
+        "no_account": "Don't have an account?",
+        "signup": "Sign Up",
+        "login_failed": "Login failed. Please check your email and password.",
+        "email_required": "Please enter your email.",
+        "password_required": "Please enter your password.",
+        "create_account": "Create Account",
+        "join_today": "Join Urban Threads today",
+        "name": "Full Name",
+        "phone": "Phone Number",
+        "address": "Address",
+        "confirm_password": "Confirm Password",
+        "signup_success": "Registration complete. Please log in.",
+        "email_exists": "This email already exists.",
+        "signup_error": "An error occurred during registration.",
+        "already_have_account": "Already have an account?",
+        "log_in": "Log In"
     },
     "error": {
         "not_found_title": "Page Not Found",
@@ -130,5 +160,26 @@
         "prev": "Previous",
         "next": "Next",
         "page_info": "Page {{current}} of {{total}}"
+    },
+    "product": {
+        "back": "Go Back",
+        "reviews": "Reviews",
+        "write_review": "Write a Review",
+        "in_stock": "In Stock ({{count}})",
+        "low_stock": "Low Stock - Only {{count}} left",
+        "out_of_stock": "Out of Stock",
+        "size": "SIZE",
+        "quantity": "QUANTITY",
+        "not_found": "Product Not Found",
+        "not_found_desc": "The product you're looking for doesn't exist or is currently unavailable."
+    },
+    "search": {
+        "results_for": "Search Results",
+        "no_results": "No results found",
+        "enter_keyword": "Please enter a keyword",
+        "enter_keyword_desc": "Type something in the search bar to find products.",
+        "searching": "Searching...",
+        "products_found": "{{count}} products found",
+        "try_different_keyword": "Try checking your spelling or use different keywords."
     }
 }

@@ -22,7 +22,7 @@
         "payment_history": "결제 내역",
         "cancel_refund": "취소/반품",
         "edit_profile": "개인정보확인/수정",
-        "products_count": "{{count}} Products",
+        "products_count": "총 {{count}}개 상품",
         "no_products": "상품이 없습니다.",
         "category_electronics": "전자제품",
         "category_clothing": "의류",
@@ -30,7 +30,37 @@
         "cart": "장바구니",
         "adding": "추가 중...",
         "buy_now": "바로 구매",
-        "go_home": "홈으로 돌아가기"
+        "go_home": "홈으로 돌아가기",
+        "shop_now": "지금 쇼핑하기",
+        "view_all": "전체 보기",
+        "welcome_suffix": " 님",
+        "error_occurred": "오류가 발생했습니다."
+    },
+    "auth": {
+        "welcome_back": "다시 만나서 반갑습니다",
+        "welcome_to": "URBAN THREADS에 오신 것을 환영합니다.",
+        "email": "이메일",
+        "email_placeholder": "hello@example.com",
+        "password": "비밀번호",
+        "password_placeholder": "••••••••",
+        "login": "로그인",
+        "processing": "처리 중...",
+        "no_account": "계정이 없으신가요?",
+        "signup": "회원가입",
+        "login_failed": "로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.",
+        "email_required": "이메일을 입력해주세요.",
+        "password_required": "비밀번호를 입력해주세요.",
+        "create_account": "계정 생성",
+        "join_today": "오늘 Urban Threads에 가입하세요",
+        "name": "성함",
+        "phone": "전화번호",
+        "address": "주소",
+        "confirm_password": "비밀번호 확인",
+        "signup_success": "회원가입이 완료되었습니다. 로그인해주세요.",
+        "email_exists": "이미 존재하는 이메일입니다.",
+        "signup_error": "회원가입 중 오류가 발생했습니다.",
+        "already_have_account": "이미 계정이 있으신가요?",
+        "log_in": "로그인"
     },
     "error": {
         "not_found_title": "페이지를 찾을 수 없습니다",
@@ -129,5 +159,26 @@
         "prev": "이전",
         "next": "다음",
         "page_info": "{{total}}페이지 중 {{current}}페이지"
+    },
+    "product": {
+        "back": "돌아가기",
+        "reviews": "리뷰",
+        "write_review": "리뷰 작성하기",
+        "in_stock": "재고 있음 ({{count}})",
+        "low_stock": "품절 임박 - 오직 {{count}}개 남음",
+        "out_of_stock": "품절",
+        "size": "사이즈",
+        "quantity": "수량",
+        "not_found": "상품을 찾을 수 없습니다",
+        "not_found_desc": "찾으시는 상품이 존재하지 않거나 현재 구매할 수 없습니다."
+    },
+    "search": {
+        "results_for": "검색 결과",
+        "no_results": "검색 결과가 없습니다",
+        "enter_keyword": "키워드를 입력해주세요",
+        "enter_keyword_desc": "찾으시는 상품을 위해 검색어를 입력해 주세요.",
+        "searching": "검색 중...",
+        "products_found": "{{count}}개의 상품을 찾았습니다",
+        "try_different_keyword": "철자를 확인하거나 다른 키워드를 사용해 보세요."
     }
 }
