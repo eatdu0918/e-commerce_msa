@@ -55,6 +55,7 @@ public class OrderService {
             OrderItem orderItem = OrderItem.create(
                     itemRequest.getProductId(),
                     itemRequest.getProductName(),
+                    itemRequest.getImageUrl(),
                     itemRequest.getUnitPrice(),
                     itemRequest.getQuantity()
             );
@@ -108,7 +109,7 @@ public class OrderService {
     @Transactional(readOnly = true)
     public PageResponse<OrderResponse> getMyOrders(Long userId, Pageable pageable) {
         Page<Order> orders = orderRepository.findByUserId(userId, pageable);
-        Page<OrderResponse> responsePage = orders.map(OrderResponse::fromWithoutItems);
+        Page<OrderResponse> responsePage = orders.map(OrderResponse::from);
         return PageResponse.from(responsePage);
     }
 
@@ -150,14 +151,14 @@ public class OrderService {
     @Transactional(readOnly = true)
     public PageResponse<OrderResponse> getAllOrders(Pageable pageable) {
         Page<Order> orders = orderRepository.findAll(pageable);
-        Page<OrderResponse> responsePage = orders.map(OrderResponse::fromWithoutItems);
+        Page<OrderResponse> responsePage = orders.map(OrderResponse::from);
         return PageResponse.from(responsePage);
     }
 
     @Transactional(readOnly = true)
     public PageResponse<OrderResponse> getOrdersByStatus(OrderStatus status, Pageable pageable) {
         Page<Order> orders = orderRepository.findByStatus(status, pageable);
-        Page<OrderResponse> responsePage = orders.map(OrderResponse::fromWithoutItems);
+        Page<OrderResponse> responsePage = orders.map(OrderResponse::from);
         return PageResponse.from(responsePage);
     }
 

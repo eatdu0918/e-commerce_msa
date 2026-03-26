@@ -3,6 +3,7 @@ import api from '../axios';
 export interface OrderItemRequest {
     productId: number;
     productName: string;
+    imageUrl?: string;
     unitPrice: number;
     quantity: number;
 }
@@ -19,7 +20,8 @@ export interface OrderItemResponse {
     id: number;
     productId: number;
     productName: string;
-    price: number;
+    imageUrl?: string;
+    unitPrice: number;
     quantity: number;
     totalPrice: number;
 }
