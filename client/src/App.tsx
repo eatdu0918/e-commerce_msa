@@ -59,6 +59,7 @@ function App() {
           <Route path="/product/:id" element={<ProductDetailPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/order/complete/:id" element={<OrderCompletePage />} />
+          <Route path="/orders/complete/:id" element={<OrderCompletePage />} />
           <Route path="/search" element={<SearchResultPage />} />
 
           {/* User Routes - In real app, wrap in AuthGuard */}

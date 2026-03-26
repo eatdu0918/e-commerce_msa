@@ -33,7 +33,7 @@ public class OrderItemDetailResponse {
                 .unitPrice(item.getUnitPrice())
                 .quantity(item.getQuantity())
                 .totalPrice(item.getTotalPrice())
-                .imageUrl(productInfo != null ? productInfo.getImageUrl() : null)
+                .imageUrl(item.getImageUrl() != null ? item.getImageUrl() : (productInfo != null ? productInfo.getImageUrl() : null))
                 .categoryName(productInfo != null ? productInfo.getCategoryName() : null)
                 .currentStock(productInfo != null ? productInfo.getStockQuantity() : null)
                 .build();

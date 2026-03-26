@@ -171,12 +171,12 @@ class KafkaConsumerIntegrationTest extends IntegrationTestBase {
     }
 
     private OrderResponse createTestOrder(Long userId) {
-        OrderItemRequest itemRequest = new OrderItemRequest(
-                (long) (Math.random() * 1000),
-                "테스트 상품",
-                new BigDecimal("30000"),
-                1
-        );
+        OrderItemRequest itemRequest = OrderItemRequest.builder()
+                .productId((long) (Math.random() * 1000))
+                .productName("테스트 상품")
+                .unitPrice(new BigDecimal("30000"))
+                .quantity(1)
+                .build();
         CreateOrderRequest request = new CreateOrderRequest(
                 List.of(itemRequest),
                 null,

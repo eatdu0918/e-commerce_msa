@@ -30,7 +30,12 @@
         "category_accessories": "Accessories",
         "cart": "Cart",
         "adding": "Adding...",
-        "buy_now": "Buy Now"
+        "buy_now": "Buy Now",
+        "go_home": "Go Back Home"
+    },
+    "error": {
+        "not_found_title": "Page Not Found",
+        "not_found_desc": "The page you are looking for doesn't exist or has been moved."
     },
     "cart": {
         "empty_msg": "Your cart is empty.",
@@ -38,7 +43,7 @@
         "total_amount": "Total Amount",
         "checkout": "Checkout",
         "shipping_info_notice": "Shipping costs and coupon discounts are applied at checkout.",
-        "currency": "KRW",
+        "currency": "$",
         "wish_to_cart_success": "Product has been added to the cart."
     },
     "nav": {

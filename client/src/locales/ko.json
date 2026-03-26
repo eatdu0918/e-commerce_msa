@@ -29,7 +29,12 @@
         "category_accessories": "악세서리",
         "cart": "장바구니",
         "adding": "추가 중...",
-        "buy_now": "바로 구매"
+        "buy_now": "바로 구매",
+        "go_home": "홈으로 돌아가기"
+    },
+    "error": {
+        "not_found_title": "페이지를 찾을 수 없습니다",
+        "not_found_desc": "요청하신 페이지가 삭제되었거나 주소가 올바르지 않습니다."
     },
     "cart": {
         "empty_msg": "장바구니가 비어 있습니다.",
@@ -37,7 +42,7 @@
         "total_amount": "합계 금액",
         "checkout": "주문하기",
         "shipping_info_notice": "배송비 및 쿠폰 할인은 주문 단계에서 적용됩니다.",
-        "currency": "원",
+        "currency": "$",
         "wish_to_cart_success": "상품이 장바구니에 담겼습니다."
     },
     "nav": {

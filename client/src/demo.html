@@ -441,7 +441,7 @@
                 <div>
                     <p class="text-xs text-stone-400 uppercase tracking-widest mb-2 font-bold">${product.category}</p>
                     <h2 class="text-4xl font-bold mb-4 tracking-tight">${product.name}</h2>
-                    <p class="text-2xl font-light mb-8">₩${product.price.toLocaleString()}</p>
+                    <p class="text-2xl font-light mb-8">$${product.price.toLocaleString()}</p>
                     <p class="text-stone-500 mb-12 leading-relaxed">${product.desc}</p>
                     <div class="space-y-8 mb-12">
                         <div>
@@ -506,7 +506,7 @@
                     </div>
                     <p class="text-[10px] text-stone-400 uppercase tracking-widest mb-1">${p.category}</p>
                     <h4 class="font-medium text-sm mb-1 group-hover:text-stone-600">${p.name}</h4>
-                    <p class="font-bold text-sm">₩${p.price.toLocaleString()}</p>
+                    <p class="font-bold text-sm">$${p.price.toLocaleString()}</p>
                 </div>
             `).join('');
         }

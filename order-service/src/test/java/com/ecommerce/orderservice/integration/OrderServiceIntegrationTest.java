@@ -46,9 +46,12 @@ class OrderServiceIntegrationTest extends IntegrationTestBase {
     void createOrder_savesToDatabase() {
         // given
         Long userId = 1L;
-        OrderItemRequest itemRequest = new OrderItemRequest(
-                100L, "테스트 상품", new BigDecimal("15000"), 2
-        );
+        OrderItemRequest itemRequest = OrderItemRequest.builder()
+                .productId(1L)
+                .productName("테스트 상품")
+                .unitPrice(new BigDecimal("10000"))
+                .quantity(2)
+                .build();
         CreateOrderRequest request = new CreateOrderRequest(
                 List.of(itemRequest),
                 null,
@@ -79,9 +82,12 @@ class OrderServiceIntegrationTest extends IntegrationTestBase {
     void createOrder_savesOutboxEvent() {
         // given
         Long userId = 2L;
-        OrderItemRequest itemRequest = new OrderItemRequest(
-                200L, "Outbox 테스트 상품", new BigDecimal("25000"), 1
-        );
+        OrderItemRequest itemRequest = OrderItemRequest.builder()
+                .productId(200L)
+                .productName("Outbox 테스트 상품")
+                .unitPrice(new BigDecimal("25000"))
+                .quantity(1)
+                .build();
         CreateOrderRequest request = new CreateOrderRequest(
                 List.of(itemRequest),
                 null,
@@ -147,9 +153,12 @@ class OrderServiceIntegrationTest extends IntegrationTestBase {
     }
 
     private OrderResponse createTestOrder(Long userId, String productName, BigDecimal price) {
-        OrderItemRequest itemRequest = new OrderItemRequest(
-                (long) (Math.random() * 1000), productName, price, 1
-        );
+        OrderItemRequest itemRequest = OrderItemRequest.builder()
+                .productId((long) (Math.random() * 1000))
+                .productName(productName)
+                .unitPrice(price)
+                .quantity(1)
+                .build();
         CreateOrderRequest request = new CreateOrderRequest(
                 List.of(itemRequest),
                 null,

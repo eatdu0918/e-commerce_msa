@@ -28,9 +28,9 @@ export default function ProductCard({ product, timer }: ProductCardProps) {
                 <p className="text-xs text-stone-400 uppercase tracking-widest">{product.badge}</p>
                 <h4 className="font-medium">{product.name}</h4>
                 <div className="flex items-center space-x-2 mt-2">
-                    <span className="font-bold">₩{product.price.toLocaleString()}</span>
+                    <span className="font-bold">${product.price.toLocaleString()}</span>
                     {product.originalPrice && (
-                        <span className="text-stone-300 line-through text-sm">₩{product.originalPrice.toLocaleString()}</span>
+                        <span className="text-stone-300 line-through text-sm">${product.originalPrice.toLocaleString()}</span>
                     )}
                 </div>
             </div>

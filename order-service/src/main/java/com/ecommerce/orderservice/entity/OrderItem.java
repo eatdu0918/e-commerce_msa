@@ -40,6 +40,9 @@ public class OrderItem extends BaseEntity {
     @Column(name = "product_name", nullable = false, length = 255)
     String productName;
 
+    @Column(name = "image_url", length = 1000)
+    String imageUrl;
+
     @Column(name = "unit_price", nullable = false, precision = 12, scale = 2)
     BigDecimal unitPrice;
 
@@ -49,10 +52,11 @@ public class OrderItem extends BaseEntity {
     @Column(name = "total_price", nullable = false, precision = 12, scale = 2)
     BigDecimal totalPrice;
 
-    public static OrderItem create(Long productId, String productName, BigDecimal unitPrice, Integer quantity) {
+    public static OrderItem create(Long productId, String productName, String imageUrl, BigDecimal unitPrice, Integer quantity) {
         return OrderItem.builder()
                 .productId(productId)
                 .productName(productName)
+                .imageUrl(imageUrl)
                 .unitPrice(unitPrice)
                 .quantity(quantity)
                 .totalPrice(unitPrice.multiply(BigDecimal.valueOf(quantity)))

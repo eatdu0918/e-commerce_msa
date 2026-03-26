@@ -95,7 +95,7 @@ export default function WishlistView() {
                         </div>
 
                         <div className="flex items-center justify-between mt-4">
-                            <span className="font-bold text-stone-900">₩{item.price.toLocaleString()}</span>
+                            <span className="font-bold text-stone-900">${item.price.toLocaleString()}</span>
                             <div className="flex space-x-2">
                                 <button
                                     onClick={() => addCartMutation.mutate(item.productId)}

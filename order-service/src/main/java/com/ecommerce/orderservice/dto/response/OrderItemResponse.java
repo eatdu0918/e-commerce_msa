@@ -18,6 +18,7 @@ public class OrderItemResponse {
     Long id;
     Long productId;
     String productName;
+    String imageUrl;
     BigDecimal unitPrice;
     Integer quantity;
     BigDecimal totalPrice;
@@ -27,6 +28,7 @@ public class OrderItemResponse {
                 .id(orderItem.getId())
                 .productId(orderItem.getProductId())
                 .productName(orderItem.getProductName())
+                .imageUrl(orderItem.getImageUrl())
                 .unitPrice(orderItem.getUnitPrice())
                 .quantity(orderItem.getQuantity())
                 .totalPrice(orderItem.getTotalPrice())

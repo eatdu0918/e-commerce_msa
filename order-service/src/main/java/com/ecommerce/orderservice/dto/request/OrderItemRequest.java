@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -12,6 +13,7 @@ import lombok.experimental.FieldDefaults;
 import java.math.BigDecimal;
 
 @Getter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -22,6 +24,8 @@ public class OrderItemRequest {
 
     @NotBlank(message = "상품명은 필수입니다.")
     String productName;
+
+    String imageUrl;
 
     @NotNull(message = "단가는 필수입니다.")
     @Positive(message = "단가는 0보다 커야 합니다.")

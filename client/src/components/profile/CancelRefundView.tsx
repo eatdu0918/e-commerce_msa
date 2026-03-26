@@ -135,7 +135,7 @@ export default function CancelRefundView() {
                                     </div>
                                     <div className="flex justify-between items-center">
                                         <p className="text-sm text-stone-400">환불 수단: {refund.refundMethod || '원결제 수단'}</p>
-                                        <p className="font-bold">{refund.refundAmount?.toLocaleString()}원</p>
+                                        <p className="font-bold">${refund.refundAmount?.toLocaleString()}</p>
                                     </div>
                                 </div>
                             );

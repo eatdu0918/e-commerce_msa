@@ -16,7 +16,7 @@ import { useNavigate } from 'react-router-dom';
 export default function CheckoutPage() {
     const navigate = useNavigate();
     const onBack = () => navigate(-1);
-    const onOrderComplete = (orderId: number) => navigate(`/order/complete/${orderId}`);
+    const onOrderComplete = (orderId: number) => navigate(`/me/orders/${orderId}`);
     const queryClient = useQueryClient();
 
     const [shippingAddress, setShippingAddress] = useState('');
@@ -78,6 +78,7 @@ export default function CheckoutPage() {
             const orderItems: OrderItemRequest[] = items.map(item => ({
                 productId: item.productId,
                 productName: item.productName,
+                imageUrl: item.imageUrl,
                 unitPrice: item.price,
                 quantity: item.quantity,
             }));
@@ -316,8 +317,8 @@ export default function CheckoutPage() {
                                                         <div>
                                                             <p className="font-bold">{coupon.couponName}</p>
                                                             <p className="text-xs text-stone-400 mt-1">
-                                                                {coupon.couponType === 'PERCENTAGE' ? `${coupon.discountValue}% 할인` : `${coupon.discountValue.toLocaleString()}원 할인`}
-                                                                {coupon.minOrderAmount > 0 && ` · ${coupon.minOrderAmount.toLocaleString()}원 이상 주문 시`}
+                                                                {coupon.couponType === 'PERCENTAGE' ? `${coupon.discountValue}% 할인` : `$${coupon.discountValue.toLocaleString()} 할인`}
+                                                                {coupon.minOrderAmount > 0 && ` · $${coupon.minOrderAmount.toLocaleString()} 이상 주문 시`}
                                                             </p>
                                                             <p className="text-[10px] text-stone-300 mt-1">~ {coupon.validUntil?.split('T')[0]} 까지</p>
                                                         </div>
@@ -383,7 +384,7 @@ export default function CheckoutPage() {
                                             <p className="text-sm font-medium truncate">{item.productName}</p>
                                             <p className="text-xs text-stone-400">수량: {item.quantity}</p>
                                         </div>
-                                        <p className="text-sm font-bold whitespace-nowrap">{(item.price * item.quantity).toLocaleString()}원</p>
+                                        <p className="text-sm font-bold whitespace-nowrap">${(item.price * item.quantity).toLocaleString()}</p>
                                     </div>
                                 ))}
                             </div>
@@ -391,12 +392,12 @@ export default function CheckoutPage() {
                             <div className="border-t border-stone-100 pt-4 space-y-3 text-sm">
                                 <div className="flex justify-between text-stone-500">
                                     <span>상품 금액</span>
-                                    <span>{totalPrice.toLocaleString()}원</span>
+                                    <span>${totalPrice.toLocaleString()}</span>
                                 </div>
                                 {discountAmount > 0 && (
                                     <div className="flex justify-between text-red-500">
                                         <span>쿠폰 할인</span>
-                                        <span>-{discountAmount.toLocaleString()}원</span>
+                                        <span>-${discountAmount.toLocaleString()}</span>
                                     </div>
                                 )}
                                 <div className="flex justify-between text-stone-500">
@@ -407,7 +408,7 @@ export default function CheckoutPage() {
 
                             <div className="border-t border-stone-100 pt-4 mt-4 flex justify-between items-center">
                                 <span className="font-bold">최종 결제금액</span>
-                                <span className="text-2xl font-bold">{finalAmount.toLocaleString()}원</span>
+                                <span className="text-2xl font-bold">${finalAmount.toLocaleString()}</span>
                             </div>
 
                             {error && (
@@ -426,7 +427,7 @@ export default function CheckoutPage() {
                                             <span>처리 중...</span>
                                         </span>
                                     ) : (
-                                        `${finalAmount.toLocaleString()}원 결제하기`
+                                        `$${finalAmount.toLocaleString()} 결제하기`
                                     )}
                                 </button>
                             )}

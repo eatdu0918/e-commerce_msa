@@ -48,7 +48,12 @@ class OrderServiceTest {
     void createOrder_success() {
         // given
         Long userId = 1L;
-        OrderItemRequest itemRequest = new OrderItemRequest(100L, "테스트 상품", new BigDecimal("10000"), 2);
+        OrderItemRequest itemRequest = OrderItemRequest.builder()
+                .productId(100L)
+                .productName("테스트 상품")
+                .unitPrice(new BigDecimal("10000"))
+                .quantity(2)
+                .build();
         CreateOrderRequest request = new CreateOrderRequest(
                 List.of(itemRequest), null, "서울시 강남구", "홍길동", "010-1234-5678"
         );
