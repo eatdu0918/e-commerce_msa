@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createOrder } from '../../api/services/order';
 import type { UserResponse } from '../../api/services/user';
 import type { Product } from '../../types/product';
 import { X } from 'lucide-react';
 import { useScrollLock } from '../../hooks/useScrollLock';
+import AddressSearchModal from '../common/AddressSearchModal';
 
 interface OrderModalProps {
     isOpen: boolean;
@@ -20,6 +21,24 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
     const [recipientPhone, setRecipientPhone] = useState(user.phoneNumber || '');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    
+    // Address state
+    const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+    const [zonecode, setZonecode] = useState('');
+    const [roadAddress, setRoadAddress] = useState('');
+    const [detailAddress, setDetailAddress] = useState('');
+
+    useEffect(() => {
+        if (roadAddress) {
+            setAddress(`(${zonecode}) ${roadAddress} ${detailAddress}`);
+        }
+    }, [zonecode, roadAddress, detailAddress]);
+
+    const handleAddressComplete = (addressStr: string, zonecodeStr: string) => {
+        setRoadAddress(addressStr);
+        setZonecode(zonecodeStr);
+        setDetailAddress('');
+    };
 
     useScrollLock(isOpen);
 
@@ -29,6 +48,12 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        if (!address.trim()) {
+            setError('배송지 주소를 입력해주세요.');
+            return;
+        }
+        
         setLoading(true);
         setError('');
 
@@ -105,13 +130,36 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
                     </div>
                     <div>
                         <label className="block text-sm font-bold text-stone-700 mb-2">배송지 주소</label>
+                        <div className="flex space-x-2 mb-2">
+                            <input
+                                type="text"
+                                value={zonecode}
+                                readOnly
+                                placeholder="우편번호"
+                                className="w-24 px-4 py-3 bg-stone-100 border border-stone-200 rounded-xl text-sm focus:outline-none text-stone-500"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setIsAddressModalOpen(true)}
+                                className="px-4 py-3 bg-black text-white rounded-xl text-sm font-bold hover:bg-stone-800 transition-all whitespace-nowrap"
+                            >
+                                주소 검색
+                            </button>
+                        </div>
                         <input
                             type="text"
-                            value={address}
-                            onChange={(e) => setAddress(e.target.value)}
+                            value={roadAddress}
+                            readOnly
+                            placeholder="기본 주소"
+                            className="w-full px-4 py-3 bg-stone-100 border border-stone-200 rounded-xl text-sm focus:outline-none mb-2 text-stone-500 cursor-pointer"
+                            onClick={() => setIsAddressModalOpen(true)}
+                        />
+                        <input
+                            type="text"
+                            value={detailAddress}
+                            onChange={(e) => setDetailAddress(e.target.value)}
+                            placeholder="상세 주소를 입력하세요 (예: 101동 1201호)"
                             className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-black transition-all"
-                            placeholder="서울특별시 강남구..."
-                            required
                         />
                     </div>
 
@@ -130,6 +178,11 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
                         {loading ? 'Processing...' : '결제하기'}
                     </button>
                 </form>
+                <AddressSearchModal
+                    isOpen={isAddressModalOpen}
+                    onClose={() => setIsAddressModalOpen(false)}
+                    onComplete={handleAddressComplete}
+                />
             </div>
         </div>
     );
