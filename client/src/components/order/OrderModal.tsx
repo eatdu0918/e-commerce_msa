@@ -1,8 +1,6 @@
-import { useState, useEffect } from 'react';
-import * as PortOne from '@portone/browser-sdk/v2';
+import { useState, useEffect, useRef } from 'react';
+import { getTossPayments } from '../../lib/tossPayments';
 import { v4 as uuidv4 } from 'uuid';
-import { createOrder } from '../../api/services/order';
-import { createPayment } from '../../api/services/payment';
 import type { UserResponse } from '../../api/services/user';
 import type { Product } from '../../types/product';
 import { X } from 'lucide-react';
@@ -22,15 +20,18 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
     const [address, setAddress] = useState('');
     const [recipientName, setRecipientName] = useState(user.name || '');
     const [recipientPhone, setRecipientPhone] = useState(user.phoneNumber || '');
-    const [paymentMethod, setPaymentMethod] = useState('CREDIT_CARD');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    
+    const [widgetsReady, setWidgetsReady] = useState(false);
+
     // Address state
     const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
     const [zonecode, setZonecode] = useState('');
     const [roadAddress, setRoadAddress] = useState('');
     const [detailAddress, setDetailAddress] = useState('');
+
+    // 토스페이먼츠 위젯 관련
+    const widgetsRef = useRef<any>(null);
 
     useEffect(() => {
         if (roadAddress) {
@@ -46,74 +47,83 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
 
     useScrollLock(isOpen);
 
-    if (!isOpen) return null;
+    // suppress unused warning
+    void onOrderSuccess;
 
     const totalAmount = product.price * quantity;
 
+    // 모달 열리면 위젯 초기화
+    useEffect(() => {
+        if (!isOpen || totalAmount <= 0) return;
+
+        let cancelled = false;
+
+        const initWidgets = async () => {
+            // DOM이 렌더링될 때까지 약간 대기
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            try {
+                const tossPayments = await getTossPayments();
+                const widgets = tossPayments.widgets({
+                    customerKey: uuidv4(),
+                });
+
+                await widgets.setAmount({
+                    currency: 'KRW',
+                    value: Math.round(totalAmount),
+                });
+
+                if (cancelled) return;
+
+                await widgets.renderPaymentMethods({
+                    selector: '#modal-payment-method-widget',
+                });
+
+                await widgets.renderAgreement({
+                    selector: '#modal-agreement-widget',
+                    variantKey: 'AGREEMENT',
+                });
+
+                widgetsRef.current = widgets;
+                setWidgetsReady(true);
+            } catch (err) {
+                console.error('결제 위젯 초기화 실패:', err);
+                if (!cancelled) {
+                    setError('결제 위젯을 불러오는 데 실패했습니다.');
+                }
+            }
+        };
+
+        initWidgets();
+
+        return () => {
+            cancelled = true;
+            setWidgetsReady(false);
+            widgetsRef.current = null;
+        };
+    }, [isOpen, totalAmount]);
+
+    if (!isOpen) return null;
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         if (!address.trim()) {
             setError('배송지 주소를 입력해주세요.');
             return;
         }
-        
+
+        if (!widgetsRef.current) {
+            setError('결제 위젯이 아직 준비되지 않았습니다.');
+            return;
+        }
+
         setLoading(true);
         setError('');
 
-        const paymentId = `ORD-${Date.now()}-${uuidv4().slice(0, 8)}`;
-
-        let portonePayMethod: any = "CARD";
-        let easyPayProvider: any = undefined;
-
-        switch (paymentMethod) {
-            case 'CREDIT_CARD':
-                portonePayMethod = 'CARD';
-                break;
-            case 'BANK_TRANSFER':
-                portonePayMethod = 'TRANSFER';
-                break;
-            case 'KAKAOPAY':
-                portonePayMethod = 'EASY_PAY';
-                easyPayProvider = 'KAKAOPAY';
-                break;
-            case 'TOSSPAY':
-                portonePayMethod = 'EASY_PAY';
-                easyPayProvider = 'TOSSPAY';
-                break;
-        }
-
-        const paymentRequest: any = {
-            storeId: "store-2dd12310-9af7-47c4-8a3c-372f87d36508", // User provided store ID
-            channelKey: "channel-key-105a265f-d034-4b42-a586-76fb87979796",
-            paymentId: paymentId,
-            orderName: product.name,
-            totalAmount: Math.round(totalAmount),
-            currency: "CURRENCY_KRW",
-            payMethod: portonePayMethod,
-            customer: {
-                fullName: recipientName,
-                phoneNumber: recipientPhone,
-                address: {
-                    addressLine1: address
-                }
-            },
-        };
-
-        if (easyPayProvider) {
-            paymentRequest.easyPay = { easyPayProvider };
-        }
-
         try {
-            const response = await PortOne.requestPayment(paymentRequest);
-
-            if (response.code != null) {
-                setError(response.message || '결제에 실패했습니다.');
-                setLoading(false);
-                return;
-            }
-
-            const newOrder = await createOrder({
+            // 주문 데이터를 localStorage에 저장 (결제 성공 후 복원)
+            const pendingOrderData = {
                 items: [{
                     productId: product.id,
                     productName: product.name,
@@ -124,17 +134,25 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
                 shippingAddress: address,
                 recipientName,
                 recipientPhone,
+                paymentMethod: 'TOSSPAYMENTS',
+            };
+
+            localStorage.setItem('pendingOrderData', JSON.stringify(pendingOrderData));
+
+            const orderId = `ORD-${Date.now()}-${uuidv4().slice(0, 8)}`;
+
+            // 결제위젯으로 결제 요청
+            await widgetsRef.current.requestPayment({
+                orderId: orderId,
+                orderName: product.name,
+                customerName: recipientName,
+                customerMobilePhone: recipientPhone.replace(/-/g, ''),
+                successUrl: `${window.location.origin}/payment/success`,
+                failUrl: `${window.location.origin}/payment/fail`,
             });
 
-            await createPayment({
-                orderId: newOrder.id,
-                paymentMethod,
-            });
-
-            onOrderSuccess(newOrder.id);
-            onClose();
         } catch (_err: any) {
-            setError('주문 및 결제 처리에 실패했습니다.');
+            setError('결제 시스템 연동 중 오류가 발생했습니다.');
         } finally {
             setLoading(false);
         }
@@ -146,7 +164,7 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
             onClick={onClose}
         >
             <div
-                className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl relative cursor-default"
+                className="bg-white rounded-3xl p-8 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl relative cursor-default"
                 onClick={(e) => e.stopPropagation()}
             >
                 <button
@@ -162,7 +180,7 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
                     <img src={product.image} alt={product.name} className="w-16 h-16 rounded-xl object-cover" />
                     <div className="text-left">
                         <h4 className="font-bold text-sm">{product.name}</h4>
-                        <p className="text-xs text-stone-500">{quantity}개 / ${totalAmount.toLocaleString()}</p>
+                        <p className="text-xs text-stone-500">{quantity}개 / {totalAmount.toLocaleString()}원</p>
                     </div>
                 </div>
 
@@ -224,40 +242,28 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
                         />
                     </div>
 
+                    {/* TossPayments 결제위젯 */}
                     <div>
                         <label className="block text-sm font-bold text-stone-700 mb-2">결제 수단</label>
-                        <div className="grid grid-cols-2 gap-2 mb-2">
-                            {[
-                                { value: 'CREDIT_CARD', label: '신용카드' },
-                                { value: 'BANK_TRANSFER', label: '계좌이체' },
-                                { value: 'KAKAOPAY', label: '카카오페이' },
-                                { value: 'TOSSPAY', label: '토스페이' },
-                            ].map((method) => (
-                                <button
-                                    key={method.value}
-                                    type="button"
-                                    onClick={() => setPaymentMethod(method.value)}
-                                    className={`p-3 rounded-xl border text-xs font-bold transition-all ${paymentMethod === method.value ? 'border-black bg-stone-50' : 'border-stone-100 hover:border-stone-200'}`}
-                                >
-                                    {method.label}
-                                </button>
-                            ))}
-                        </div>
+                        <div id="modal-payment-method-widget" className="w-full" />
                     </div>
+
+                    {/* 약관 동의 위젯 */}
+                    <div id="modal-agreement-widget" className="w-full" />
 
                     <div className="pt-4 border-t border-stone-100 flex justify-between items-center font-bold">
                         <span>총 결제금액</span>
-                        <span className="text-xl">${totalAmount.toLocaleString()}</span>
+                        <span className="text-xl">{totalAmount.toLocaleString()}원</span>
                     </div>
 
                     {error && <p className="text-red-500 text-sm">{error}</p>}
 
                     <button
                         type="submit"
-                        disabled={loading}
+                        disabled={loading || !widgetsReady}
                         className="w-full bg-black text-white py-4 rounded-xl font-bold text-lg hover:bg-stone-800 transition-colors disabled:opacity-50"
                     >
-                        {loading ? 'Processing...' : '결제하기'}
+                        {loading ? '처리 중...' : !widgetsReady ? '결제 위젯 로딩 중...' : '결제하기'}
                     </button>
                 </form>
                 <AddressSearchModal

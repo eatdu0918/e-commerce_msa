@@ -1,14 +1,12 @@
-import { useState, useEffect } from 'react';
-import * as PortOne from '@portone/browser-sdk/v2';
+import { useState, useEffect, useRef } from 'react';
+import { getTossPayments } from '../../lib/tossPayments';
 import { v4 as uuidv4 } from 'uuid';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, Tag, Truck, CreditCard, ShoppingBag, Check, Ticket } from 'lucide-react';
 import { getCart } from '../../api/services/cart';
-import { createOrder } from '../../api/services/order';
-import type { CreateOrderRequest, OrderItemRequest } from '../../api/services/order';
+import type { OrderItemRequest } from '../../api/services/order';
 import { getAvailableCoupons, calculateDiscount } from '../../api/services/coupon';
 import type { UserCouponResponse, DiscountCalculationResponse } from '../../api/services/coupon';
-import { createPayment } from '../../api/services/payment';
 import AddressSearchModal from '../common/AddressSearchModal';
 
 import { useNavigate } from 'react-router-dom';
@@ -16,22 +14,24 @@ import { useNavigate } from 'react-router-dom';
 export default function CheckoutPage() {
     const navigate = useNavigate();
     const onBack = () => navigate(-1);
-    const onOrderComplete = (orderId: number) => navigate(`/me/orders/${orderId}`);
-    const queryClient = useQueryClient();
 
     const [shippingAddress, setShippingAddress] = useState('');
     const [recipientName, setRecipientName] = useState('');
     const [recipientPhone, setRecipientPhone] = useState('');
     const [selectedCouponId, setSelectedCouponId] = useState<number | null>(null);
     const [discountInfo, setDiscountInfo] = useState<DiscountCalculationResponse | null>(null);
-    const [paymentMethod, setPaymentMethod] = useState('CREDIT_CARD');
     const [step, setStep] = useState<'shipping' | 'payment'>('shipping');
     const [error, setError] = useState('');
+    const [isProcessing, setIsProcessing] = useState(false);
 
     const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
     const [zonecode, setZonecode] = useState('');
     const [roadAddress, setRoadAddress] = useState('');
     const [detailAddress, setDetailAddress] = useState('');
+
+    // 토스페이먼츠 위젯 관련
+    const widgetsRef = useRef<any>(null);
+    const [widgetsReady, setWidgetsReady] = useState(false);
 
     const { data: cart, isLoading: cartLoading } = useQuery({
         queryKey: ['cart'],
@@ -73,8 +73,78 @@ export default function CheckoutPage() {
     const finalAmount = discountInfo ? discountInfo.finalAmount : totalPrice;
     const discountAmount = discountInfo ? discountInfo.discountAmount : 0;
 
-    const orderMutation = useMutation({
-        mutationFn: async () => {
+    // 결제 단계에 진입하면 위젯 초기화
+    useEffect(() => {
+        if (step !== 'payment' || finalAmount <= 0) return;
+
+        let cancelled = false;
+
+        const initWidgets = async () => {
+            try {
+                const tossPayments = await getTossPayments();
+                const widgets = tossPayments.widgets({
+                    customerKey: uuidv4(),
+                });
+
+                await widgets.setAmount({
+                    currency: 'KRW',
+                    value: Math.round(finalAmount),
+                });
+
+                if (cancelled) return;
+
+                await widgets.renderPaymentMethods({
+                    selector: '#payment-method-widget',
+                });
+
+                await widgets.renderAgreement({
+                    selector: '#agreement-widget',
+                    variantKey: 'AGREEMENT',
+                });
+
+                widgetsRef.current = widgets;
+                setWidgetsReady(true);
+            } catch (err) {
+                console.error('결제 위젯 초기화 실패:', err);
+                if (!cancelled) {
+                    setError('결제 위젯을 불러오는 데 실패했습니다.');
+                }
+            }
+        };
+
+        initWidgets();
+
+        return () => {
+            cancelled = true;
+            setWidgetsReady(false);
+            widgetsRef.current = null;
+        };
+    }, [step, finalAmount]);
+
+    // 금액 변경 시 위젯 업데이트
+    useEffect(() => {
+        if (widgetsRef.current && finalAmount > 0) {
+            widgetsRef.current.setAmount({
+                currency: 'KRW',
+                value: Math.round(finalAmount),
+            }).catch(console.error);
+        }
+    }, [finalAmount]);
+
+    const handlePayment = async () => {
+        if (!shippingAddress.trim() || !recipientName.trim() || !recipientPhone.trim()) {
+            setError('배송 정보를 모두 입력해주세요.');
+            return;
+        }
+        if (!widgetsRef.current) {
+            setError('결제 위젯이 아직 준비되지 않았습니다.');
+            return;
+        }
+        setError('');
+        setIsProcessing(true);
+
+        try {
+            // 주문 데이터를 localStorage에 저장 (결제 성공 후 복원)
             const orderItems: OrderItemRequest[] = items.map(item => ({
                 productId: item.productId,
                 productName: item.productName,
@@ -83,108 +153,33 @@ export default function CheckoutPage() {
                 quantity: item.quantity,
             }));
 
-            const orderData: CreateOrderRequest = {
+            const pendingOrderData = {
                 items: orderItems,
                 shippingAddress,
                 recipientName,
                 recipientPhone,
                 ...(selectedCouponId ? { userCouponId: selectedCouponId } : {}),
+                paymentMethod: 'TOSSPAYMENTS',
             };
 
-            const order = await createOrder(orderData);
+            localStorage.setItem('pendingOrderData', JSON.stringify(pendingOrderData));
 
-            // Create payment
-            await createPayment({
-                orderId: order.id,
-                paymentMethod,
+            const orderId = `ORD-${Date.now()}-${uuidv4().slice(0, 8)}`;
+
+            // 결제위젯으로 결제 요청
+            await widgetsRef.current.requestPayment({
+                orderId: orderId,
+                orderName: items.length > 1 ? `${items[0].productName} 외 ${items.length - 1}건` : items[0].productName,
+                customerName: recipientName,
+                customerMobilePhone: recipientPhone.replace(/-/g, ''),
+                successUrl: `${window.location.origin}/payment/success`,
+                failUrl: `${window.location.origin}/payment/fail`,
             });
-
-            return order;
-        },
-        onSuccess: (order) => {
-            queryClient.invalidateQueries({ queryKey: ['cart'] });
-            queryClient.invalidateQueries({ queryKey: ['orders'] });
-            onOrderComplete(order.id);
-        },
-        onError: (err: any) => {
-            setError(err.response?.data?.message || '주문 처리 중 오류가 발생했습니다.');
-        },
-    });
-
-    const handlePayment = async () => {
-        if (!shippingAddress.trim() || !recipientName.trim() || !recipientPhone.trim()) {
-            setError('배송 정보를 모두 입력해주세요.');
-            return;
-        }
-        setError('');
-
-        const paymentId = `ORD-${Date.now()}-${uuidv4().slice(0, 8)}`;
-
-        let portonePayMethod: any = "CARD";
-        let easyPayProvider: any = undefined;
-
-        switch (paymentMethod) {
-            case 'CREDIT_CARD':
-                portonePayMethod = 'CARD';
-                break;
-            case 'BANK_TRANSFER':
-                portonePayMethod = 'TRANSFER';
-                break;
-            case 'VIRTUAL_ACCOUNT':
-                portonePayMethod = 'VIRTUAL_ACCOUNT';
-                break;
-            case 'KAKAOPAY':
-                portonePayMethod = 'EASY_PAY';
-                easyPayProvider = 'KAKAOPAY';
-                break;
-            case 'TOSSPAY':
-                portonePayMethod = 'EASY_PAY';
-                easyPayProvider = 'TOSSPAY';
-                break;
-            case 'NAVERPAY':
-                portonePayMethod = 'EASY_PAY';
-                easyPayProvider = 'NAVERPAY';
-                break;
-        }
-
-        const paymentRequest: any = {
-            storeId: "store-2dd12310-9af7-47c4-8a3c-372f87d36508", // User provided store ID
-            channelKey: "channel-key-105a265f-d034-4b42-a586-76fb87979796",
-            paymentId: paymentId,
-            orderName: items.length > 1 ? `${items[0].productName} 외 ${items.length - 1}건` : items[0].productName,
-            totalAmount: Math.round(finalAmount),
-            currency: "CURRENCY_KRW",
-            payMethod: portonePayMethod,
-            customer: {
-                fullName: recipientName,
-                phoneNumber: recipientPhone,
-                address: {
-                    addressLine1: shippingAddress
-                }
-            },
-        };
-
-        if (easyPayProvider) {
-            paymentRequest.easyPay = { easyPayProvider };
-        }
-
-        try {
-            const response = await PortOne.requestPayment(paymentRequest);
-
-            if (response.code != null) {
-                setError(response.message || '결제에 실패했습니다.');
-                return;
-            }
-
-            orderMutation.mutate();
 
         } catch (_error: any) {
             setError('결제 시스템 연동 중 오류가 발생했습니다.');
+            setIsProcessing(false);
         }
-    };
-
-    const handleSubmitOrder = () => {
-        handlePayment();
     };
 
     if (cartLoading) {
@@ -350,8 +345,8 @@ export default function CheckoutPage() {
                                                         <div>
                                                             <p className="font-bold">{coupon.couponName}</p>
                                                             <p className="text-xs text-stone-400 mt-1">
-                                                                {coupon.couponType === 'PERCENTAGE' ? `${coupon.discountValue}% 할인` : `$${coupon.discountValue.toLocaleString()} 할인`}
-                                                                {coupon.minOrderAmount > 0 && ` · $${coupon.minOrderAmount.toLocaleString()} 이상 주문 시`}
+                                                                {coupon.couponType === 'PERCENTAGE' ? `${coupon.discountValue}% 할인` : `${coupon.discountValue.toLocaleString()}원 할인`}
+                                                                {coupon.minOrderAmount > 0 && ` · ${coupon.minOrderAmount.toLocaleString()}원 이상 주문 시`}
                                                             </p>
                                                             <p className="text-[10px] text-stone-300 mt-1">~ {coupon.validUntil?.split('T')[0]} 까지</p>
                                                         </div>
@@ -365,30 +360,18 @@ export default function CheckoutPage() {
                                     )}
                                 </div>
 
-                                {/* Payment Method */}
+                                {/* TossPayments 결제위젯 */}
                                 <div className="bg-white p-8 rounded-[30px] shadow-sm border border-stone-100">
                                     <h3 className="text-lg font-bold mb-6 flex items-center">
                                         <CreditCard size={20} className="mr-3 text-blue-500" />
                                         결제 수단
                                     </h3>
-                                    <div className="grid grid-cols-2 gap-3">
-                                        {[
-                                            { value: 'CREDIT_CARD', label: '신용카드' },
-                                            { value: 'BANK_TRANSFER', label: '계좌이체' },
-                                            { value: 'VIRTUAL_ACCOUNT', label: '가상계좌' },
-                                            { value: 'KAKAOPAY', label: '카카오페이' },
-                                            { value: 'TOSSPAY', label: '토스페이' },
-                                            { value: 'NAVERPAY', label: '네이버페이' },
-                                        ].map((method) => (
-                                            <button
-                                                key={method.value}
-                                                onClick={() => setPaymentMethod(method.value)}
-                                                className={`p-4 rounded-2xl border text-sm font-medium transition-all ${paymentMethod === method.value ? 'border-black bg-stone-50 font-bold' : 'border-stone-100 hover:border-stone-300'}`}
-                                            >
-                                                {method.label}
-                                            </button>
-                                        ))}
-                                    </div>
+                                    <div id="payment-method-widget" className="w-full" />
+                                </div>
+
+                                {/* 약관 동의 위젯 */}
+                                <div className="bg-white p-8 rounded-[30px] shadow-sm border border-stone-100">
+                                    <div id="agreement-widget" className="w-full" />
                                 </div>
                             </>
                         )}
@@ -418,7 +401,7 @@ export default function CheckoutPage() {
                                             <p className="text-sm font-medium truncate">{item.productName}</p>
                                             <p className="text-xs text-stone-400">수량: {item.quantity}</p>
                                         </div>
-                                        <p className="text-sm font-bold whitespace-nowrap">${(item.price * item.quantity).toLocaleString()}</p>
+                                        <p className="text-sm font-bold whitespace-nowrap">{(item.price * item.quantity).toLocaleString()}원</p>
                                     </div>
                                 ))}
                             </div>
@@ -426,12 +409,12 @@ export default function CheckoutPage() {
                             <div className="border-t border-stone-100 pt-4 space-y-3 text-sm">
                                 <div className="flex justify-between text-stone-500">
                                     <span>상품 금액</span>
-                                    <span>${totalPrice.toLocaleString()}</span>
+                                    <span>{totalPrice.toLocaleString()}원</span>
                                 </div>
                                 {discountAmount > 0 && (
                                     <div className="flex justify-between text-red-500">
                                         <span>쿠폰 할인</span>
-                                        <span>-${discountAmount.toLocaleString()}</span>
+                                        <span>-{discountAmount.toLocaleString()}원</span>
                                     </div>
                                 )}
                                 <div className="flex justify-between text-stone-500">
@@ -442,7 +425,7 @@ export default function CheckoutPage() {
 
                             <div className="border-t border-stone-100 pt-4 mt-4 flex justify-between items-center">
                                 <span className="font-bold">최종 결제금액</span>
-                                <span className="text-2xl font-bold">${finalAmount.toLocaleString()}</span>
+                                <span className="text-2xl font-bold">{finalAmount.toLocaleString()}원</span>
                             </div>
 
                             {error && (
@@ -451,17 +434,22 @@ export default function CheckoutPage() {
 
                             {step === 'payment' && (
                                 <button
-                                    onClick={handleSubmitOrder}
-                                    disabled={orderMutation.isPending}
+                                    onClick={handlePayment}
+                                    disabled={isProcessing || !widgetsReady}
                                     className="w-full mt-6 bg-black text-white py-4 rounded-2xl text-sm font-bold hover:bg-stone-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
                                 >
-                                    {orderMutation.isPending ? (
+                                    {isProcessing ? (
                                         <span className="flex items-center justify-center space-x-2">
                                             <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                                             <span>처리 중...</span>
                                         </span>
+                                    ) : !widgetsReady ? (
+                                        <span className="flex items-center justify-center space-x-2">
+                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                            <span>결제 위젯 로딩 중...</span>
+                                        </span>
                                     ) : (
-                                        `$${finalAmount.toLocaleString()} 결제하기`
+                                        `${finalAmount.toLocaleString()}원 결제하기`
                                     )}
                                 </button>
                             )}

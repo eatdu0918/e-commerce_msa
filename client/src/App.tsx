@@ -25,6 +25,8 @@ const NotFoundPage = lazy(() => import('./components/common/NotFoundPage'));
 const SignupPage = lazy(() => import('./components/auth/SignupPage'));
 const CheckoutPage = lazy(() => import('./components/checkout/CheckoutPage'));
 const OrderCompletePage = lazy(() => import('./components/checkout/OrderCompletePage'));
+const PaymentSuccessPage = lazy(() => import('./components/checkout/PaymentSuccessPage'));
+const PaymentFailPage = lazy(() => import('./components/checkout/PaymentFailPage'));
 const MyPageView = lazy(() => import('./components/profile/MyPageView'));
 const EditProfileView = lazy(() => import('./components/profile/EditProfileView'));
 const WishlistView = lazy(() => import('./components/profile/WishlistView'));
@@ -60,6 +62,8 @@ function App() {
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/order/complete/:id" element={<OrderCompletePage />} />
           <Route path="/orders/complete/:id" element={<OrderCompletePage />} />
+          <Route path="/payment/success" element={<PaymentSuccessPage />} />
+          <Route path="/payment/fail" element={<PaymentFailPage />} />
           <Route path="/search" element={<SearchResultPage />} />
 
           {/* User Routes - In real app, wrap in AuthGuard */}
