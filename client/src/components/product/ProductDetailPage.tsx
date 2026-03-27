@@ -152,7 +152,7 @@ export default function ProductDetailPage() {
                     <div className="text-left">
                         <p className="text-xs text-stone-400 uppercase tracking-widest mb-2 font-bold">{product.category}</p>
                         <h2 className="text-4xl font-bold mb-4 tracking-tight text-stone-900">{product.name}</h2>
-                        <p className="text-2xl font-light mb-4 text-stone-800">${product.price.toLocaleString()}</p>
+                        <p className="text-2xl font-light mb-4 text-stone-800">{Number(product.price).toLocaleString()}원</p>
                         {stockInfo && (
                             <div className="mb-6">
                                 {stockInfo.stockQuantity > 10 ? (

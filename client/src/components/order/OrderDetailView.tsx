@@ -237,7 +237,7 @@ export default function OrderDetailView() {
                                                 <span className="px-2.5 py-1 rounded-lg bg-stone-50 border border-stone-100 text-[10px] font-black uppercase tracking-wider text-stone-500">QTY: {item.quantity || 1}</span>
                                                 <span className="text-xs text-stone-300 font-medium tracking-tight">× ${(item.unitPrice || 0).toLocaleString()}</span>
                                             </div>
-                                            <span className="font-black text-stone-900">${(item.totalPrice || (item.unitPrice * item.quantity) || 0).toLocaleString()}</span>
+                                            <span className="font-black text-stone-900">{(item.totalPrice || (item.unitPrice * item.quantity) || 0).toLocaleString()}원</span>
                                         </div>
                                     </div>
                                 </div>
@@ -260,7 +260,7 @@ export default function OrderDetailView() {
                             <div className="space-y-4 mb-8">
                                 <div className="flex justify-between text-sm text-white/50">
                                     <span>상품 금액</span>
-                                    <span>${(order.totalAmount || 0).toLocaleString()}</span>
+                                    <span>{(order.totalAmount || 0).toLocaleString()}원</span>
                                 </div>
                                 <div className="flex justify-between text-sm text-white/50">
                                     <span>할인 금액</span>

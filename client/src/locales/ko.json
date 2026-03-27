@@ -72,7 +72,7 @@
         "total_amount": "합계 금액",
         "checkout": "주문하기",
         "shipping_info_notice": "배송비 및 쿠폰 할인은 주문 단계에서 적용됩니다.",
-        "currency": "$",
+        "currency": "원",
         "wish_to_cart_success": "상품이 장바구니에 담겼습니다."
     },
     "nav": {
