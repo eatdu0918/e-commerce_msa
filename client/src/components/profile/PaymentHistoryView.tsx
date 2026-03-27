@@ -83,7 +83,7 @@ export default function PaymentHistoryView() {
                                     <CreditCard size={14} />
                                     <span>{PAYMENT_METHOD_MAP[payment.paymentMethod] || payment.paymentMethod}</span>
                                 </div>
-                                <p className="font-bold text-lg">${payment.payAmount?.toLocaleString()}</p>
+                                <p className="font-bold text-lg">{payment.payAmount?.toLocaleString()}원</p>
                             </div>
                             {payment.paidAt && (
                                 <p className="text-[10px] text-stone-300 mt-2">결제일시: {payment.paidAt.replace('T', ' ').substring(0, 19)}</p>

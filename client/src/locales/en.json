@@ -73,7 +73,7 @@
         "total_amount": "Total Amount",
         "checkout": "Checkout",
         "shipping_info_notice": "Shipping costs and coupon discounts are applied at checkout.",
-        "currency": "$",
+        "currency": "원",
         "wish_to_cart_success": "Product has been added to the cart."
     },
     "nav": {
