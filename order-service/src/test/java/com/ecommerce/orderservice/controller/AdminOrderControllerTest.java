@@ -88,7 +88,7 @@ class AdminOrderControllerTest {
                     .last(true)
                     .build();
 
-            when(orderService.getAllOrders(any(Pageable.class))).thenReturn(pageResponse);
+            when(orderAggregationService.getAllOrdersForAdmin(any(Pageable.class))).thenReturn(pageResponse);
 
             // when & then
             mockMvc.perform(get("/api/admin/orders"))
@@ -114,7 +114,7 @@ class AdminOrderControllerTest {
                     .last(true)
                     .build();
 
-            when(orderService.getOrdersByStatus(eq(OrderStatus.PENDING), any(Pageable.class)))
+            when(orderAggregationService.getOrdersByStatusForAdmin(eq(OrderStatus.PENDING), any(Pageable.class)))
                     .thenReturn(pageResponse);
 
             // when & then
@@ -139,7 +139,7 @@ class AdminOrderControllerTest {
                     .last(true)
                     .build();
 
-            when(orderService.getAllOrders(any(Pageable.class))).thenReturn(pageResponse);
+            when(orderAggregationService.getAllOrdersForAdmin(any(Pageable.class))).thenReturn(pageResponse);
 
             // when & then
             mockMvc.perform(get("/api/admin/orders"))
@@ -160,7 +160,7 @@ class AdminOrderControllerTest {
             // given
             OrderResponse response = createOrderResponse(1L, OrderStatus.CONFIRMED);
 
-            when(orderService.getOrderById(1L)).thenReturn(response);
+            when(orderAggregationService.getOrderByIdForAdmin(1L)).thenReturn(response);
 
             // when & then
             mockMvc.perform(get("/api/admin/orders/1"))
@@ -174,7 +174,7 @@ class AdminOrderControllerTest {
         @DisplayName("주문 상세 조회 실패 - 존재하지 않음")
         void getOrder_notFound() throws Exception {
             // given
-            when(orderService.getOrderById(999L))
+            when(orderAggregationService.getOrderByIdForAdmin(999L))
                     .thenThrow(new OrderDomainException(OrderDomainExceptionCode.OrderNotFoundException));
 
             // when & then

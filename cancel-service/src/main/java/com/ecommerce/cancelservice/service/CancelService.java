@@ -123,6 +123,20 @@ public class CancelService {
                         .build());
     }
 
+    /**
+     * 관리자·order-service 집계용. JWT 사용자와 주문 소유자가 다를 때(관리자)에도 동일 주문의 취소 진행 상태를 조회한다.
+     */
+    @Transactional(readOnly = true)
+    public Optional<OrderCancelSummaryResponse> getActiveCancelForOrderAdmin(Long orderId) {
+        return cancelRepository.findFirstByOrderIdAndStatusInOrderByIdDesc(
+                        orderId, BLOCK_DUPLICATE_CREATE_STATUSES)
+                .map(c -> OrderCancelSummaryResponse.builder()
+                        .cancelId(c.getId())
+                        .cancelNumber(c.getCancelNumber())
+                        .status(c.getStatus())
+                        .build());
+    }
+
     @Transactional(readOnly = true)
     public PageResponse<CancelResponse> getMyCancels(Long userId, Pageable pageable) {
         Page<Cancel> cancels = cancelRepository.findByUserId(userId, pageable);

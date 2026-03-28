@@ -27,7 +27,10 @@ spring:
           CouponUsedEvent:com.ecommerce.orderservice.event.CouponUsedEvent,
           CouponUseFailedEvent:com.ecommerce.orderservice.event.CouponUseFailedEvent,
           PaymentFailedEvent:com.ecommerce.orderservice.event.PaymentFailedEvent,
-          CancelApprovedEvent:com.ecommerce.orderservice.event.CancelApprovedEvent
+          PaymentCompletedEvent:com.ecommerce.orderservice.event.PaymentCompletedEvent,
+          CancelApprovedEvent:com.ecommerce.orderservice.event.CancelApprovedEvent,
+          CancelRequestedEvent:com.ecommerce.orderservice.event.CancelRequestedEvent,
+          CancelRejectedEvent:com.ecommerce.orderservice.event.CancelRejectedEvent
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
@@ -40,7 +43,10 @@ spring:
           CouponUsedEvent:com.ecommerce.orderservice.event.CouponUsedEvent,
           CouponUseFailedEvent:com.ecommerce.orderservice.event.CouponUseFailedEvent,
           PaymentFailedEvent:com.ecommerce.orderservice.event.PaymentFailedEvent,
-          CancelApprovedEvent:com.ecommerce.orderservice.event.CancelApprovedEvent
+          PaymentCompletedEvent:com.ecommerce.orderservice.event.PaymentCompletedEvent,
+          CancelApprovedEvent:com.ecommerce.orderservice.event.CancelApprovedEvent,
+          CancelRequestedEvent:com.ecommerce.orderservice.event.CancelRequestedEvent,
+          CancelRejectedEvent:com.ecommerce.orderservice.event.CancelRejectedEvent
 
 jwt:
   secret: "test-secret-key-minimum-32-characters-required-for-testing"

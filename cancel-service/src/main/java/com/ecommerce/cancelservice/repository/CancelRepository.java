@@ -34,4 +34,8 @@ public interface CancelRepository extends JpaRepository<Cancel, Long> {
      */
     Optional<Cancel> findFirstByOrderIdAndUserIdAndStatusInOrderByIdDesc(
             Long orderId, Long userId, Collection<CancelStatus> statuses);
+
+    /** 관리자·order-service 집계: 주문 소유자와 무관하게 주문 ID만으로 진행 중 취소 조회 */
+    Optional<Cancel> findFirstByOrderIdAndStatusInOrderByIdDesc(
+            Long orderId, Collection<CancelStatus> statuses);
 }

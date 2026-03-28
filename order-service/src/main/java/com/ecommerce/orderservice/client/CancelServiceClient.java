@@ -16,4 +16,8 @@ public interface CancelServiceClient {
 
     @GetMapping("/api/cancels/by-order/{orderId}/active")
     ApiResponse<OrderCancelSummaryResponse> getActiveCancelForOrder(@PathVariable("orderId") Long orderId);
+
+    /** 관리자 JWT로 호출 — 주문 소유자와 무관하게 주문 ID 기준 취소 진행 상태 */
+    @GetMapping("/api/admin/cancels/orders/{orderId}/active")
+    ApiResponse<OrderCancelSummaryResponse> getActiveCancelForOrderAdmin(@PathVariable("orderId") Long orderId);
 }

@@ -42,6 +42,7 @@ public class KafkaConsumerConfig {
         Map<String, Object> props = new HashMap<>(kafkaProperties.buildConsumerProperties(null));
         props.remove(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG);
         props.remove(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG);
+        props.keySet().removeIf(k -> k.startsWith("spring.json."));
 
         Map<Pattern, Deserializer<?>> delegates = new LinkedHashMap<>();
         delegates.put(Pattern.compile("^stock-decreased$"),

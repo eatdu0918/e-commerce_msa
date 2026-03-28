@@ -9,6 +9,7 @@ import com.ecommerce.orderservice.client.dto.ProductInfo;
 import com.ecommerce.orderservice.dto.OrderProgressStatusResolver;
 import com.ecommerce.orderservice.dto.response.*;
 import com.ecommerce.orderservice.response.ApiResponse;
+import com.ecommerce.orderservice.enums.OrderStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -60,8 +61,50 @@ public class OrderAggregationService {
         OrderResponse order = orderService.getOrderById(orderId);
         List<OrderItemDetailResponse> enrichedItems = enrichOrderItems(order.getItems());
         PaymentInfo paymentInfo = fetchPaymentInfo(orderId);
+        String activeCancel = fetchActiveCancelStatusAdmin(orderId);
 
-        return OrderDetailResponse.from(order, enrichedItems, paymentInfo, null);
+        return OrderDetailResponse.from(order, enrichedItems, paymentInfo, activeCancel);
+    }
+
+    public PageResponse<OrderResponse> getAllOrdersForAdmin(Pageable pageable) {
+        PageResponse<OrderResponse> page = orderService.getAllOrders(pageable);
+        return enrichAdminOrderPage(page);
+    }
+
+    public PageResponse<OrderResponse> getOrdersByStatusForAdmin(OrderStatus status, Pageable pageable) {
+        PageResponse<OrderResponse> page = orderService.getOrdersByStatus(status, pageable);
+        return enrichAdminOrderPage(page);
+    }
+
+    public OrderResponse getOrderByIdForAdmin(Long orderId) {
+        OrderResponse order = orderService.getOrderById(orderId);
+        return withPaymentStatusForAdmin(order);
+    }
+
+    private PageResponse<OrderResponse> enrichAdminOrderPage(PageResponse<OrderResponse> page) {
+        List<OrderResponse> enriched = page.getContent().stream()
+                .map(this::withPaymentStatusForAdmin)
+                .toList();
+        return PageResponse.<OrderResponse>builder()
+                .content(enriched)
+                .pageNumber(page.getPageNumber())
+                .pageSize(page.getPageSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .build();
+    }
+
+    private OrderResponse withPaymentStatusForAdmin(OrderResponse order) {
+        PaymentInfo info = fetchPaymentInfo(order.getId());
+        String paymentStatus = info != null ? info.getStatus() : null;
+        String activeCancel = fetchActiveCancelStatusAdmin(order.getId());
+        return order.toBuilder()
+                .paymentStatus(paymentStatus)
+                .progressStatus(OrderProgressStatusResolver.resolveForDisplayWithActiveCancel(
+                        order.getStatus(), paymentStatus, activeCancel))
+                .build();
     }
 
     private List<OrderItemDetailResponse> enrichOrderItems(List<OrderItemResponse> items) {
@@ -106,6 +149,19 @@ public class OrderAggregationService {
             }
         } catch (Exception e) {
             log.warn("진행 중 취소 요약 조회 실패: orderId={}, error={}", orderId, e.getMessage());
+        }
+        return null;
+    }
+
+    private String fetchActiveCancelStatusAdmin(Long orderId) {
+        try {
+            ApiResponse<OrderCancelSummaryResponse> response =
+                    cancelServiceClient.getActiveCancelForOrderAdmin(orderId);
+            if (response != null && response.isSuccess() && response.getData() != null) {
+                return response.getData().getStatus();
+            }
+        } catch (Exception e) {
+            log.warn("관리자용 진행 중 취소 요약 조회 실패: orderId={}, error={}", orderId, e.getMessage());
         }
         return null;
     }

@@ -34,9 +34,9 @@ public class AdminOrderController {
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         PageResponse<OrderResponse> response;
         if (status != null) {
-            response = orderService.getOrdersByStatus(status, pageable);
+            response = orderAggregationService.getOrdersByStatusForAdmin(status, pageable);
         } else {
-            response = orderService.getAllOrders(pageable);
+            response = orderAggregationService.getAllOrdersForAdmin(pageable);
         }
         return ResponseEntity.ok(ApiResponse.success(response));
     }
@@ -44,7 +44,7 @@ public class AdminOrderController {
     @Operation(summary = "주문 상세 조회")
     @GetMapping("/{orderId}")
     public ResponseEntity<ApiResponse<OrderResponse>> getOrder(@PathVariable Long orderId) {
-        OrderResponse response = orderService.getOrderById(orderId);
+        OrderResponse response = orderAggregationService.getOrderByIdForAdmin(orderId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

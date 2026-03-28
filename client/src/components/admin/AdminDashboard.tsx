@@ -142,7 +142,9 @@ const AdminDashboard = () => {
                 <div>
                   <p className="font-medium text-gray-900">{t('admin.order_row', { id: order.id })}</p>
                   <p className="text-sm text-gray-500">
-                    {orderStatusLabel[order.status] ?? order.status}
+                    {orderStatusLabel[order.progressStatus || order.status] ??
+                      order.progressStatus ??
+                      order.status}
                     {' · '}
                     {order.totalAmount.toLocaleString()}
                     {t('common.currency_won')}

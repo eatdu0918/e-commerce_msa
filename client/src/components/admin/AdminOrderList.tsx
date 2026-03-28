@@ -84,7 +84,9 @@ export default function AdminOrderList() {
                   </td>
                 </tr>
               ) : (
-                orders.map((order) => (
+                orders.map((order) => {
+                  const displayStatus = (order.progressStatus || order.status || '').toUpperCase();
+                  return (
                   <tr key={order.id} className="hover:bg-stone-50/50 transition-colors relative group">
                     <td className="px-6 py-4 font-medium">#{order.id}</td>
                     <td className="px-6 py-4 text-stone-500">
@@ -100,11 +102,22 @@ export default function AdminOrderList() {
                     </td>
                     <td className="px-6 py-4 font-bold">₩{order.totalAmount.toLocaleString()}</td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${order.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
-                          order.status === 'CANCELLED' ? 'bg-red-100 text-red-800' :
-                            'bg-blue-100 text-blue-800'
-                        }`}>
-                        {order.status}
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          displayStatus === 'DELIVERED'
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : displayStatus === 'CANCELLED'
+                              ? 'bg-red-100 text-red-800'
+                              : displayStatus === 'CANCEL_REQUESTED'
+                                ? 'bg-amber-100 text-amber-900'
+                                : displayStatus === 'CONFIRMED' ||
+                                    displayStatus === 'PREPARING' ||
+                                    displayStatus === 'SHIPPING'
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-blue-100 text-blue-800'
+                        }`}
+                      >
+                        {order.progressStatus || order.status}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
@@ -116,7 +129,8 @@ export default function AdminOrderList() {
                       </button>
                     </td>
                   </tr>
-                ))
+                  );
+                })
               )}
             </tbody>
           </table>

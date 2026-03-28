@@ -24,7 +24,9 @@ import org.springframework.test.context.ActiveProfiles;
                 "coupon-use-failed",
                 "payment-failed",
                 "payment-completed",
-                "cancel-approved"
+                "cancel-approved",
+                "cancel-requested",
+                "cancel-rejected"
         },
         brokerProperties = {
                 "listeners=PLAINTEXT://localhost:0",

@@ -3,6 +3,7 @@ package com.ecommerce.cancelservice.controller;
 import com.ecommerce.cancelservice.config.SecurityConfig;
 import com.ecommerce.cancelservice.dto.response.CancelItemResponse;
 import com.ecommerce.cancelservice.dto.response.CancelResponse;
+import com.ecommerce.cancelservice.dto.response.OrderCancelSummaryResponse;
 import com.ecommerce.cancelservice.dto.response.PageResponse;
 import com.ecommerce.cancelservice.enums.CancelReason;
 import com.ecommerce.cancelservice.enums.CancelStatus;
@@ -32,6 +33,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -143,6 +145,38 @@ class AdminCancelControllerTest {
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data.content").isEmpty())
                     .andExpect(jsonPath("$.data.totalElements").value(0));
+        }
+    }
+
+    @Nested
+    @DisplayName("GET /api/admin/cancels/orders/{orderId}/active - 주문별 진행 중 취소 요약")
+    class GetActiveCancelForOrderTest {
+
+        @Test
+        @DisplayName("진행 중 취소가 있으면 요약 반환")
+        void getActiveCancel_found() throws Exception {
+            OrderCancelSummaryResponse summary = OrderCancelSummaryResponse.builder()
+                    .cancelId(1L)
+                    .cancelNumber("CN-1")
+                    .status(CancelStatus.APPROVED)
+                    .build();
+            when(cancelService.getActiveCancelForOrderAdmin(10L)).thenReturn(Optional.of(summary));
+
+            mockMvc.perform(get("/api/admin/cancels/orders/10/active"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data.status").value("APPROVED"));
+        }
+
+        @Test
+        @DisplayName("진행 중 취소가 없으면 data 없음")
+        void getActiveCancel_empty() throws Exception {
+            when(cancelService.getActiveCancelForOrderAdmin(10L)).thenReturn(Optional.empty());
+
+            mockMvc.perform(get("/api/admin/cancels/orders/10/active"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data").doesNotExist());
         }
     }
 

@@ -1,7 +1,8 @@
-package com.ecommerce.discountservice.config;
+package com.ecommerce.cancelservice.config;
 
-import com.ecommerce.discountservice.event.OrderCancelledEvent;
-import com.ecommerce.discountservice.event.StockDecreasedEvent;
+import com.ecommerce.cancelservice.event.PaymentCancelledEvent;
+import com.ecommerce.cancelservice.event.RefundCompletedEvent;
+import com.ecommerce.cancelservice.event.RefundFailedEvent;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.Deserializer;
@@ -21,8 +22,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
- * TypeId 헤더 없이 JSON만 오는 메시지와 JsonSerializer(헤더 포함) 메시지 모두
- * 토픽당 단일 DTO로 역직렬화한다.
+ * 아웃박스·프로듀서가 TypeId 헤더 없이 JSON만 보내는 경우와 호환되도록 토픽별 역직렬화 타입을 고정한다.
  */
 @Configuration
 public class KafkaConsumerConfig {
@@ -38,10 +38,12 @@ public class KafkaConsumerConfig {
         props.keySet().removeIf(k -> k.startsWith("spring.json."));
 
         Map<Pattern, Deserializer<?>> delegates = new LinkedHashMap<>();
-        delegates.put(Pattern.compile("^stock-decreased$"),
-                jsonDeserializer(StockDecreasedEvent.class, objectMapper));
-        delegates.put(Pattern.compile("^order-cancelled$"),
-                jsonDeserializer(OrderCancelledEvent.class, objectMapper));
+        delegates.put(Pattern.compile("^payment-cancelled$"),
+                jsonDeserializer(PaymentCancelledEvent.class, objectMapper));
+        delegates.put(Pattern.compile("^refund-completed$"),
+                jsonDeserializer(RefundCompletedEvent.class, objectMapper));
+        delegates.put(Pattern.compile("^refund-failed$"),
+                jsonDeserializer(RefundFailedEvent.class, objectMapper));
 
         var valueDeserializer = new DelegatingByTopicDeserializer(delegates, new StringDeserializer());
 

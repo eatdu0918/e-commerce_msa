@@ -18,6 +18,8 @@ export interface Order {
   userId: number;
   totalAmount: number;
   status: string;
+  /** 결제·취소 반영 후 목록 표시용(있으면 우선) */
+  progressStatus?: string | null;
   recipientName: string;
   createdAt: string;
   updatedAt: string;
