@@ -195,7 +195,7 @@ export default function OrderDetailView() {
             {/* Visual Status Stepper */}
             {!isCancelled && (
                 <div className="bg-white rounded-[2.5rem] border border-stone-100 p-8 mb-10 shadow-sm overflow-hidden border-b-4 border-b-black/5">
-                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-8 relative">
+                    <div className="flex flex-col sm:flex-row justify-between items-start gap-8 relative">
                         {/* Connection Line (Desktop) */}
                         <div className="hidden sm:block absolute top-[1.35rem] left-[2.5rem] right-[2.5rem] h-0.5 bg-stone-100 -z-0">
                             <div 
