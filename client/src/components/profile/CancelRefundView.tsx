@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { RotateCcw, XCircle, CheckCircle, Clock, AlertCircle, Package } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Helmet } from 'react-helmet-async';
@@ -9,6 +10,15 @@ import { getMyRefunds } from '../../api/services/refund';
 import type { RefundResponse } from '../../api/services/refund';
 
 type TabType = 'order_cancel' | 'return_refund';
+
+const TAB_QUERY = 'tab';
+
+function tabFromSearchParam(value: string | null): TabType {
+    if (value === 'order_cancel' || value === 'return_refund') {
+        return value;
+    }
+    return 'return_refund';
+}
 
 type MergedReturnRow =
     | { kind: 'return_cancel'; cancel: CancelResponse }
@@ -27,7 +37,26 @@ function formatRefundAmount(amount: RefundResponse['amount']): string {
 
 export default function CancelRefundView() {
     const { t } = useTranslation();
-    const [tab, setTab] = useState<TabType>('return_refund');
+    const [searchParams, setSearchParams] = useSearchParams();
+    const tab = tabFromSearchParam(searchParams.get(TAB_QUERY));
+
+    const setTab = useCallback(
+        (next: TabType) => {
+            setSearchParams(
+                (prev) => {
+                    const nextParams = new URLSearchParams(prev);
+                    if (next === 'return_refund') {
+                        nextParams.delete(TAB_QUERY);
+                    } else {
+                        nextParams.set(TAB_QUERY, next);
+                    }
+                    return nextParams;
+                },
+                { replace: true }
+            );
+        },
+        [setSearchParams]
+    );
 
     const CANCEL_STATUS_MAP = useMemo(
         () => ({
