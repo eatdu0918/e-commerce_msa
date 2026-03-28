@@ -16,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.UUID;
 
 @Slf4j
@@ -28,58 +30,67 @@ public class ProductEventConsumer {
     private final StockService stockService;
     private final ObjectMapper objectMapper;
 
-    @KafkaListener(topics = "order-created", groupId = "product-service")
     @Transactional
     public void handleOrderCreated(String message) {
         log.info("Received order-created raw message: {}", message);
 
         try {
             OrderCreatedEvent event = objectMapper.readValue(message, OrderCreatedEvent.class);
-            log.info("Parsed order-created event: orderId={}, items={}",
-                    event.getOrderId(), event.getItems().size());
-
+            
+            // 1. 멱등성 체크
             if (isDuplicate(event.getEventId(), "order-created")) {
+                log.info("Duplicate event detected: eventId={}", event.getEventId());
                 return;
             }
 
-            List<StockDecreasedEvent.StockItemEvent> decreasedItems = new ArrayList<>();
-            List<Long> productsToRestore = new ArrayList<>();
+            log.info("Starting inventory processing for order: orderId={}, pieces={}", 
+                    event.getOrderId(), event.getItems().size());
 
-            try {
-                for (OrderCreatedEvent.OrderItemEvent item : event.getItems()) {
-                    // 재고 차감 시도 (내부에서 검증 및 캐시 무효화 수행)
-                    StockResponse response = stockService.decreaseStock(StockRequest.of(item.getProductId(), item.getQuantity()));
-                    
-                    productsToRestore.add(item.getProductId());
-                    decreasedItems.add(StockDecreasedEvent.StockItemEvent.builder()
-                            .productId(item.getProductId())
-                            .quantity(item.getQuantity())
-                            .remainingStock(response.getStockQuantity())
-                            .build());
-                }
+            // 2. 상품별로 수량 집계 (동일 상품 ID 중복 시 합산)
+            Map<Long, Integer> aggregatedItems = event.getItems().stream()
+                    .collect(Collectors.groupingBy(
+                            OrderCreatedEvent.OrderItemEvent::getProductId,
+                            Collectors.summingInt(OrderCreatedEvent.OrderItemEvent::getQuantity)
+                    ));
 
-                StockDecreasedEvent successEvent = StockDecreasedEvent.builder()
-                        .eventId(UUID.randomUUID().toString())
-                        .orderId(event.getOrderId())
-                        .orderNumber(event.getOrderNumber())
-                        .userId(event.getUserId())
-                        .totalAmount(event.getTotalAmount())
-                        .userCouponId(event.getUserCouponId())
-                        .items(decreasedItems)
-                        .build();
+            List<StockDecreasedEvent.StockItemEvent> decreasedItemsCount = new ArrayList<>();
 
-                outboxEventPublisher.publishStockDecreasedEvent(successEvent);
-                log.info("Stock decreased successfully for order: orderId={}", event.getOrderId());
+            // 3. 재고 차감 처리
+            for (Map.Entry<Long, Integer> entry : aggregatedItems.entrySet()) {
+                Long productId = entry.getKey();
+                Integer totalQuantity = entry.getValue();
 
-                markProcessed(event.getEventId(), "order-created");
-
-            } catch (Exception e) {
-                log.error("Error processing inventory for order: orderId={}", event.getOrderId(), e);
-                rollbackStockManually(productsToRestore, decreasedItems);
-                sendStockDecreaseFailed(event, null, "재고 처리 중 오류 발생: " + e.getMessage());
+                log.debug("Decreasing stock: productId={}, totalQuantity={}", productId, totalQuantity);
+                StockResponse response = stockService.decreaseStock(StockRequest.of(productId, totalQuantity));
+                
+                decreasedItemsCount.add(StockDecreasedEvent.StockItemEvent.builder()
+                        .productId(productId)
+                        .quantity(totalQuantity)
+                        .remainingStock(response.getStockQuantity())
+                        .build());
             }
+
+            // 4. 이벤트 처리 완료 마킹 (unique constraint를 통한 동시성 제어)
+            markProcessed(event.getEventId(), "order-created");
+
+            // 5. 성공 이벤트 발행 (동일 트랜재션 내에서 아웃박스 테이블에 저장)
+            StockDecreasedEvent successEvent = StockDecreasedEvent.builder()
+                    .eventId(event.getEventId())
+                    .orderId(event.getOrderId())
+                    .orderNumber(event.getOrderNumber())
+                    .userId(event.getUserId())
+                    .totalAmount(event.getTotalAmount())
+                    .userCouponId(event.getUserCouponId())
+                    .items(decreasedItemsCount)
+                    .build();
+
+            outboxEventPublisher.publishStockDecreasedEvent(successEvent);
+            log.info("Inventory processed successfully for order: orderId={}", event.getOrderId());
+
         } catch (Exception e) {
-            log.error("Failed to parse order-created message: {}", message, e);
+            log.error("Error during order processing. Transaction will be rolled back. error={}", e.getMessage(), e);
+            // 런타임 예외를 던져 트랜잭션 롤백 유도
+            throw new RuntimeException("Inventory processing error: " + e.getMessage(), e);
         }
     }
 
