@@ -175,8 +175,8 @@ export default function OrderListView() {
                                     <div className="flex items-center gap-4">
                                         <div className="flex items-center -space-x-5">
                                             {[...Array(Math.min(3, items.length || 1))].map((_, i) => (
-                                                <div key={i} className="inline-block h-12 w-12 rounded-full ring-4 ring-white bg-stone-100 border border-stone-200 flex items-center justify-center text-[10px] font-black text-stone-400">
-                                                    <Layers size={18} />
+                                                <div key={i} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-stone-200 bg-stone-100 text-[10px] font-black text-stone-400 ring-4 ring-white">
+                                                    <Layers size={18} className="shrink-0" aria-hidden />
                                                 </div>
                                             ))}
                                         </div>
