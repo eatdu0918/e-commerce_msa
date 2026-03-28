@@ -23,6 +23,13 @@ public final class OrderProgressStatusResolver {
      */
     public static OrderStatus resolveForDisplayWithActiveCancel(
             OrderStatus orderStatus, String paymentStatus, String activeCancelStatus) {
+        /*
+         * 결제가 취소·환불되었는데 주문 엔티티가 아직 CANCEL_REQUESTED인 경우(Kafka 지연 등).
+         * 사용자 상세·목록에서 «취소 요청 중»이 아닌 «주문 취소»로 맞춘다.
+         */
+        if (orderStatus == OrderStatus.CANCEL_REQUESTED && isPaymentCancelledOrRefunded(paymentStatus)) {
+            return OrderStatus.CANCELLED;
+        }
         OrderStatus progress = resolveForDisplay(orderStatus, paymentStatus);
         if (activeCancelStatus == null || orderStatus == OrderStatus.CANCELLED) {
             return progress;
@@ -38,5 +45,13 @@ public final class OrderProgressStatusResolver {
 
     private static boolean isPaymentCompleted(String paymentStatus) {
         return paymentStatus != null && "COMPLETED".equalsIgnoreCase(paymentStatus.trim());
+    }
+
+    private static boolean isPaymentCancelledOrRefunded(String paymentStatus) {
+        if (paymentStatus == null) {
+            return false;
+        }
+        String s = paymentStatus.trim().toUpperCase();
+        return "CANCELLED".equals(s) || "REFUNDED".equals(s);
     }
 }

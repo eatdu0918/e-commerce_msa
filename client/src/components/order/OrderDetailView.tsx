@@ -152,11 +152,9 @@ export default function OrderDetailView() {
     }
 
     const progressStatus = getUiProgressStatus(order);
-    const isCancelledFlow =
-        progressStatus === 'CANCELLED' ||
-        progressStatus === 'CANCEL_REQUESTED' ||
-        order.status === 'CANCELLED' ||
-        order.status === 'CANCEL_REQUESTED';
+    const isCancelledFlow = ['CANCELLED', 'CANCEL_REQUESTED'].includes(
+        (progressStatus || order.status || '').toUpperCase()
+    );
     const { completedThrough: stepperCompletedThrough, pulseAt: stepperPulseAt } = getOrderStepperDisplay(
         progressStatus,
         STATUS_STEPS.length
@@ -205,7 +203,7 @@ export default function OrderDetailView() {
                 </div>
             </header>
 
-            {(headerStatusKey === 'CANCEL_REQUESTED' || order.status === 'CANCEL_REQUESTED') && (
+            {headerStatusKey === 'CANCEL_REQUESTED' && (
                 <div
                     className="mb-10 flex gap-4 rounded-[2rem] border border-amber-200/80 bg-amber-50/90 p-6 text-amber-950 shadow-sm"
                     role="status"

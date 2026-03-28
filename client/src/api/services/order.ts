@@ -84,8 +84,12 @@ export function getUiProgressStatus(order: {
     payment?: { status?: string };
 }): string {
     if (order.progressStatus) return order.progressStatus;
+    const pay = (order.payment?.status || order.paymentStatus || '').toUpperCase();
+    if (order.status === 'CANCEL_REQUESTED' && (pay === 'CANCELLED' || pay === 'REFUNDED')) {
+        return 'CANCELLED';
+    }
     const cancelled = order.status === 'CANCELLED' || order.status === 'CANCEL_REQUESTED';
-    const paid = (order.payment?.status || order.paymentStatus || '').toUpperCase() === 'COMPLETED';
+    const paid = pay === 'COMPLETED';
     if (!cancelled && order.status === 'PENDING' && paid) return 'CONFIRMED';
     return order.status;
 }
