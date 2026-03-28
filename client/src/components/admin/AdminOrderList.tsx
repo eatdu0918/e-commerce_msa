@@ -1,27 +1,40 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { adminApi } from '../../api/services/admin';
-import { Eye, Search, Filter } from 'lucide-react';
+import { Eye, Search, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function AdminOrderList() {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [page, setPage] = useState(0);
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['admin-orders', page],
     queryFn: () => adminApi.getOrders(page, 10),
   });
 
   const orders = data?.data?.content || [];
-  const totalPages = data?.data?.totalPages || 0;
+  const pageData = data?.data;
+  const dateLocale = i18n.language.startsWith('ko') ? 'ko-KR' : undefined;
+
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-red-500">{t('admin.error_load')}</div>
+      </div>
+    );
+  }
 
   return (
     <div>
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-2xl font-bold">Orders</h1>
-          <p className="text-stone-500 text-sm">Managing client orders</p>
+          <h1 className="text-2xl font-bold">{t('admin.nav_orders')}</h1>
+          <p className="text-stone-500 text-sm mt-1">
+            {t('admin.total_items', { count: pageData?.totalElements ?? 0 })}
+          </p>
         </div>
       </div>
 
@@ -74,7 +87,9 @@ export default function AdminOrderList() {
                 orders.map((order) => (
                   <tr key={order.id} className="hover:bg-stone-50/50 transition-colors relative group">
                     <td className="px-6 py-4 font-medium">#{order.id}</td>
-                    <td className="px-6 py-4 text-stone-500">{new Date(order.createdAt).toLocaleDateString()}</td>
+                    <td className="px-6 py-4 text-stone-500">
+                      {new Date(order.createdAt).toLocaleDateString(dateLocale)}
+                    </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center">
                         <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold mr-2">
@@ -105,6 +120,30 @@ export default function AdminOrderList() {
               )}
             </tbody>
           </table>
+        </div>
+
+        <div className="flex items-center justify-between px-6 py-4 border-t border-stone-100 bg-stone-50/50">
+          <button
+            type="button"
+            onClick={() => setPage((p) => Math.max(0, p - 1))}
+            disabled={isLoading || pageData?.first}
+            className="flex items-center px-4 py-2 text-sm font-medium text-stone-700 bg-white border border-stone-200 rounded-lg hover:bg-stone-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <ChevronLeft className="w-4 h-4 mr-1" />
+            {t('admin.prev')}
+          </button>
+          <span className="text-sm text-stone-700">
+            {page + 1} / {pageData?.totalPages || 1}
+          </span>
+          <button
+            type="button"
+            onClick={() => setPage((p) => p + 1)}
+            disabled={isLoading || pageData?.last}
+            className="flex items-center px-4 py-2 text-sm font-medium text-stone-700 bg-white border border-stone-200 rounded-lg hover:bg-stone-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {t('admin.next')}
+            <ChevronRight className="w-4 h-4 ml-1" />
+          </button>
         </div>
       </div>
     </div>
