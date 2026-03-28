@@ -1,5 +1,11 @@
 import axios from 'axios';
 import i18n from '../i18n';
+import {
+    AUTH_STORAGE_KEYS,
+    clearAuthStorage,
+    getStoredAccessToken,
+    getStoredRefreshToken,
+} from '../lib/authStorage';
 
 const api = axios.create({
     baseURL: import.meta.env.VITE_API_URL || '',
@@ -29,7 +35,7 @@ const processQueue = (error: unknown, token: string | null = null) => {
 // Request interceptor to add the auth token header to requests
 api.interceptors.request.use(
     (config) => {
-        const token = sessionStorage.getItem('accessToken');
+        const token = getStoredAccessToken();
         if (token) {
             config.headers['Authorization'] = `Bearer ${token}`;
         }
@@ -49,12 +55,10 @@ api.interceptors.response.use(
         const originalRequest = error.config;
 
         if (error.response?.status === 401 && !originalRequest._retry) {
-            const refreshToken = sessionStorage.getItem('refreshToken');
+            const refreshToken = getStoredRefreshToken();
 
             if (!refreshToken) {
-                sessionStorage.removeItem('accessToken');
-                sessionStorage.removeItem('refreshToken');
-                sessionStorage.removeItem('user');
+                clearAuthStorage();
                 window.location.href = '/?login=true';
                 return Promise.reject(error);
             }
@@ -79,9 +83,9 @@ api.interceptors.response.use(
                 );
 
                 const { accessToken, refreshToken: newRefreshToken } = response.data.data;
-                sessionStorage.setItem('accessToken', accessToken);
+                localStorage.setItem(AUTH_STORAGE_KEYS.accessToken, accessToken);
                 if (newRefreshToken) {
-                    sessionStorage.setItem('refreshToken', newRefreshToken);
+                    localStorage.setItem(AUTH_STORAGE_KEYS.refreshToken, newRefreshToken);
                 }
 
                 processQueue(null, accessToken);
@@ -89,9 +93,7 @@ api.interceptors.response.use(
                 return api(originalRequest);
             } catch (refreshError) {
                 processQueue(refreshError, null);
-                sessionStorage.removeItem('accessToken');
-                sessionStorage.removeItem('refreshToken');
-                sessionStorage.removeItem('user');
+                clearAuthStorage();
                 window.location.href = '/?login=true';
                 return Promise.reject(refreshError);
             } finally {

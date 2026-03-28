@@ -6,6 +6,7 @@ import * as z from 'zod';
 import { useState } from 'react';
 import { useScrollLock } from '../../hooks/useScrollLock';
 import { useTranslation } from 'react-i18next';
+import { AUTH_STORAGE_KEYS } from '../../lib/authStorage';
 
 interface LoginModalProps {
     isOpen: boolean;
@@ -37,11 +38,12 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, onSignupCl
         setLoading(true);
         try {
             const response = await login({ email: data.email, password: data.password });
-            sessionStorage.setItem('accessToken', response.accessToken);
+            localStorage.setItem(AUTH_STORAGE_KEYS.accessToken, response.accessToken);
+            localStorage.setItem(AUTH_STORAGE_KEYS.refreshToken, response.refreshToken);
 
             const userProfile = await getMyProfile();
-            sessionStorage.setItem('user', JSON.stringify(userProfile));
-            sessionStorage.setItem('role', userProfile.role);
+            localStorage.setItem(AUTH_STORAGE_KEYS.user, JSON.stringify(userProfile));
+            localStorage.setItem(AUTH_STORAGE_KEYS.role, userProfile.role);
 
             onLoginSuccess();
             onClose();
