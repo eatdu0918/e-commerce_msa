@@ -7,8 +7,10 @@ import ProductCard from '../product/ProductCard';
 import { useQuery } from '@tanstack/react-query';
 import { fetchProducts } from '../../api/services/product';
 import type { Product } from '../../types/product';
+import { useTranslation } from 'react-i18next';
 
 export default function HomePage() {
+    const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const [timeLeft, setTimeLeft] = useState(24 * 60 * 60);
 
@@ -27,7 +29,7 @@ export default function HomePage() {
     };
 
     const { data: productsPage, isLoading } = useQuery({
-        queryKey: ['products', 'home'],
+        queryKey: ['products', 'home', i18n.language],
         queryFn: () => fetchProducts(0, 4),
     });
 
@@ -36,22 +38,22 @@ export default function HomePage() {
     return (
         <>
             <Helmet>
-                <title>Sparta Shop | Home</title>
-                <meta name="description" content="Discover unique styles and exclusive drops at Sparta Shop." />
+                <title>{t('homePage.title')}</title>
+                <meta name="description" content={t('homePage.description')} />
             </Helmet>
             <Hero />
             <CategoryGrid />
             <section className="max-w-7xl mx-auto px-6 py-20 border-t border-stone-200">
                 <div className="flex justify-between items-end mb-10 text-left">
                     <div>
-                        <h2 className="text-2xl font-bold tracking-tight mb-2">DAILY DROPS</h2>
-                        <p className="text-stone-500 text-sm">Special opportunities arriving every day at noon.</p>
+                        <h2 className="text-2xl font-bold tracking-tight mb-2">{t('home.daily_drops')}</h2>
+                        <p className="text-stone-500 text-sm">{t('homePage.section_subtitle')}</p>
                     </div>
                     <button
                         onClick={() => navigate('/shop')}
                         className="text-sm font-medium border-b border-black pb-1 hover:text-stone-500 hover:border-stone-500 transition-colors"
                     >
-                        View All
+                        {t('home.view_all')}
                     </button>
                 </div>
 

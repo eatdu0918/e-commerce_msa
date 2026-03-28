@@ -8,12 +8,12 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
 export default function WishlistView() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
 
     const { data: wishlistItems, isLoading } = useQuery<WishlistItemResponse[]>({
-        queryKey: ['wishlist'],
+        queryKey: ['wishlist', i18n.language],
         queryFn: getWishlist,
     });
 
@@ -28,7 +28,7 @@ export default function WishlistView() {
         mutationFn: (productId: number) => addToCart({ productId, quantity: 1 }),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['cart'] });
-            toast.success(t('cart.wish_to_cart_success') || '장바구니에 담겼습니다.');
+            toast.success(t('cart.wish_to_cart_success'));
         },
     });
 
@@ -46,7 +46,7 @@ export default function WishlistView() {
                 <div className="w-16 h-16 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-6">
                     <Trash2 size={24} className="text-stone-300" />
                 </div>
-                <p>{t('order.no_history') || '찜한 상품이 없습니다.'}</p>
+                <p>{t('wishlist.empty')}</p>
             </div>
         );
     }
@@ -95,7 +95,10 @@ export default function WishlistView() {
                         </div>
 
                         <div className="flex items-center justify-between mt-4">
-                            <span className="font-bold text-stone-900">{item.price.toLocaleString()}원</span>
+                            <span className="font-bold text-stone-900">
+                                {item.price.toLocaleString()}
+                                {t('common.currency_won')}
+                            </span>
                             <div className="flex space-x-2">
                                 <button
                                     onClick={() => addCartMutation.mutate(item.productId)}

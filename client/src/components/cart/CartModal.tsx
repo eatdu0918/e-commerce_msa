@@ -12,13 +12,13 @@ interface CartModalProps {
 }
 
 export default function CartModal({ isOpen, onClose, onCheckout }: CartModalProps) {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const queryClient = useQueryClient();
 
     useScrollLock(isOpen);
 
     const { data: cart, isLoading } = useQuery<CartResponse>({
-        queryKey: ['cart'],
+        queryKey: ['cart', i18n.language],
         queryFn: getCart,
         enabled: isOpen,
     });

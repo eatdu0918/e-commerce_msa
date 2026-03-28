@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchProducts } from '../../api/services/product';
 import { getAllCategories } from '../../api/services/category';
 import { useTranslation } from 'react-i18next';
+import { catalogCategoryName } from '../../lib/catalogLocale';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Button } from '../ui/Button';
@@ -12,7 +13,7 @@ import { Skeleton } from '../ui/Skeleton';
 import { Search } from 'lucide-react';
 
 export default function ProductListPage() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const keyword = searchParams.get('keyword') || undefined;
@@ -61,7 +62,7 @@ export default function ProductListPage() {
     };
 
     const { data: categoriesData } = useQuery({
-        queryKey: ['categories', 'all'],
+        queryKey: ['categories', 'all', i18n.language],
         queryFn: getAllCategories,
         staleTime: Infinity,
         retry: false,
@@ -72,10 +73,16 @@ export default function ProductListPage() {
         return categoriesData?.find(c => c.name === filter)?.id;
     };
 
-    const filterOptions = ['all', ...(categoriesData?.map(c => c.name) ?? [])];
+    const filterOptions: { value: string; label: string }[] = [
+        { value: 'all', label: t('common.category_all') },
+        ...(categoriesData?.map((c) => ({
+            value: c.name,
+            label: catalogCategoryName(c, i18n.language),
+        })) ?? []),
+    ];
 
     const { data: productsPage, isLoading, isError, refetch } = useQuery({
-        queryKey: ['products', page, currentFilter, currentSort, keyword],
+        queryKey: ['products', page, currentFilter, currentSort, keyword, i18n.language],
         queryFn: () => fetchProducts(page, pageSize, getCategoryId(currentFilter), getBackendSort(currentSort), keyword),
     });
 
@@ -86,9 +93,9 @@ export default function ProductListPage() {
         return (
             <div className="min-h-screen flex items-center justify-center bg-[#f9f7f2]">
                 <div className="text-center p-8 bg-white rounded-3xl shadow-xl max-w-md">
-                    <h2 className="text-2xl font-bold text-red-500 mb-4">앗! 문제가 발생했습니다</h2>
-                    <p className="text-stone-500 mb-6">상품 정보를 불러오는 중 오류가 발생했습니다. 다시 시도해 주세요.</p>
-                    <Button onClick={() => refetch()} variant="primary" className="w-full">다시 시도</Button>
+                    <h2 className="text-2xl font-bold text-red-500 mb-4">{t('common.shop_error_title')}</h2>
+                    <p className="text-stone-500 mb-6">{t('common.shop_error_desc')}</p>
+                    <Button onClick={() => refetch()} variant="primary" className="w-full">{t('common.retry')}</Button>
                 </div>
             </div>
         );
@@ -126,21 +133,21 @@ export default function ProductListPage() {
 
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-12 border-b border-stone-200 pb-8">
                     <div className="flex space-x-2 overflow-x-auto no-scrollbar pb-2 md:pb-0 w-full md:w-auto">
-                        {filterOptions.map((cat) => (
+                        {filterOptions.map((opt) => (
                             <Button
-                                key={cat}
-                                onClick={() => handleFilterChange(cat)}
-                                variant={currentFilter === cat ? 'primary' : 'ghost'}
+                                key={opt.value}
+                                onClick={() => handleFilterChange(opt.value)}
+                                variant={currentFilter === opt.value ? 'primary' : 'ghost'}
                                 size="sm"
-                                className={`rounded-full ${currentFilter === cat ? '' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}
+                                className={`rounded-full ${currentFilter === opt.value ? '' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}
                             >
-                                {cat === 'all' ? t('common.category_all') : cat}
+                                {opt.label}
                             </Button>
                         ))}
                     </div>
                     <div className="flex items-center space-x-6 w-full md:w-auto justify-between">
                         <span className="text-xs text-stone-400">
-                            <span className="font-medium text-stone-600">{productsPage?.totalElements || 0}</span> {t('common.products_count', { count: productsPage?.totalElements || 0 }).replace(/[0-9]+\s/, '')}
+                            {t('common.products_count', { count: productsPage?.totalElements || 0 })}
                         </span>
                         <select
                             value={currentSort}
@@ -182,7 +189,7 @@ export default function ProductListPage() {
                                     setSearchParams({});
                                     setSearchTerm('');
                                 }}>
-                                    Clear Filters
+                                    {t('common.clear_filters')}
                                 </Button>
                             </div>
                         )}

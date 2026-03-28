@@ -6,10 +6,15 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import SearchBar from '../common/SearchBar';
 
+export interface CategoryNavItem {
+    key: string;
+    label: string;
+}
+
 interface HeaderProps {
-    category: string;
-    setCategory: (category: string) => void;
-    categories: string[];
+    activeCategoryKey: string;
+    onSelectCategory: (categoryKey: string) => void;
+    categoryNavItems: CategoryNavItem[];
     user?: UserResponse;
     onLoginClick: () => void;
     onLogoutClick: () => void;
@@ -17,7 +22,7 @@ interface HeaderProps {
     cartCount?: number;
 }
 
-export default function Header({ category, setCategory, categories, user, onLoginClick, onLogoutClick, onCartClick, cartCount = 0 }: HeaderProps) {
+export default function Header({ activeCategoryKey, onSelectCategory, categoryNavItems, user, onLoginClick, onLogoutClick, onCartClick, cartCount = 0 }: HeaderProps) {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const location = useLocation();
@@ -58,7 +63,7 @@ export default function Header({ category, setCategory, categories, user, onLogi
                 <div
                     className="text-xl font-bold tracking-tighter cursor-pointer"
                     onClick={() => {
-                        setCategory(t('common.category_all'));
+                        onSelectCategory('all');
                         handleNavigate('/');
                     }}
                 >
@@ -72,17 +77,17 @@ export default function Header({ category, setCategory, categories, user, onLogi
                     >
                         {t('common.shop_all')}
                     </button>
-                    {categories.map((cat) => (
+                    {categoryNavItems.map((item) => (
                         <button
-                            key={cat}
+                            key={item.key}
                             onClick={() => {
-                                setCategory(cat);
+                                onSelectCategory(item.key);
                                 handleNavigate('/');
                             }}
-                            className={`hover:text-black transition-colors ${category === cat ? 'text-black' : ''
+                            className={`hover:text-black transition-colors ${activeCategoryKey === item.key ? 'text-black' : ''
                                 }`}
                         >
-                            {cat}
+                            {item.label}
                         </button>
                     ))}
                 </div>
@@ -243,17 +248,17 @@ export default function Header({ category, setCategory, categories, user, onLogi
                         >
                             {t('common.shop_all')}
                         </button>
-                        {categories.map((cat) => (
+                        {categoryNavItems.map((item) => (
                             <button
-                                key={cat}
+                                key={item.key}
                                 onClick={() => {
-                                    setCategory(cat);
+                                    onSelectCategory(item.key);
                                     handleNavigate('/');
                                 }}
-                                className={`text-left hover:text-black transition-colors ${category === cat ? 'text-black' : ''
+                                className={`text-left hover:text-black transition-colors ${activeCategoryKey === item.key ? 'text-black' : ''
                                     }`}
                             >
-                                {cat}
+                                {item.label}
                             </button>
                         ))}
                     </div>

@@ -19,7 +19,7 @@ interface OutletContextType {
 }
 
 export default function ProductDetailPage() {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const { id } = useParams();
     const navigate = useNavigate();
     const { openLogin, openCart } = useOutletContext<OutletContextType>();
@@ -31,13 +31,13 @@ export default function ProductDetailPage() {
     const queryClient = useQueryClient();
 
     const { data: product, isLoading, isError } = useQuery({
-        queryKey: ['product', id],
+        queryKey: ['product', id, i18n.language],
         queryFn: () => getProduct(Number(id)),
         enabled: !!id,
     });
 
     const { data: stockInfo } = useQuery({
-        queryKey: ['stock', id],
+        queryKey: ['stock', id, i18n.language],
         queryFn: () => getStock(Number(id)),
         enabled: !!id,
     });
@@ -157,7 +157,10 @@ export default function ProductDetailPage() {
                     <div className="text-left">
                         <p className="text-xs text-stone-400 uppercase tracking-widest mb-2 font-bold">{product.category}</p>
                         <h2 className="text-4xl font-bold mb-4 tracking-tight text-stone-900">{product.name}</h2>
-                        <p className="text-2xl font-light mb-4 text-stone-800">{Number(product.price).toLocaleString()}원</p>
+                        <p className="text-2xl font-light mb-4 text-stone-800">
+                            {Number(product.price).toLocaleString()}
+                            {t('common.currency_won')}
+                        </p>
                         {stockInfo && (
                             <div className="mb-6">
                                 {stockInfo.stockQuantity > 10 ? (

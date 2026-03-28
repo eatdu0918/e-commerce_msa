@@ -1,4 +1,5 @@
 import axios from 'axios';
+import i18n from '../i18n';
 
 const api = axios.create({
     baseURL: import.meta.env.VITE_API_URL || '',
@@ -32,6 +33,8 @@ api.interceptors.request.use(
         if (token) {
             config.headers['Authorization'] = `Bearer ${token}`;
         }
+        const lang = i18n.language?.toLowerCase().startsWith('en') ? 'en-US' : 'ko-KR';
+        config.headers['Accept-Language'] = lang;
         return config;
     },
     (error) => {

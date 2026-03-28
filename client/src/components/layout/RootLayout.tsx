@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Toaster } from 'react-hot-toast';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import Header from './Header';
 import Footer from './Footer';
 import CartModal from '../cart/CartModal';
@@ -11,25 +11,29 @@ import { getMyProfile } from '../../api/services/user';
 import { getCart } from '../../api/services/cart';
 import { getRootCategories } from '../../api/services/category';
 import { useTranslation } from 'react-i18next';
+import { catalogCategoryName } from '../../lib/catalogLocale';
 
 export default function RootLayout() {
-    const { t } = useTranslation();
+    const { i18n } = useTranslation();
     const navigate = useNavigate();
-    const location = useLocation();
     const queryClient = useQueryClient();
 
     const [isLoginOpen, setIsLoginOpen] = useState(false);
     const [isSignupOpen, setIsSignupOpen] = useState(false);
     const [isCartOpen, setIsCartOpen] = useState(false);
-    const [category, setCategory] = useState(t('common.category_all'));
+    const [activeCategoryKey, setActiveCategoryKey] = useState('all');
 
     const { data: categoriesData } = useQuery({
-        queryKey: ['categories', 'root'],
+        queryKey: ['categories', 'root', i18n.language],
         queryFn: getRootCategories,
         staleTime: Infinity,
         retry: false,
     });
-    const categories = categoriesData?.map(c => c.name) ?? [];
+    const categoryNavItems =
+        categoriesData?.map((c) => ({
+            key: c.name,
+            label: catalogCategoryName(c, i18n.language),
+        })) ?? [];
 
     // Check auth
     const { data: user } = useQuery({
@@ -45,28 +49,26 @@ export default function RootLayout() {
     });
 
     const { data: cart } = useQuery({
-        queryKey: ['cart'],
+        queryKey: ['cart', i18n.language],
         queryFn: getCart,
         enabled: !!user,
     });
 
-    // Handle category change navigation
-    const handleCategoryChange = (newCategory: string) => {
-        setCategory(newCategory);
-        if (newCategory === t('common.category_all')) {
+    const handleCategoryChange = (key: string) => {
+        setActiveCategoryKey(key);
+        if (key === 'all') {
             navigate('/');
         } else {
-            // Simple mapping for demo. In real app, use IDs or slugs
-            navigate(`/?category=${encodeURIComponent(newCategory)}`);
+            navigate(`/?category=${encodeURIComponent(key)}`);
         }
     };
 
     return (
         <div className="antialiased min-h-screen flex flex-col">
             <Header
-                category={category}
-                setCategory={handleCategoryChange}
-                categories={categories}
+                activeCategoryKey={activeCategoryKey}
+                onSelectCategory={handleCategoryChange}
+                categoryNavItems={categoryNavItems}
                 user={user}
                 onLoginClick={() => setIsLoginOpen(true)}
                 onLogoutClick={() => {

@@ -1,14 +1,19 @@
 import api from '../axios';
 import type { Product } from '../../types/product';
+import i18n from '../../i18n';
+import { catalogCategoryName, catalogProductDescription, catalogProductName } from '../../lib/catalogLocale';
 
 export interface ProductResponse {
     id: number;
     name: string;
+    nameKo?: string | null;
     description: string;
+    descriptionKo?: string | null;
     price: number;
     stockQuantity: number;
     categoryId: number;
     categoryName: string;
+    categoryNameKo?: string | null;
     isActive: boolean;
     createdAt: string;
     updatedAt: string;
@@ -24,35 +29,27 @@ export interface PageResponse<T> {
     last: boolean;
 }
 
-// Data Transformer
+// Data Transformer — 표시명은 현재 i18n 언어에 맞춤
 const transformProduct = (serverProduct: ProductResponse): Product => {
-    // Deterministic random rating based on ID
     const rating = 3 + (serverProduct.id % 20) / 10; // 3.0 ~ 4.9
     const reviews = Math.floor(serverProduct.id * 10 + (serverProduct.id % 5) * 100);
+    const lang = i18n.language;
 
-    // Map Category to Image (Simple mapping)
-    // let image = '/assets/images/product_vase.png'; // Default
-    // const catName = serverProduct.categoryName?.toUpperCase() || '';
-
-    // if (catName.includes('CLOTH') || catName.includes('APPAREL')) {
-    //     image = '/assets/images/product_hoodie.png';
-    //     if (serverProduct.id % 2 === 0) image = '/assets/images/product_cardigan.png';
-    // } else if (catName.includes('HOME') || catName.includes('LIVING')) {
-    //     image = '/assets/images/product_lamp.png';
-    // } else if (catName.includes('FOOT') || catName.includes('SHOE')) {
-    //     image = '/assets/images/product_runner.png';
-    // } else if (catName.includes('ELECTRONIC')) {
-    //     image = '/assets/images/product_headphones.png';
-    // }
+    const categoryLabel = serverProduct.categoryName
+        ? catalogCategoryName(
+              { name: serverProduct.categoryName, nameKo: serverProduct.categoryNameKo },
+              lang
+          )
+        : 'General';
 
     return {
         id: serverProduct.id,
-        name: serverProduct.name,
-        category: serverProduct.categoryName || 'General',
+        name: catalogProductName(serverProduct, lang),
+        category: categoryLabel,
         price: serverProduct.price,
-        originalPrice: undefined, // Backend doesn't have it
+        originalPrice: undefined,
         date: serverProduct.createdAt.split('T')[0],
-        description: serverProduct.description,
+        description: catalogProductDescription(serverProduct, lang),
         image: serverProduct.imageUrl || '/assets/images/product_vase.png',
         rating: Number(rating.toFixed(1)),
         reviews: reviews,

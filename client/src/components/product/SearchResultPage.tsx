@@ -10,11 +10,11 @@ import { Search } from 'lucide-react';
 export default function SearchResultPage() {
     const [searchParams] = useSearchParams();
     const query = searchParams.get('keyword') || ''; // Changed from 'q' to 'keyword' to match ProductListPage and App.tsx search logic
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const [page, setPage] = useState(0);
 
     const { data, isLoading, isError } = useQuery({
-        queryKey: ['products', 'search', query, page],
+        queryKey: ['products', 'search', query, page, i18n.language],
         queryFn: () => fetchProducts(page, 12, undefined, undefined, query),
         enabled: !!query,
         staleTime: 1000 * 60 * 5, // 5 minutes

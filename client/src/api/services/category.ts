@@ -3,7 +3,9 @@ import api from '../axios';
 export interface CategoryResponse {
     id: number;
     name: string;
+    nameKo?: string | null;
     description: string;
+    descriptionKo?: string | null;
     parentId: number | null;
     children: CategoryResponse[];
     productCount: number;
