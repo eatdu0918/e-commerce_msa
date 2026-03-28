@@ -22,10 +22,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    // 인증 불필요 경로 (상품 조회는 누구나 가능)
+    // 인증 불필요 경로 (상품/카테고리 조회는 누구나 가능)
     public static final String[] PUBLIC_GET_PATHS = {
             "/api/products",
             "/api/products/**",
+            "/api/categories",
+            "/api/categories/**",
             "/api/reviews/products/**"
     };
 
