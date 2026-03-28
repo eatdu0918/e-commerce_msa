@@ -15,6 +15,7 @@ const AdminLayout = lazy(() => import('./components/admin/AdminLayout'));
 const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard'));
 const AdminProductList = lazy(() => import('./components/admin/AdminProductList'));
 const AdminOrderList = lazy(() => import('./components/admin/AdminOrderList'));
+const AdminOrderDetail = lazy(() => import('./components/admin/AdminOrderDetail'));
 const AdminUserList = lazy(() => import('./components/admin/AdminUserList'));
 const AdminPaymentList = lazy(() => import('./components/admin/AdminPaymentList'));
 const AdminCouponList = lazy(() => import('./components/admin/AdminCouponList'));
@@ -104,6 +105,7 @@ function App() {
           <Route path="users" element={<AdminUserList />} />
           <Route path="products" element={<AdminProductList />} />
           <Route path="orders" element={<AdminOrderList />} />
+          <Route path="orders/:id" element={<AdminOrderDetail />} />
           <Route path="payments" element={<AdminPaymentList />} />
           <Route path="coupons" element={<AdminCouponList />} />
           <Route path="cancels" element={<AdminCancelList />} />

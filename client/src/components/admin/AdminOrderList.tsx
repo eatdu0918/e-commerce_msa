@@ -1,18 +1,37 @@
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { adminApi } from '../../api/services/admin';
-import { Eye, Search, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  adminDisplayStatusLabel,
+  adminNextTargetLabel,
+  getNextAdminOrderStatus,
+} from '../../lib/adminOrderStatus';
+import { Eye, Search, Filter, ChevronLeft, ChevronRight, ChevronRightCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function AdminOrderList() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(0);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['admin-orders', page],
     queryFn: () => adminApi.getOrders(page, 10),
+  });
+
+  const advanceMutation = useMutation({
+    mutationFn: ({ id, status }: { id: number; status: string }) =>
+      adminApi.updateOrderStatus(id, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-order-detail'] });
+      alert(t('admin.order_status_updated'));
+    },
+    onError: () => {
+      alert(t('admin.order_status_update_fail'));
+    },
   });
 
   const orders = data?.data?.content || [];
@@ -65,7 +84,7 @@ export default function AdminOrderList() {
                 <th className="px-6 py-4">Customer</th>
                 <th className="px-6 py-4">Total</th>
                 <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4 text-right">Actions</th>
+                <th className="px-6 py-4 text-right">{t('admin.actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-50">
@@ -86,6 +105,11 @@ export default function AdminOrderList() {
               ) : (
                 orders.map((order) => {
                   const displayStatus = (order.progressStatus || order.status || '').toUpperCase();
+                  const nextCode = getNextAdminOrderStatus(order.status, {
+                    paymentStatus: order.paymentStatus,
+                    activeCancelStatus: order.activeCancelStatus,
+                  });
+                  const nextLabel = nextCode ? adminNextTargetLabel(t, nextCode) : null;
                   return (
                   <tr key={order.id} className="hover:bg-stone-50/50 transition-colors relative group">
                     <td className="px-6 py-4 font-medium">#{order.id}</td>
@@ -117,16 +141,39 @@ export default function AdminOrderList() {
                                   : 'bg-blue-100 text-blue-800'
                         }`}
                       >
-                        {order.progressStatus || order.status}
+                        {adminDisplayStatusLabel(t, displayStatus)}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() => navigate(`/checkout/complete/${order.id}`)} // Re-using existing detail view for demo
-                        className="p-2 text-stone-400 hover:text-black hover:bg-stone-100 rounded-lg transition-colors"
-                      >
-                        <Eye size={16} />
-                      </button>
+                      <div className="inline-flex items-center justify-end gap-1">
+                        {nextCode && nextLabel && (
+                          <button
+                            type="button"
+                            title={t('admin.order_next_step', { label: nextLabel })}
+                            onClick={() => {
+                              if (
+                                window.confirm(
+                                  t('admin.order_confirm_advance', { label: nextLabel })
+                                )
+                              ) {
+                                advanceMutation.mutate({ id: order.id, status: nextCode });
+                              }
+                            }}
+                            disabled={advanceMutation.isPending}
+                            className="p-2 text-stone-500 hover:text-emerald-700 hover:bg-emerald-50 rounded-lg transition-colors disabled:opacity-50"
+                          >
+                            <ChevronRightCircle size={18} />
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/admin/orders/${order.id}`)}
+                          className="p-2 text-stone-400 hover:text-black hover:bg-stone-100 rounded-lg transition-colors"
+                          aria-label={t('admin.order_detail_open')}
+                        >
+                          <Eye size={16} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                   );

@@ -16,34 +16,66 @@ export interface User {
 export interface Order {
   id: number;
   userId: number;
+  orderNumber?: string;
   totalAmount: number;
   status: string;
   /** 결제·취소 반영 후 목록 표시용(있으면 우선) */
   progressStatus?: string | null;
+  /** 집계 조회 시 결제 상태 */
+  paymentStatus?: string | null;
+  /** 진행 중 취소(REQUESTED/APPROVED/COMPLETED) */
+  activeCancelStatus?: string | null;
   recipientName: string;
   createdAt: string;
   updatedAt: string;
 }
 
+/** GET /api/admin/orders/{id}/detail 응답 */
 export interface OrderDetail {
-  orderId: number;
+  id: number;
+  orderId?: number;
   userId: number;
-  userEmail: string;
+  orderNumber?: string;
   status: string;
+  statusDescription?: string;
   totalAmount: number;
+  discountAmount?: number;
+  finalAmount?: number;
+  shippingAddress?: string;
+  recipientName?: string;
+  recipientPhone?: string;
   createdAt: string;
   updatedAt: string;
   items: OrderItem[];
-  payment?: Payment;
+  payment?: AdminOrderPaymentInfo | null;
+  progressStatus?: string | null;
+  activeCancelStatus?: string | null;
+}
+
+export interface AdminOrderPaymentInfo {
+  id: number;
+  orderId: number;
+  paymentNumber?: string;
+  status: string;
+  amount: number;
+  paymentMethod: string;
+  paymentDetails?: string;
+  paidAt?: string;
 }
 
 export interface OrderItem {
-  orderItemId: number;
+  id: number;
+  orderItemId?: number;
   productId: number;
   productName: string;
-  productPrice: number;
+  productPrice?: number;
+  unitPrice?: number;
   quantity: number;
-  itemPrice: number;
+  itemPrice?: number;
+  totalPrice: number;
+  imageUrl?: string | null;
+  categoryName?: string | null;
+  currentStock?: number | null;
 }
 
 export interface Payment {
