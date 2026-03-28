@@ -6,7 +6,9 @@ import com.ecommerce.paymentservice.enums.PaymentMethod;
 import com.ecommerce.paymentservice.enums.PaymentStatus;
 import com.ecommerce.paymentservice.exception.PaymentDomainException;
 import com.ecommerce.paymentservice.exception.PaymentDomainExceptionCode;
+import com.ecommerce.paymentservice.security.jwt.JwtTokenProvider;
 import com.ecommerce.paymentservice.service.PaymentService;
+import com.ecommerce.paymentservice.service.TokenService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -43,6 +45,12 @@ class AdminPaymentControllerTest {
 
     @MockBean
     PaymentService paymentService;
+
+    @MockBean
+    JwtTokenProvider jwtTokenProvider;
+
+    @MockBean
+    TokenService tokenService;
 
     @Nested
     @DisplayName("GET /api/admin/payments - 전체 결제 목록 조회")

@@ -5,7 +5,9 @@ import com.ecommerce.discountservice.dto.response.PageResponse;
 import com.ecommerce.discountservice.enums.CouponType;
 import com.ecommerce.discountservice.exception.DiscountDomainException;
 import com.ecommerce.discountservice.exception.DiscountDomainExceptionCode;
+import com.ecommerce.discountservice.security.jwt.JwtTokenProvider;
 import com.ecommerce.discountservice.service.CouponService;
+import com.ecommerce.discountservice.service.TokenService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -41,6 +43,12 @@ class AdminCouponControllerTest {
 
     @MockBean
     CouponService couponService;
+
+    @MockBean
+    JwtTokenProvider jwtTokenProvider;
+
+    @MockBean
+    TokenService tokenService;
 
     @Nested
     @DisplayName("POST /api/admin/coupons - 쿠폰 생성")

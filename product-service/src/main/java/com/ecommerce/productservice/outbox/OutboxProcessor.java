@@ -1,11 +1,13 @@
 package com.ecommerce.productservice.outbox;
 
-import com.ecommerce.productservice.config.OutboxKafkaConfig;
 import com.ecommerce.productservice.entity.OutboxEvent;
 import com.ecommerce.productservice.enums.OutboxStatus;
+import com.ecommerce.productservice.event.StockDecreaseFailedEvent;
+import com.ecommerce.productservice.event.StockDecreasedEvent;
 import com.ecommerce.productservice.repository.OutboxEventRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -23,13 +25,16 @@ public class OutboxProcessor {
     private static final int CLEANUP_DAYS = 7;
 
     private final OutboxEventRepository outboxEventRepository;
-    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final ObjectMapper objectMapper;
 
     public OutboxProcessor(
             OutboxEventRepository outboxEventRepository,
-            @Qualifier(OutboxKafkaConfig.OUTBOX_KAFKA_TEMPLATE) KafkaTemplate<String, String> kafkaTemplate) {
+            KafkaTemplate<String, Object> kafkaTemplate,
+            ObjectMapper objectMapper) {
         this.outboxEventRepository = outboxEventRepository;
         this.kafkaTemplate = kafkaTemplate;
+        this.objectMapper = objectMapper;
     }
 
     @Scheduled(fixedDelay = 1000)
@@ -39,7 +44,8 @@ public class OutboxProcessor {
 
         for (OutboxEvent event : events) {
             try {
-                kafkaTemplate.send(event.getTopic(), event.getAggregateId(), event.getPayload())
+                Object payload = deserializePayload(event);
+                kafkaTemplate.send(event.getTopic(), event.getAggregateId(), payload)
                         .whenComplete((result, ex) -> {
                             if (ex != null) {
                                 log.error("Kafka 발행 실패: eventId={}, topic={}", event.getId(), event.getTopic(), ex);
@@ -58,6 +64,17 @@ public class OutboxProcessor {
                 }
             }
         }
+    }
+
+    private Object deserializePayload(OutboxEvent event) throws JsonProcessingException {
+        String type = event.getEventType();
+        return switch (type) {
+            case "StockDecreasedEvent" ->
+                    objectMapper.readValue(event.getPayload(), StockDecreasedEvent.class);
+            case "StockDecreaseFailedEvent" ->
+                    objectMapper.readValue(event.getPayload(), StockDecreaseFailedEvent.class);
+            default -> throw new IllegalArgumentException("지원하지 않는 Outbox 이벤트 타입: " + type);
+        };
     }
 
     @Scheduled(cron = "0 0 3 * * *")

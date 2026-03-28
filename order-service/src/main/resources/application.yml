@@ -35,20 +35,6 @@ spring:
     consumer:
       group-id: order-service
       auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      properties:
-        spring.json.trusted.packages: "*"
-        spring.json.type.mapping: >-
-          OrderCreatedEvent:com.ecommerce.orderservice.event.OrderCreatedEvent,
-          OrderCancelledEvent:com.ecommerce.orderservice.event.OrderCancelledEvent,
-          StockDecreasedEvent:com.ecommerce.orderservice.event.StockDecreasedEvent,
-          StockDecreaseFailedEvent:com.ecommerce.orderservice.event.StockDecreaseFailedEvent,
-          CouponUsedEvent:com.ecommerce.orderservice.event.CouponUsedEvent,
-          CouponUseFailedEvent:com.ecommerce.orderservice.event.CouponUseFailedEvent,
-          PaymentFailedEvent:com.ecommerce.orderservice.event.PaymentFailedEvent,
-          PaymentCompletedEvent:com.ecommerce.orderservice.event.PaymentCompletedEvent,
-          CancelApprovedEvent:com.ecommerce.orderservice.event.CancelApprovedEvent
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer

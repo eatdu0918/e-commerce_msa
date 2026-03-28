@@ -9,7 +9,7 @@ import com.ecommerce.cancelservice.entity.CancelItem;
 import com.ecommerce.cancelservice.enums.CancelReason;
 import com.ecommerce.cancelservice.enums.CancelStatus;
 import com.ecommerce.cancelservice.exception.CancelDomainException;
-import com.ecommerce.cancelservice.kafka.CancelEventProducer;
+import com.ecommerce.cancelservice.outbox.OutboxEventPublisher;
 import com.ecommerce.cancelservice.repository.CancelRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -41,7 +41,7 @@ class CancelServiceTest {
     CancelRepository cancelRepository;
 
     @Mock
-    CancelEventProducer cancelEventProducer;
+    OutboxEventPublisher outboxEventPublisher;
 
     @InjectMocks
     CancelService cancelService;
@@ -79,7 +79,7 @@ class CancelServiceTest {
                 ReflectionTestUtils.setField(cancel, "id", CANCEL_ID);
                 return cancel;
             });
-            doNothing().when(cancelEventProducer).sendCancelRequestedEvent(any());
+            doNothing().when(outboxEventPublisher).publishCancelRequestedEvent(any());
 
             // when
             CancelResponse response = cancelService.createCancel(USER_ID, request);
@@ -91,7 +91,7 @@ class CancelServiceTest {
             assertThat(response.getCancelReason()).isEqualTo(CancelReason.CHANGE_OF_MIND);
             assertThat(response.getStatus()).isEqualTo(CancelStatus.REQUESTED);
             verify(cancelRepository).save(any(Cancel.class));
-            verify(cancelEventProducer).sendCancelRequestedEvent(any());
+            verify(outboxEventPublisher).publishCancelRequestedEvent(any());
         }
 
         @Test
@@ -243,7 +243,7 @@ class CancelServiceTest {
         void approveCancel_success() {
             // given
             when(cancelRepository.findByIdWithItems(CANCEL_ID)).thenReturn(Optional.of(testCancel));
-            doNothing().when(cancelEventProducer).sendCancelApprovedEvent(any());
+            doNothing().when(outboxEventPublisher).publishCancelApprovedEvent(any());
 
             // when
             CancelResponse response = cancelService.approveCancel(CANCEL_ID);
@@ -251,7 +251,7 @@ class CancelServiceTest {
             // then
             assertThat(response).isNotNull();
             assertThat(response.getStatus()).isEqualTo(CancelStatus.APPROVED);
-            verify(cancelEventProducer).sendCancelApprovedEvent(any());
+            verify(outboxEventPublisher).publishCancelApprovedEvent(any());
         }
 
         @Test
@@ -292,7 +292,7 @@ class CancelServiceTest {
             String rejectedReason = "재고 부족으로 인한 거부";
 
             when(cancelRepository.findByIdWithItems(CANCEL_ID)).thenReturn(Optional.of(testCancel));
-            doNothing().when(cancelEventProducer).sendCancelRejectedEvent(any());
+            doNothing().when(outboxEventPublisher).publishCancelRejectedEvent(any());
 
             // when
             CancelResponse response = cancelService.rejectCancel(CANCEL_ID, rejectedReason);
@@ -301,7 +301,7 @@ class CancelServiceTest {
             assertThat(response).isNotNull();
             assertThat(response.getStatus()).isEqualTo(CancelStatus.REJECTED);
             assertThat(response.getRejectedReason()).isEqualTo(rejectedReason);
-            verify(cancelEventProducer).sendCancelRejectedEvent(any());
+            verify(outboxEventPublisher).publishCancelRejectedEvent(any());
         }
 
         @Test
