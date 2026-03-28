@@ -14,8 +14,10 @@ import {
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useScrollLock } from '../../hooks/useScrollLock';
+import { useTranslation } from 'react-i18next';
 
 export default function AdminLayout() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -25,22 +27,22 @@ export default function AdminLayout() {
   useEffect(() => {
     const userRole = sessionStorage.getItem('role');
     if (userRole !== 'ADMIN') {
-      alert('관리자 권한이 필요합니다.');
+      alert(t('admin.need_role'));
       navigate('/');
     }
-  }, [navigate]);
+  }, [navigate, t]);
 
   const isActive = (path: string) => location.pathname === path;
 
   const navItems = [
-    { icon: LayoutDashboard, label: '대시보드', path: '/admin' },
-    { icon: Users, label: '사용자', path: '/admin/users' },
-    { icon: Package, label: '상품', path: '/admin/products' },
-    { icon: ShoppingBag, label: '주문', path: '/admin/orders' },
-    { icon: CreditCard, label: '결제', path: '/admin/payments' },
-    { icon: Ticket, label: '쿠폰', path: '/admin/coupons' },
-    { icon: XCircle, label: '취소', path: '/admin/cancels' },
-    { icon: RotateCcw, label: '환불', path: '/admin/refunds' },
+    { icon: LayoutDashboard, label: t('admin.nav_dashboard'), path: '/admin' },
+    { icon: Users, label: t('admin.nav_users'), path: '/admin/users' },
+    { icon: Package, label: t('admin.nav_products'), path: '/admin/products' },
+    { icon: ShoppingBag, label: t('admin.nav_orders'), path: '/admin/orders' },
+    { icon: CreditCard, label: t('admin.nav_payments'), path: '/admin/payments' },
+    { icon: Ticket, label: t('admin.nav_coupons'), path: '/admin/coupons' },
+    { icon: XCircle, label: t('admin.nav_cancels'), path: '/admin/cancels' },
+    { icon: RotateCcw, label: t('admin.nav_refunds'), path: '/admin/refunds' },
   ];
 
   return (
@@ -73,7 +75,7 @@ export default function AdminLayout() {
             className="w-full flex items-center space-x-3 px-4 py-3 text-stone-500 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
           >
             <LogOut size={20} />
-            <span className="text-sm font-medium">사용자 페이지로</span>
+            <span className="text-sm font-medium">{t('admin.back_to_site')}</span>
           </button>
         </div>
       </aside>
@@ -112,7 +114,7 @@ export default function AdminLayout() {
                 className="w-full flex items-center space-x-3 px-4 py-3 text-stone-500 hover:text-red-500 mt-8"
               >
                 <LogOut size={20} />
-                <span className="text-sm font-medium">사용자 페이지로</span>
+                <span className="text-sm font-medium">{t('admin.back_to_site')}</span>
               </button>
             </nav>
           </div>

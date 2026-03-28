@@ -6,8 +6,10 @@ import { createPayment } from '../../api/services/payment';
 import type { CreateOrderRequest, OrderItemRequest } from '../../api/services/order';
 import { Check, Loader2 } from 'lucide-react';
 import { getApiErrorMessage } from '../../lib/getApiErrorMessage';
+import { useTranslation } from 'react-i18next';
 
 export default function PaymentSuccessPage() {
+    const { t } = useTranslation();
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
@@ -24,7 +26,7 @@ export default function PaymentSuccessPage() {
             // localStorage에서 저장된 주문 정보 가져오기
             const savedOrderData = localStorage.getItem('pendingOrderData');
             if (!savedOrderData) {
-                throw new Error('주문 정보를 찾을 수 없습니다.');
+                throw new Error(t('paymentFlow.order_not_found'));
             }
 
             const orderData: {
@@ -85,14 +87,14 @@ export default function PaymentSuccessPage() {
             }, 1500);
         },
         onError: (err: unknown) => {
-            setError(getApiErrorMessage(err, '주문 처리 중 오류가 발생했습니다.'));
+            setError(getApiErrorMessage(err, t('paymentFlow.order_process_error')));
             setProcessing(false);
         },
     });
 
     useEffect(() => {
         if (!paymentKey || !orderId || !amount) {
-            setError('결제 정보가 올바르지 않습니다.');
+            setError(t('paymentFlow.invalid_payment'));
             setProcessing(false);
             return;
         }
@@ -112,13 +114,13 @@ export default function PaymentSuccessPage() {
                     <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
                         <span className="text-3xl">❌</span>
                     </div>
-                    <h2 className="text-xl font-bold mb-3">주문 처리 실패</h2>
+                    <h2 className="text-xl font-bold mb-3">{t('paymentFlow.fail_title')}</h2>
                     <p className="text-sm text-stone-500 mb-6">{error}</p>
                     <button
                         onClick={() => navigate('/shop', { replace: true })}
                         className="bg-black text-white px-8 py-3 rounded-full text-sm font-bold hover:bg-stone-800 transition-all"
                     >
-                        쇼핑으로 돌아가기
+                        {t('paymentFlow.fail_cta_shop')}
                     </button>
                 </div>
             </div>
@@ -133,16 +135,16 @@ export default function PaymentSuccessPage() {
                         <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
                             <Loader2 size={32} className="text-blue-500 animate-spin" />
                         </div>
-                        <h2 className="text-xl font-bold mb-3">결제 완료! 주문을 처리하고 있습니다...</h2>
-                        <p className="text-sm text-stone-500">잠시만 기다려주세요.</p>
+                        <h2 className="text-xl font-bold mb-3">{t('paymentFlow.success_title_processing')}</h2>
+                        <p className="text-sm text-stone-500">{t('paymentFlow.success_sub_wait')}</p>
                     </>
                 ) : (
                     <>
                         <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6">
                             <Check size={32} className="text-green-500" />
                         </div>
-                        <h2 className="text-xl font-bold mb-3">주문이 완료되었습니다!</h2>
-                        <p className="text-sm text-stone-500">주문 상세 페이지로 이동합니다...</p>
+                        <h2 className="text-xl font-bold mb-3">{t('paymentFlow.success_title_done')}</h2>
+                        <p className="text-sm text-stone-500">{t('paymentFlow.success_sub_done')}</p>
                     </>
                 )}
             </div>

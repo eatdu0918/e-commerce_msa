@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { signup } from '../../api/services/user';
 import { X } from 'lucide-react';
 import { useScrollLock } from '../../hooks/useScrollLock';
+import { useTranslation } from 'react-i18next';
 
 interface SignupModalProps {
     isOpen: boolean;
@@ -28,10 +29,10 @@ export default function SignupModal({ isOpen, onClose, onSwitchToLogin }: Signup
         setLoading(true);
         try {
             await signup({ email, password, name, phoneNumber, gender, address: '', role: 'USER' });
-            alert('회원가입이 완료되었습니다. 로그인해주세요.');
+            alert(t('signupModal.success_alert'));
             onSwitchToLogin();
         } catch (_err: any) {
-            setError('회원가입에 실패했습니다.');
+            setError(t('signupModal.fail_error'));
         } finally {
             setLoading(false);
         }
@@ -53,56 +54,56 @@ export default function SignupModal({ isOpen, onClose, onSwitchToLogin }: Signup
                     <X size={24} />
                 </button>
 
-                <h2 className="text-3xl font-bold mb-2">Join Us</h2>
-                <p className="text-stone-500 mb-8">URBAN THREADS의 멤버가 되어보세요.</p>
+                <h2 className="text-3xl font-bold mb-2">{t('signupModal.join_title')}</h2>
+                <p className="text-stone-500 mb-8">{t('signupModal.subtitle')}</p>
 
                 <form onSubmit={handleSubmit} className="space-y-5">
                     <div>
-                        <label className="block text-sm font-bold text-stone-700 mb-2">이름</label>
+                        <label className="block text-sm font-bold text-stone-700 mb-2">{t('signupModal.name_label')}</label>
                         <input
                             type="text"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-black transition-all"
-                            placeholder="홍길동"
+                            placeholder={t('checkout.placeholder_name')}
                             required
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-bold text-stone-700 mb-2">Email</label>
+                        <label className="block text-sm font-bold text-stone-700 mb-2">{t('auth.email')}</label>
                         <input
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-black transition-all"
-                            placeholder="hello@example.com"
+                            placeholder={t('auth.email_placeholder')}
                             required
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-bold text-stone-700 mb-2">Password</label>
+                        <label className="block text-sm font-bold text-stone-700 mb-2">{t('auth.password')}</label>
                         <input
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-black transition-all"
-                            placeholder="영문+숫자+특수문자 8자 이상"
+                            placeholder={t('signupModal.password_pattern_hint')}
                             required
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-bold text-stone-700 mb-2">휴대폰 번호</label>
+                        <label className="block text-sm font-bold text-stone-700 mb-2">{t('signupModal.phone_label')}</label>
                         <input
                             type="tel"
                             value={phoneNumber}
                             onChange={(e) => setPhoneNumber(e.target.value)}
                             className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-black transition-all"
-                            placeholder="010-0000-0000"
+                            placeholder={t('signupModal.phone_placeholder')}
                             required
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-bold text-stone-700 mb-2">성별</label>
+                        <label className="block text-sm font-bold text-stone-700 mb-2">{t('signupModal.gender_label')}</label>
                         <div className="grid grid-cols-2 gap-3">
                             <button
                                 type="button"
@@ -112,7 +113,7 @@ export default function SignupModal({ isOpen, onClose, onSwitchToLogin }: Signup
                                     : 'bg-white text-stone-400 border-stone-200 hover:border-stone-400'
                                 }`}
                             >
-                                남성
+                                {t('profile.male')}
                             </button>
                             <button
                                 type="button"
@@ -122,7 +123,7 @@ export default function SignupModal({ isOpen, onClose, onSwitchToLogin }: Signup
                                     : 'bg-white text-stone-400 border-stone-200 hover:border-stone-400'
                                 }`}
                             >
-                                여성
+                                {t('profile.female')}
                             </button>
                         </div>
                     </div>
@@ -134,12 +135,15 @@ export default function SignupModal({ isOpen, onClose, onSwitchToLogin }: Signup
                         disabled={loading}
                         className="w-full bg-black text-white py-4 rounded-xl font-bold text-lg hover:bg-stone-800 transition-colors disabled:opacity-50"
                     >
-                        {loading ? 'Processing...' : 'Sign Up'}
+                        {loading ? t('auth.processing') : t('auth.signup')}
                     </button>
                 </form>
 
                 <div className="mt-6 text-center text-sm text-stone-500">
-                    이미 계정이 있으신가요? <button onClick={onSwitchToLogin} className="font-bold text-black underline">로그인</button>
+                    {t('signupModal.has_account')}{' '}
+                    <button type="button" onClick={onSwitchToLogin} className="font-bold text-black underline">
+                        {t('auth.log_in')}
+                    </button>
                 </div>
             </div>
         </div>

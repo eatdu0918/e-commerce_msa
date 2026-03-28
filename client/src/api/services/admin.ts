@@ -7,7 +7,7 @@ import api from '../axios';
 export interface User {
   id: number;
   email: string;
-  username: string;
+  name: string;
   role: string;
   createdAt: string;
   isActive: boolean;
@@ -73,9 +73,10 @@ export interface Cancel {
   orderId: number;
   userId: number;
   cancelReason: string;
+  cancelDetail?: string;
   status: string;
-  requestedAt: string;
-  processedAt?: string;
+  createdAt: string;
+  updatedAt: string;
   rejectedReason?: string;
 }
 

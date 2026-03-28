@@ -4,8 +4,10 @@ import { changePassword } from '../../api/services/user';
 import { useMutation } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 export default function ChangePasswordView() {
+    const { t } = useTranslation();
     const navigate = useNavigate();
 
     const [form, setForm] = useState({
@@ -26,11 +28,11 @@ export default function ChangePasswordView() {
                 newPassword: form.newPassword,
             }),
         onSuccess: () => {
-            toast.success('비밀번호가 변경되었습니다.');
+            toast.success(t('password.toast_ok'));
             navigate('/me');
         },
         onError: () => {
-            toast.error('비밀번호 변경에 실패했습니다. 현재 비밀번호를 확인해주세요.');
+            toast.error(t('password.toast_fail'));
         },
     });
 
@@ -39,15 +41,15 @@ export default function ChangePasswordView() {
         setValidationError('');
 
         if (form.newPassword.length < 8) {
-            setValidationError('새 비밀번호는 8자 이상이어야 합니다.');
+            setValidationError(t('password.min_length'));
             return;
         }
         if (form.newPassword !== form.confirmPassword) {
-            setValidationError('새 비밀번호가 일치하지 않습니다.');
+            setValidationError(t('password.mismatch'));
             return;
         }
         if (form.currentPassword === form.newPassword) {
-            setValidationError('현재 비밀번호와 동일한 비밀번호로 변경할 수 없습니다.');
+            setValidationError(t('password.same_as_current'));
             return;
         }
 
@@ -103,33 +105,33 @@ export default function ChangePasswordView() {
                 >
                     <ArrowLeft size={24} />
                 </button>
-                <h1 className="text-2xl font-bold tracking-tight">비밀번호 변경</h1>
+                <h1 className="text-2xl font-bold tracking-tight">{t('password.title')}</h1>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6 text-left">
                 <PasswordField
-                    label="현재 비밀번호"
+                    label={t('password.current')}
                     value={form.currentPassword}
                     onChange={(v) => setForm({ ...form, currentPassword: v })}
                     show={showCurrent}
                     onToggle={() => setShowCurrent(!showCurrent)}
-                    placeholder="현재 비밀번호 입력"
+                    placeholder={t('password.placeholder_current')}
                 />
                 <PasswordField
-                    label="새 비밀번호"
+                    label={t('password.new')}
                     value={form.newPassword}
                     onChange={(v) => setForm({ ...form, newPassword: v })}
                     show={showNew}
                     onToggle={() => setShowNew(!showNew)}
-                    placeholder="새 비밀번호 (8자 이상)"
+                    placeholder={t('password.placeholder_new')}
                 />
                 <PasswordField
-                    label="새 비밀번호 확인"
+                    label={t('password.confirm')}
                     value={form.confirmPassword}
                     onChange={(v) => setForm({ ...form, confirmPassword: v })}
                     show={showConfirm}
                     onToggle={() => setShowConfirm(!showConfirm)}
-                    placeholder="새 비밀번호 재입력"
+                    placeholder={t('password.placeholder_confirm')}
                 />
 
                 {validationError && (
@@ -144,14 +146,14 @@ export default function ChangePasswordView() {
                         onClick={() => navigate(-1)}
                         className="flex-1 py-4 bg-stone-100 text-stone-600 rounded-2xl text-sm font-bold hover:bg-stone-200 transition-colors"
                     >
-                        취소
+                        {t('password.cancel')}
                     </button>
                     <button
                         type="submit"
                         disabled={mutation.isPending}
                         className="flex-2 bg-stone-900 text-white rounded-2xl py-4 px-12 text-sm font-bold hover:bg-black transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        {mutation.isPending ? '변경 중...' : '비밀번호 변경'}
+                        {mutation.isPending ? t('password.submitting') : t('password.submit')}
                     </button>
                 </div>
             </form>

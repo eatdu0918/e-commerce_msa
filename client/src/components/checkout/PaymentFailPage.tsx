@@ -1,12 +1,14 @@
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ChevronLeft } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export default function PaymentFailPage() {
+    const { t } = useTranslation();
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
 
     const code = searchParams.get('code') || 'UNKNOWN';
-    const message = searchParams.get('message') || '결제에 실패했습니다.';
+    const message = searchParams.get('message') || t('paymentFlow.fail_default_msg');
 
     // 결제 실패 시 pending 데이터 정리
     localStorage.removeItem('pendingOrderData');
@@ -17,22 +19,22 @@ export default function PaymentFailPage() {
                 <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
                     <span className="text-3xl">❌</span>
                 </div>
-                <h2 className="text-xl font-bold mb-3">결제에 실패했습니다</h2>
+                <h2 className="text-xl font-bold mb-3">{t('paymentFlow.fail_page_title')}</h2>
                 <p className="text-sm text-stone-500 mb-2">{message}</p>
-                <p className="text-xs text-stone-400 mb-8">오류 코드: {code}</p>
+                <p className="text-xs text-stone-400 mb-8">{t('paymentFlow.error_code', { code })}</p>
                 <div className="space-y-3">
                     <button
                         onClick={() => navigate(-1)}
                         className="w-full bg-black text-white py-3.5 rounded-2xl text-sm font-bold hover:bg-stone-800 transition-all flex items-center justify-center gap-2"
                     >
                         <ChevronLeft size={16} />
-                        돌아가서 다시 시도
+                        {t('paymentFlow.retry_go_back')}
                     </button>
                     <button
                         onClick={() => navigate('/shop', { replace: true })}
                         className="w-full bg-stone-100 text-stone-600 py-3.5 rounded-2xl text-sm font-medium hover:bg-stone-200 transition-all"
                     >
-                        쇼핑으로 돌아가기
+                        {t('paymentFlow.fail_cta_shop')}
                     </button>
                 </div>
             </div>

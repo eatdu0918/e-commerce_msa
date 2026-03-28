@@ -1,8 +1,10 @@
 import { CheckCircle, ShoppingBag, ChevronRight } from 'lucide-react';
 
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 export default function OrderCompletePage() {
+    const { t } = useTranslation();
     const { id } = useParams();
     const navigate = useNavigate();
     const orderId = Number(id);
@@ -20,8 +22,8 @@ export default function OrderCompletePage() {
                     </div>
                 </div>
 
-                <h2 className="text-3xl font-bold tracking-tight mb-3 text-stone-900">주문이 완료되었습니다!</h2>
-                <p className="text-stone-400 text-sm mb-10">주문이 성공적으로 접수되었습니다. 감사합니다.</p>
+                <h2 className="text-3xl font-bold tracking-tight mb-3 text-stone-900">{t('paymentFlow.complete_title')}</h2>
+                <p className="text-stone-400 text-sm mb-10">{t('paymentFlow.complete_desc')}</p>
 
                 {/* Order Summary Card */}
                 <div className="bg-white p-8 rounded-[30px] shadow-sm border border-stone-100 text-left mb-8">
@@ -30,19 +32,19 @@ export default function OrderCompletePage() {
                             <ShoppingBag size={20} className="text-stone-500" />
                         </div>
                         <div>
-                            <p className="text-xs font-bold text-stone-400 uppercase tracking-widest">주문번호</p>
+                            <p className="text-xs font-bold text-stone-400 uppercase tracking-widest">{t('paymentFlow.order_number')}</p>
                             <p className="font-bold">#{orderId}</p>
                         </div>
                     </div>
 
                     <div className="space-y-3 text-sm border-t border-stone-100 pt-6">
                         <div className="flex justify-between text-stone-400">
-                            <span>주문 상태</span>
-                            <span className="text-blue-600 font-bold">주문 접수</span>
+                            <span>{t('paymentFlow.order_status_label')}</span>
+                            <span className="text-blue-600 font-bold">{t('orderStatus.PENDING')}</span>
                         </div>
                         <div className="flex justify-between text-stone-400">
-                            <span>예상 배송</span>
-                            <span className="text-stone-700">3~5 영업일</span>
+                            <span>{t('paymentFlow.estimated_delivery')}</span>
+                            <span className="text-stone-700">{t('paymentFlow.biz_days')}</span>
                         </div>
                     </div>
                 </div>
@@ -53,14 +55,14 @@ export default function OrderCompletePage() {
                         onClick={() => onViewOrder(orderId)}
                         className="w-full bg-black text-white py-4 rounded-2xl text-sm font-bold hover:bg-stone-800 transition-all active:scale-[0.98] flex items-center justify-center space-x-2"
                     >
-                        <span>주문 상세보기</span>
+                        <span>{t('paymentFlow.view_detail')}</span>
                         <ChevronRight size={16} />
                     </button>
                     <button
                         onClick={onGoHome}
                         className="w-full bg-white border border-stone-200 text-stone-700 py-4 rounded-2xl text-sm font-bold hover:bg-stone-50 transition-all"
                     >
-                        쇼핑 계속하기
+                        {t('paymentFlow.continue_shopping')}
                     </button>
                 </div>
             </div>

@@ -1,6 +1,7 @@
 import DaumPostcode from 'react-daum-postcode';
 import { X } from 'lucide-react';
 import { useScrollLock } from '../../hooks/useScrollLock';
+import { useTranslation } from 'react-i18next';
 
 interface AddressSearchModalProps {
     isOpen: boolean;
@@ -9,6 +10,7 @@ interface AddressSearchModalProps {
 }
 
 export default function AddressSearchModal({ isOpen, onClose, onComplete }: AddressSearchModalProps) {
+    const { t } = useTranslation();
     useScrollLock(isOpen);
     if (!isOpen) return null;
 
@@ -40,7 +42,7 @@ export default function AddressSearchModal({ isOpen, onClose, onComplete }: Addr
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="flex justify-between items-center p-4 border-b border-gray-100">
-                    <h3 className="font-bold text-lg">주소 검색</h3>
+                    <h3 className="font-bold text-lg">{t('addressModal.title')}</h3>
                     <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
                         <X size={20} />
                     </button>

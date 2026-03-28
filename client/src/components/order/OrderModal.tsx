@@ -7,6 +7,7 @@ import type { Product } from '../../types/product';
 import { X } from 'lucide-react';
 import { useScrollLock } from '../../hooks/useScrollLock';
 import AddressSearchModal from '../common/AddressSearchModal';
+import { useTranslation } from 'react-i18next';
 
 interface OrderModalProps {
     isOpen: boolean;
@@ -18,6 +19,7 @@ interface OrderModalProps {
 }
 
 export default function OrderModal({ isOpen, onClose, product, quantity, user, onOrderSuccess }: OrderModalProps) {
+    const { t } = useTranslation();
     const [address, setAddress] = useState('');
     const [recipientName, setRecipientName] = useState(user.name || '');
     const [recipientPhone, setRecipientPhone] = useState(user.phoneNumber || '');
@@ -90,7 +92,7 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
             } catch (err) {
                 console.error('결제 위젯 초기화 실패:', err);
                 if (!cancelled) {
-                    setError('결제 위젯을 불러오는 데 실패했습니다.');
+                    setError(t('checkout.widget_load_failed'));
                 }
             }
         };
@@ -102,7 +104,7 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
             setWidgetsReady(false);
             widgetsRef.current = null;
         };
-    }, [isOpen, totalAmount]);
+    }, [isOpen, totalAmount, t]);
 
     if (!isOpen) return null;
 
@@ -110,22 +112,22 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
         e.preventDefault();
 
         if (!address.trim()) {
-            setError('배송지 주소를 입력해주세요.');
+            setError(t('checkout.fill_address'));
             return;
         }
 
         if (!recipientName.trim() || !recipientPhone.trim()) {
-            setError('수령인과 연락처를 입력해주세요.');
+            setError(t('checkout.fill_recipient'));
             return;
         }
 
         if (!isValidKoreanMobile(recipientPhone)) {
-            setError('연락처는 01012345678 또는 010-1234-5678 형식으로 입력해주세요.');
+            setError(t('checkout.phone_invalid'));
             return;
         }
 
         if (!widgetsRef.current) {
-            setError('결제 위젯이 아직 준비되지 않았습니다.');
+            setError(t('checkout.widget_not_ready'));
             return;
         }
 
@@ -163,7 +165,7 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
             });
 
         } catch (_err: any) {
-            setError('결제 시스템 연동 중 오류가 발생했습니다.');
+            setError(t('checkout.payment_system_error'));
         } finally {
             setLoading(false);
         }
@@ -185,47 +187,52 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
                     <X size={24} />
                 </button>
 
-                <h2 className="text-2xl font-bold mb-6">주문서 작성</h2>
+                <h2 className="text-2xl font-bold mb-6">{t('checkout.order_form_title')}</h2>
 
                 <div className="flex items-center space-x-4 mb-6 bg-stone-50 p-4 rounded-2xl">
                     <img src={product.image} alt={product.name} className="w-16 h-16 rounded-xl object-cover" />
                     <div className="text-left">
                         <h4 className="font-bold text-sm">{product.name}</h4>
-                        <p className="text-xs text-stone-500">{quantity}개 / {totalAmount.toLocaleString()}원</p>
+                        <p className="text-xs text-stone-500">
+                            {t('checkout.quantity_total', {
+                                quantity,
+                                amount: `${totalAmount.toLocaleString()}${t('common.currency_won')}`,
+                            })}
+                        </p>
                     </div>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-5">
                     <div>
-                        <label className="block text-sm font-bold text-stone-700 mb-2">수령인 이름</label>
+                        <label className="block text-sm font-bold text-stone-700 mb-2">{t('checkout.recipient_name')}</label>
                         <input
                             type="text"
                             value={recipientName}
                             onChange={(e) => setRecipientName(e.target.value)}
                             className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-black transition-all"
-                            placeholder="홍길동"
+                            placeholder={t('checkout.placeholder_name')}
                             required
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-bold text-stone-700 mb-2">수령인 전화번호</label>
+                        <label className="block text-sm font-bold text-stone-700 mb-2">{t('checkout.recipient_phone')}</label>
                         <input
                             type="tel"
                             value={recipientPhone}
                             onChange={(e) => setRecipientPhone(e.target.value)}
                             className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-black transition-all"
-                            placeholder="01012345678 또는 010-0000-0000"
+                            placeholder={t('checkout.placeholder_phone')}
                             required
                         />
                     </div>
                     <div>
-                        <label className="block text-sm font-bold text-stone-700 mb-2">배송지 주소</label>
+                        <label className="block text-sm font-bold text-stone-700 mb-2">{t('checkout.shipping_address')}</label>
                         <div className="flex space-x-2 mb-2">
                             <input
                                 type="text"
                                 value={zonecode}
                                 readOnly
-                                placeholder="우편번호"
+                                placeholder={t('checkout.postcode_placeholder')}
                                 className="w-24 px-4 py-3 bg-stone-100 border border-stone-200 rounded-xl text-sm focus:outline-none text-stone-500"
                             />
                             <button
@@ -233,14 +240,14 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
                                 onClick={() => setIsAddressModalOpen(true)}
                                 className="px-4 py-3 bg-black text-white rounded-xl text-sm font-bold hover:bg-stone-800 transition-all whitespace-nowrap"
                             >
-                                주소 검색
+                                {t('checkout.address_search')}
                             </button>
                         </div>
                         <input
                             type="text"
                             value={roadAddress}
                             readOnly
-                            placeholder="기본 주소"
+                            placeholder={t('checkout.address_base_placeholder')}
                             className="w-full px-4 py-3 bg-stone-100 border border-stone-200 rounded-xl text-sm focus:outline-none mb-2 text-stone-500 cursor-pointer"
                             onClick={() => setIsAddressModalOpen(true)}
                         />
@@ -248,14 +255,14 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
                             type="text"
                             value={detailAddress}
                             onChange={(e) => setDetailAddress(e.target.value)}
-                            placeholder="상세 주소를 입력하세요 (예: 101동 1201호)"
+                            placeholder={t('checkout.address_detail_placeholder')}
                             className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-black transition-all"
                         />
                     </div>
 
                     {/* TossPayments 결제위젯 */}
                     <div>
-                        <label className="block text-sm font-bold text-stone-700 mb-2">결제 수단</label>
+                        <label className="block text-sm font-bold text-stone-700 mb-2">{t('checkout.payment_method')}</label>
                         <div id="modal-payment-method-widget" className="w-full" />
                     </div>
 
@@ -263,8 +270,8 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
                     <div id="modal-agreement-widget" className="w-full" />
 
                     <div className="pt-4 border-t border-stone-100 flex justify-between items-center font-bold">
-                        <span>총 결제금액</span>
-                        <span className="text-xl">{totalAmount.toLocaleString()}원</span>
+                        <span>{t('checkout.total_payment')}</span>
+                        <span className="text-xl">{totalAmount.toLocaleString()}{t('common.currency_won')}</span>
                     </div>
 
                     {error && <p className="text-red-500 text-sm">{error}</p>}
@@ -274,7 +281,7 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
                         disabled={loading || !widgetsReady}
                         className="w-full bg-black text-white py-4 rounded-xl font-bold text-lg hover:bg-stone-800 transition-colors disabled:opacity-50"
                     >
-                        {loading ? '처리 중...' : !widgetsReady ? '결제 위젯 로딩 중...' : '결제하기'}
+                        {loading ? t('auth.processing') : !widgetsReady ? t('checkout.widget_loading') : t('checkout.pay_cta')}
                     </button>
                 </form>
                 <AddressSearchModal

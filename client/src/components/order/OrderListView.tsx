@@ -12,17 +12,17 @@ interface StatusTheme {
     color: string;
     bg: string;
     icon: LucideIcon;
-    label: string;
+    labelKey: string;
 }
 
 const STATUS_THEME: Record<string, StatusTheme> = {
-    PENDING: { color: 'text-amber-600', bg: 'bg-amber-50', icon: AlertCircle, label: '주문 접수' },
-    CONFIRMED: { color: 'text-blue-600', bg: 'bg-blue-50', icon: RefreshCw, label: '결제 완료' },
-    PREPARING: { color: 'text-indigo-600', bg: 'bg-indigo-50', icon: Package, label: '상품 준비' },
-    SHIPPING: { color: 'text-purple-600', bg: 'bg-purple-50', icon: Truck, label: '배송 중' },
-    DELIVERED: { color: 'text-emerald-600', bg: 'bg-emerald-50', icon: CheckCircle2, label: '배송 완료' },
-    CANCELLED: { color: 'text-rose-600', bg: 'bg-rose-50', icon: AlertCircle, label: '주문 취소' },
-    CANCEL_REQUESTED: { color: 'text-stone-500', bg: 'bg-stone-100', icon: RefreshCw, label: '취소 요청' },
+    PENDING: { color: 'text-amber-600', bg: 'bg-amber-50', icon: AlertCircle, labelKey: 'PENDING' },
+    CONFIRMED: { color: 'text-blue-600', bg: 'bg-blue-50', icon: RefreshCw, labelKey: 'CONFIRMED_LIST' },
+    PREPARING: { color: 'text-indigo-600', bg: 'bg-indigo-50', icon: Package, labelKey: 'PREPARING' },
+    SHIPPING: { color: 'text-purple-600', bg: 'bg-purple-50', icon: Truck, labelKey: 'SHIPPING' },
+    DELIVERED: { color: 'text-emerald-600', bg: 'bg-emerald-50', icon: CheckCircle2, labelKey: 'DELIVERED' },
+    CANCELLED: { color: 'text-rose-600', bg: 'bg-rose-50', icon: AlertCircle, labelKey: 'CANCELLED' },
+    CANCEL_REQUESTED: { color: 'text-stone-500', bg: 'bg-stone-100', icon: RefreshCw, labelKey: 'CANCEL_REQUESTED_LIST' },
 };
 
 const FALLBACK_IMAGES = {
@@ -76,7 +76,7 @@ export default function OrderListView() {
                     <ShoppingBag size={24} />
                 </div>
                 <h3 className="text-lg font-bold text-stone-900 mb-2">{t('order.no_history')}</h3>
-                <p className="text-stone-400 mb-8 max-w-xs mx-auto text-sm">아직 주문하신 내역이 없습니다. 다양한 상품들을 구경해보세요.</p>
+                <p className="text-stone-400 mb-8 max-w-xs mx-auto text-sm">{t('orderList.empty_hint')}</p>
                 <button
                     onClick={() => navigate('/shop')}
                     className="px-8 py-3 bg-black text-white rounded-full font-bold text-sm hover:opacity-80 transition-all active:scale-95"
@@ -93,7 +93,9 @@ export default function OrderListView() {
                 <div className="flex items-center justify-between mb-2">
                     <h2 className="text-3xl font-black italic tracking-tighter uppercase text-stone-900">{t('order.title')}</h2>
                     <div className="bg-stone-100 px-3 py-1 rounded-full">
-                        <span className="text-[10px] font-black text-stone-500 uppercase tracking-widest">Total {orders.length}</span>
+                        <span className="text-[10px] font-black text-stone-500 uppercase tracking-widest">
+                            {t('orderList.total_label', { count: orders.length })}
+                        </span>
                     </div>
                 </div>
                 
@@ -103,7 +105,7 @@ export default function OrderListView() {
                         const StatusIcon = theme.icon;
                         const items = order.items || [];
                         const firstItem = items.length > 0 ? items[0] : null;
-                        const itemName = firstItem?.productName || `주문 번호 ${order.orderNumber}`;
+                        const itemName = firstItem?.productName || t('orderList.order_ref', { no: order.orderNumber });
                         const etcCount = items.length > 1 ? items.length - 1 : 0;
                         
                         // Use the purchased image from the first item if available
@@ -124,7 +126,7 @@ export default function OrderListView() {
                                         </div>
                                         <div>
                                             <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${theme.color}`}>
-                                                {theme.label}
+                                                {t(`orderStatus.${theme.labelKey}`)}
                                             </span>
                                             <div className="flex items-center gap-3 mt-1">
                                                 <span className="text-sm font-black text-stone-900">
@@ -138,7 +140,7 @@ export default function OrderListView() {
                                     </div>
                                     
                                     <button className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-stone-400 group-hover:text-black transition-colors bg-stone-50 md:bg-transparent px-6 py-3 md:px-0 md:py-0 rounded-full">
-                                        Track Order
+                                        {t('orderList.track_order')}
                                         <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
                                     </button>
                                 </div>
@@ -155,16 +157,18 @@ export default function OrderListView() {
                                     
                                     <div className="flex-1 min-w-0">
                                         <h4 className="text-2xl font-black text-stone-900 mb-2 truncate group-hover:text-stone-700 transition-colors">
-                                            {itemName}{etcCount > 0 ? ` 외 ${etcCount}건` : ''}
+                                            {itemName}
+                                            {etcCount > 0 ? ` ${t('orderList.extra_count', { count: etcCount })}` : ''}
                                         </h4>
                                         <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
                                             <span className="text-2xl font-light text-stone-900">
-                                                {order.totalAmount.toLocaleString()}원
+                                                {order.totalAmount.toLocaleString()}
+                                                {t('common.currency_won')}
                                             </span>
                                             <div className="flex items-center gap-2 bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-xl border border-emerald-100">
                                                 <CheckCircle2 size={14} />
                                                 <span className="text-[10px] font-black uppercase tracking-widest">
-                                                    {getEstimatedArrivalDate(order.createdAt)} Arrival
+                                                    {t('orderList.arrival', { date: getEstimatedArrivalDate(order.createdAt) })}
                                                 </span>
                                             </div>
                                         </div>
@@ -181,7 +185,7 @@ export default function OrderListView() {
                                             ))}
                                         </div>
                                         <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest bg-stone-50 px-4 py-2 rounded-2xl border border-stone-100">
-                                            {items.length || 0} Item{ items.length !== 1 ? 's' : '' }
+                                            {t('orderList.item_count', { count: items.length || 0 })}
                                         </span>
                                     </div>
                                     <div className="text-[11px] font-black text-stone-200 uppercase tracking-[0.3em] font-serif italic">

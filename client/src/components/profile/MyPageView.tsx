@@ -90,7 +90,7 @@ export default function MyPageView() {
                     >
                         <span className="font-medium flex items-center gap-2">
                             <Lock size={15} className="text-stone-400" />
-                            비밀번호 변경
+                            {t('password.title')}
                         </span>
                         <ChevronRight size={16} className="text-stone-300 group-hover:translate-x-1 transition-transform" />
                     </button>

@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { adminApi, Cancel } from '../../api/services/admin';
 import { ChevronLeft, ChevronRight, Check, X } from 'lucide-react';
 
 const AdminCancelList = () => {
+  const { t, i18n } = useTranslation();
   const [page, setPage] = useState(0);
   const [statusFilter, setStatusFilter] = useState('');
   const [rejectReason, setRejectReason] = useState('');
@@ -19,10 +21,10 @@ const AdminCancelList = () => {
     mutationFn: (id: number) => adminApi.approveCancel(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-cancels'] });
-      alert('취소가 승인되었습니다.');
+      alert(t('admin.approve_ok'));
     },
     onError: () => {
-      alert('승인에 실패했습니다.');
+      alert(t('admin.approve_fail'));
     },
   });
 
@@ -31,24 +33,24 @@ const AdminCancelList = () => {
       adminApi.rejectCancel(id, reason),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-cancels'] });
-      alert('취소가 거부되었습니다.');
+      alert(t('admin.reject_ok'));
       setRejectingId(null);
       setRejectReason('');
     },
     onError: () => {
-      alert('거부에 실패했습니다.');
+      alert(t('admin.reject_fail'));
     },
   });
 
   const handleApprove = (id: number) => {
-    if (window.confirm('취소를 승인하시겠습니까?')) {
+    if (window.confirm(t('admin.confirm_approve'))) {
       approveMutation.mutate(id);
     }
   };
 
   const handleReject = (id: number) => {
     if (!rejectReason.trim()) {
-      alert('거부 사유를 입력해주세요.');
+      alert(t('admin.reject_reason_required'));
       return;
     }
     rejectMutation.mutate({ id, reason: rejectReason });
@@ -57,7 +59,7 @@ const AdminCancelList = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">로딩 중...</div>
+        <div className="text-gray-500">{t('admin.loading')}</div>
       </div>
     );
   }
@@ -66,14 +68,15 @@ const AdminCancelList = () => {
   const pageData = data?.data;
 
   const statusOptions = ['REQUESTED', 'APPROVED', 'REJECTED', 'COMPLETED'];
+  const dateLocale = i18n.language.startsWith('ko') ? 'ko-KR' : undefined;
 
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">취소 관리</h2>
+          <h2 className="text-2xl font-bold text-gray-900">{t('admin.cancels_title')}</h2>
           <p className="text-gray-600 mt-1">
-            전체 {pageData?.totalElements || 0}건
+            {t('admin.total_items', { count: pageData?.totalElements || 0 })}
           </p>
         </div>
         <select
@@ -84,7 +87,7 @@ const AdminCancelList = () => {
           }}
           className="px-4 py-2 border border-gray-300 rounded-lg"
         >
-          <option value="">전체 상태</option>
+          <option value="">{t('admin.all_status')}</option>
           {statusOptions.map((status) => (
             <option key={status} value={status}>
               {status}
@@ -98,25 +101,25 @@ const AdminCancelList = () => {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                취소 ID
+                {t('admin.cancel_id_col')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                주문 ID
+                {t('admin.order_id')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                사용자 ID
+                {t('admin.user_id')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                취소 사유
+                {t('admin.cancel_reason')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                상태
+                {t('admin.status')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                요청일
+                {t('admin.requested_at')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                작업
+                {t('admin.actions')}
               </th>
             </tr>
           </thead>
@@ -151,7 +154,7 @@ const AdminCancelList = () => {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {new Date(cancel.requestedAt).toLocaleDateString('ko-KR')}
+                  {new Date(cancel.requestedAt).toLocaleDateString(dateLocale)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {cancel.status === 'REQUESTED' && (
@@ -159,14 +162,14 @@ const AdminCancelList = () => {
                       <button
                         onClick={() => handleApprove(cancel.id)}
                         className="p-2 text-green-600 hover:bg-green-50 rounded"
-                        title="승인"
+                        title={t('admin.approve_title')}
                       >
                         <Check className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => setRejectingId(cancel.id)}
                         className="p-2 text-red-600 hover:bg-red-50 rounded"
-                        title="거부"
+                        title={t('admin.reject_title')}
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -187,7 +190,7 @@ const AdminCancelList = () => {
           className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <ChevronLeft className="w-4 h-4 mr-1" />
-          이전
+          {t('admin.prev')}
         </button>
         <span className="text-sm text-gray-700">
           {page + 1} / {pageData?.totalPages || 1}
@@ -197,7 +200,7 @@ const AdminCancelList = () => {
           disabled={pageData?.last}
           className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          다음
+          {t('admin.next')}
           <ChevronRight className="w-4 h-4 ml-1" />
         </button>
       </div>
@@ -207,7 +210,7 @@ const AdminCancelList = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">취소 거부 사유</h3>
+              <h3 className="text-lg font-semibold">{t('admin.reject_modal_title')}</h3>
               <button onClick={() => setRejectingId(null)}>
                 <X className="w-5 h-5" />
               </button>
@@ -215,7 +218,7 @@ const AdminCancelList = () => {
             <textarea
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
-              placeholder="거부 사유를 입력하세요"
+              placeholder={t('admin.reject_placeholder')}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg h-32 resize-none"
             />
             <div className="flex space-x-3 mt-4">
@@ -223,13 +226,13 @@ const AdminCancelList = () => {
                 onClick={() => setRejectingId(null)}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
               >
-                취소
+                {t('admin.cancel_btn')}
               </button>
               <button
                 onClick={() => handleReject(rejectingId)}
                 className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
               >
-                거부
+                {t('admin.reject_btn')}
               </button>
             </div>
           </div>

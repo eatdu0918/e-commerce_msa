@@ -3,10 +3,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Ticket, Tag, Clock, CheckCircle, XCircle, Gift } from 'lucide-react';
 import { getMyCoupons, getAvailableCoupons, claimCoupon } from '../../api/services/coupon';
 import type { UserCouponResponse } from '../../api/services/coupon';
+import { useTranslation } from 'react-i18next';
 
 type TabType = 'available' | 'all' | 'used';
 
 export default function CouponView() {
+    const { t } = useTranslation();
     const queryClient = useQueryClient();
     const [tab, setTab] = useState<TabType>('available');
     const [couponCode, setCouponCode] = useState('');
@@ -29,11 +31,11 @@ export default function CouponView() {
             queryClient.invalidateQueries({ queryKey: ['coupons'] });
             setCouponCode('');
             setClaimError('');
-            setClaimSuccess('쿠폰이 발급되었습니다!');
+            setClaimSuccess(t('couponView.claim_success'));
             setTimeout(() => setClaimSuccess(''), 3000);
         },
         onError: (err: any) => {
-            setClaimError(err.response?.data?.message || '쿠폰 등록에 실패했습니다.');
+            setClaimError(err.response?.data?.message || t('couponView.claim_fail'));
             setClaimSuccess('');
         },
     });
@@ -61,12 +63,22 @@ export default function CouponView() {
             {/* Coupon Stats */}
             <div className="grid grid-cols-2 gap-4">
                 <div className="bg-stone-50 p-6 rounded-2xl border border-stone-100 text-center">
-                    <p className="text-xs font-bold text-stone-400 uppercase mb-1">보유 쿠폰</p>
-                    <p className="text-3xl font-bold">{allCoupons.length}<span className="text-sm text-stone-400 ml-1">장</span></p>
+                    <p className="text-xs font-bold text-stone-400 uppercase mb-1">{t('couponView.owned')}</p>
+                    <p className="text-3xl font-bold">
+                        {allCoupons.length}
+                        {t('couponView.sheet_suffix') ? (
+                            <span className="text-sm text-stone-400 ml-1">{t('couponView.sheet_suffix')}</span>
+                        ) : null}
+                    </p>
                 </div>
                 <div className="bg-blue-50 p-6 rounded-2xl border border-blue-100 text-center">
-                    <p className="text-xs font-bold text-blue-400 uppercase mb-1">사용 가능</p>
-                    <p className="text-3xl font-bold text-blue-600">{availableCoupons.length}<span className="text-sm text-blue-300 ml-1">장</span></p>
+                    <p className="text-xs font-bold text-blue-400 uppercase mb-1">{t('couponView.available_tab_label')}</p>
+                    <p className="text-3xl font-bold text-blue-600">
+                        {availableCoupons.length}
+                        {t('couponView.sheet_suffix') ? (
+                            <span className="text-sm text-blue-300 ml-1">{t('couponView.sheet_suffix')}</span>
+                        ) : null}
+                    </p>
                 </div>
             </div>
 
@@ -77,7 +89,7 @@ export default function CouponView() {
                         type="text"
                         value={couponCode}
                         onChange={(e) => setCouponCode(e.target.value)}
-                        placeholder="쿠폰 코드를 입력하세요"
+                        placeholder={t('couponView.code_placeholder')}
                         className="flex-1 px-4 py-3 bg-white border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-black/10"
                     />
                     <button
@@ -85,7 +97,7 @@ export default function CouponView() {
                         disabled={!couponCode.trim() || claimMutation.isPending}
                         className="px-6 py-3 bg-black text-white rounded-xl text-sm font-bold hover:bg-stone-800 transition-all disabled:opacity-50"
                     >
-                        {claimMutation.isPending ? '등록 중...' : '등록'}
+                        {claimMutation.isPending ? t('couponView.registering') : t('couponView.register')}
                     </button>
                 </div>
                 {claimError && <p className="text-red-500 text-xs mt-2">{claimError}</p>}
@@ -95,17 +107,17 @@ export default function CouponView() {
             {/* Tabs */}
             <div className="flex space-x-2">
                 {([
-                    { key: 'available', label: '사용 가능' },
-                    { key: 'all', label: '전체' },
-                    { key: 'used', label: '사용/만료' },
-                ] as const).map((t) => (
+                    { key: 'available', labelKey: 'couponView.tab_available' },
+                    { key: 'all', labelKey: 'couponView.tab_all' },
+                    { key: 'used', labelKey: 'couponView.tab_used' },
+                ] as const).map((tabDef) => (
                     <button
-                        key={t.key}
-                        onClick={() => setTab(t.key)}
-                        className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${tab === t.key ? 'bg-black text-white' : 'bg-stone-100 text-stone-400 hover:bg-stone-200'
+                        key={tabDef.key}
+                        onClick={() => setTab(tabDef.key)}
+                        className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${tab === tabDef.key ? 'bg-black text-white' : 'bg-stone-100 text-stone-400 hover:bg-stone-200'
                             }`}
                     >
-                        {t.label}
+                        {t(tabDef.labelKey)}
                     </button>
                 ))}
             </div>
@@ -118,7 +130,7 @@ export default function CouponView() {
             ) : displayCoupons.length === 0 ? (
                 <div className="text-center py-12">
                     <Gift size={32} className="mx-auto mb-4 text-stone-200" />
-                    <p className="text-stone-400 text-sm">쿠폰이 없습니다.</p>
+                    <p className="text-stone-400 text-sm">{t('couponView.empty')}</p>
                 </div>
             ) : (
                 <div className="space-y-4">
@@ -148,18 +160,25 @@ export default function CouponView() {
                                             <p className="text-xs text-stone-400 flex items-center">
                                                 <Tag size={12} className="mr-1" />
                                                 {coupon.couponType === 'PERCENTAGE'
-                                                    ? `${coupon.discountValue}% 할인`
-                                                    : `${coupon.discountValue?.toLocaleString()}원 할인`}
-                                                {coupon.maxDiscountAmount > 0 && ` (최대 ${coupon.maxDiscountAmount.toLocaleString()}원)`}
+                                                    ? t('couponView.discount_percent', { value: coupon.discountValue })
+                                                    : t('couponView.discount_fixed', {
+                                                          value: `${coupon.discountValue?.toLocaleString() ?? ''}${t('common.currency_won')}`,
+                                                      })}
+                                                {coupon.maxDiscountAmount > 0 &&
+                                                    ` ${t('couponView.max_discount', {
+                                                        value: `${coupon.maxDiscountAmount.toLocaleString()}${t('common.currency_won')}`,
+                                                    })}`}
                                             </p>
                                             {coupon.minOrderAmount > 0 && (
                                                 <p className="text-xs text-stone-300">
-                                                    {coupon.minOrderAmount.toLocaleString()}원 이상 주문 시
+                                                    {t('couponView.min_order', {
+                                                        value: `${coupon.minOrderAmount.toLocaleString()}${t('common.currency_won')}`,
+                                                    })}
                                                 </p>
                                             )}
                                             <p className="text-xs text-stone-300 flex items-center">
                                                 <Clock size={12} className="mr-1" />
-                                                {coupon.validUntil?.split('T')[0]} 까지
+                                                {t('couponView.valid_until', { date: coupon.validUntil?.split('T')[0] ?? '' })}
                                             </p>
                                         </div>
                                     </div>
@@ -167,11 +186,13 @@ export default function CouponView() {
                                     <div className="text-right">
                                         {isUsed ? (
                                             <span className="inline-flex items-center text-xs text-stone-400 bg-stone-100 px-3 py-1 rounded-full">
-                                                <CheckCircle size={12} className="mr-1" />사용완료
+                                                <CheckCircle size={12} className="mr-1" />
+                                                {t('couponView.used')}
                                             </span>
                                         ) : isExpired ? (
                                             <span className="inline-flex items-center text-xs text-red-400 bg-red-50 px-3 py-1 rounded-full">
-                                                <XCircle size={12} className="mr-1" />만료
+                                                <XCircle size={12} className="mr-1" />
+                                                {t('couponView.expired')}
                                             </span>
                                         ) : daysLeft !== null && daysLeft <= 7 ? (
                                             <span className="text-xs font-bold text-red-500">D-{daysLeft}</span>

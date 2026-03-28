@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { adminApi, Refund } from '../../api/services/admin';
 import { ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react';
 
 const AdminRefundList = () => {
+  const { t, i18n } = useTranslation();
   const [page, setPage] = useState(0);
   const [statusFilter, setStatusFilter] = useState('');
   const queryClient = useQueryClient();
@@ -17,15 +19,15 @@ const AdminRefundList = () => {
     mutationFn: (id: number) => adminApi.retryRefund(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-refunds'] });
-      alert('환불 재시도가 요청되었습니다.');
+      alert(t('admin.refund_retry_ok'));
     },
     onError: () => {
-      alert('재시도에 실패했습니다.');
+      alert(t('admin.refund_retry_fail'));
     },
   });
 
   const handleRetry = (id: number) => {
-    if (window.confirm('환불을 재시도하시겠습니까?')) {
+    if (window.confirm(t('admin.confirm_refund_retry'))) {
       retryMutation.mutate(id);
     }
   };
@@ -33,7 +35,7 @@ const AdminRefundList = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">로딩 중...</div>
+        <div className="text-gray-500">{t('admin.loading')}</div>
       </div>
     );
   }
@@ -42,14 +44,15 @@ const AdminRefundList = () => {
   const pageData = data?.data;
 
   const statusOptions = ['PENDING', 'COMPLETED', 'FAILED'];
+  const dateLocale = i18n.language.startsWith('ko') ? 'ko-KR' : undefined;
 
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">환불 관리</h2>
+          <h2 className="text-2xl font-bold text-gray-900">{t('admin.refunds_title')}</h2>
           <p className="text-gray-600 mt-1">
-            전체 {pageData?.totalElements || 0}건
+            {t('admin.total_items', { count: pageData?.totalElements || 0 })}
           </p>
         </div>
         <select
@@ -60,7 +63,7 @@ const AdminRefundList = () => {
           }}
           className="px-4 py-2 border border-gray-300 rounded-lg"
         >
-          <option value="">전체 상태</option>
+          <option value="">{t('admin.all_status')}</option>
           {statusOptions.map((status) => (
             <option key={status} value={status}>
               {status}
@@ -74,28 +77,28 @@ const AdminRefundList = () => {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                환불 ID
+                {t('admin.refund_id')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                취소 ID
+                {t('admin.cancel_id')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                주문 ID
+                {t('admin.order_id')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                환불 금액
+                {t('admin.refund_amount')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                상태
+                {t('admin.status')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                생성일
+                {t('admin.created')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                수정일
+                {t('admin.updated')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                작업
+                {t('admin.actions')}
               </th>
             </tr>
           </thead>
@@ -112,7 +115,7 @@ const AdminRefundList = () => {
                   #{refund.orderId}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {refund.amount.toLocaleString()}원
+                  {refund.amount.toLocaleString()}{t('common.currency_won')}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
@@ -128,17 +131,17 @@ const AdminRefundList = () => {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {new Date(refund.createdAt).toLocaleDateString('ko-KR')}
+                  {new Date(refund.createdAt).toLocaleDateString(dateLocale)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {new Date(refund.updatedAt).toLocaleDateString('ko-KR')}
+                  {new Date(refund.updatedAt).toLocaleDateString(dateLocale)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {refund.status === 'FAILED' && (
                     <button
                       onClick={() => handleRetry(refund.id)}
                       className="p-2 text-blue-600 hover:bg-blue-50 rounded"
-                      title="재시도"
+                      title={t('admin.retry_title')}
                     >
                       <RotateCcw className="w-4 h-4" />
                     </button>
@@ -158,7 +161,7 @@ const AdminRefundList = () => {
           className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <ChevronLeft className="w-4 h-4 mr-1" />
-          이전
+          {t('admin.prev')}
         </button>
         <span className="text-sm text-gray-700">
           {page + 1} / {pageData?.totalPages || 1}
@@ -168,7 +171,7 @@ const AdminRefundList = () => {
           disabled={pageData?.last}
           className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          다음
+          {t('admin.next')}
           <ChevronRight className="w-4 h-4 ml-1" />
         </button>
       </div>

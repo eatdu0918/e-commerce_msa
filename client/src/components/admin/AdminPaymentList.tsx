@@ -1,14 +1,16 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { adminApi, Payment } from '../../api/services/admin';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const AdminPaymentList = () => {
+  const { t, i18n } = useTranslation();
   const [page, setPage] = useState(0);
   const [statusFilter, setStatusFilter] = useState('');
   const queryClient = useQueryClient();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['admin-payments', page, statusFilter],
     queryFn: () => adminApi.getPayments(page, 10, statusFilter || undefined),
   });
@@ -18,15 +20,15 @@ const AdminPaymentList = () => {
       adminApi.updatePaymentStatus(id, status),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-payments'] });
-      alert('결제 상태가 변경되었습니다.');
+      alert(t('admin.status_change_ok'));
     },
     onError: () => {
-      alert('상태 변경에 실패했습니다.');
+      alert(t('admin.status_change_fail'));
     },
   });
 
   const handleStatusChange = (paymentId: number, newStatus: string) => {
-    if (window.confirm('결제 상태를 변경하시겠습니까?')) {
+    if (window.confirm(t('admin.confirm_payment_status'))) {
       updateStatusMutation.mutate({ id: paymentId, status: newStatus });
     }
   };
@@ -34,7 +36,15 @@ const AdminPaymentList = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">로딩 중...</div>
+        <div className="text-gray-500">{t('admin.loading')}</div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-red-500">{t('admin.error_load')}</div>
       </div>
     );
   }
@@ -43,14 +53,15 @@ const AdminPaymentList = () => {
   const pageData = data?.data;
 
   const statusOptions = ['PENDING', 'COMPLETED', 'FAILED', 'CANCELLED'];
+  const dateLocale = i18n.language.startsWith('ko') ? 'ko-KR' : undefined;
 
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">결제 관리</h2>
+          <h2 className="text-2xl font-bold text-gray-900">{t('admin.payments_title')}</h2>
           <p className="text-gray-600 mt-1">
-            전체 {pageData?.totalElements || 0}건
+            {t('admin.total_items', { count: pageData?.totalElements || 0 })}
           </p>
         </div>
         <select
@@ -61,7 +72,7 @@ const AdminPaymentList = () => {
           }}
           className="px-4 py-2 border border-gray-300 rounded-lg"
         >
-          <option value="">전체 상태</option>
+          <option value="">{t('admin.all_status')}</option>
           {statusOptions.map((status) => (
             <option key={status} value={status}>
               {status}
@@ -75,25 +86,25 @@ const AdminPaymentList = () => {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                결제 ID
+                {t('admin.payment_id')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                주문 ID
+                {t('admin.order_id')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                결제 금액
+                {t('admin.payment_amount')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                결제 방법
+                {t('admin.payment_method')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                상태
+                {t('admin.status')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                결제일
+                {t('admin.payment_date')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                수정일
+                {t('admin.updated')}
               </th>
             </tr>
           </thead>
@@ -107,7 +118,7 @@ const AdminPaymentList = () => {
                   #{payment.orderId}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {payment.amount.toLocaleString()}원
+                  {payment.amount?.toLocaleString() ?? '-'}{t('common.currency_won')}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {payment.paymentMethod}
@@ -126,10 +137,10 @@ const AdminPaymentList = () => {
                   </select>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {new Date(payment.createdAt).toLocaleDateString('ko-KR')}
+                  {new Date(payment.createdAt).toLocaleDateString(dateLocale)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {new Date(payment.updatedAt).toLocaleDateString('ko-KR')}
+                  {new Date(payment.updatedAt).toLocaleDateString(dateLocale)}
                 </td>
               </tr>
             ))}
@@ -145,7 +156,7 @@ const AdminPaymentList = () => {
           className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <ChevronLeft className="w-4 h-4 mr-1" />
-          이전
+          {t('admin.prev')}
         </button>
         <span className="text-sm text-gray-700">
           {page + 1} / {pageData?.totalPages || 1}
@@ -155,7 +166,7 @@ const AdminPaymentList = () => {
           disabled={pageData?.last}
           className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          다음
+          {t('admin.next')}
           <ChevronRight className="w-4 h-4 ml-1" />
         </button>
       </div>

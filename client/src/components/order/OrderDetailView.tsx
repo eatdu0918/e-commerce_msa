@@ -5,60 +5,9 @@ import { getOrderDetail } from '../../api/services/order';
 import type { OrderDetailResponse } from '../../api/services/order';
 import { createCancel, CANCEL_REASON_LABELS } from '../../api/services/cancel';
 import type { CancelReason, CreateCancelRequest } from '../../api/services/cancel';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-
-const STATUS_STEPS = [
-    { key: 'PENDING', label: '주문 접수', icon: Receipt },
-    { key: 'CONFIRMED', label: '결제 완료', icon: CheckCircle2 },
-    { key: 'PREPARING', label: '상품 준비', icon: Package },
-    { key: 'SHIPPING', label: '배송 중', icon: Truck },
-    { key: 'DELIVERED', label: '배송 완료', icon: CheckCircle2 },
-];
-
-const STATUS_LABELS: Record<string, string> = {
-    PENDING: '주문 접수',
-    CONFIRMED: '주문 확인',
-    PREPARING: '상품 준비',
-    SHIPPING: '배송 중',
-    DELIVERED: '배송 완료',
-    CANCELLED: '주문 취소',
-    CANCEL_REQUESTED: '취소 요청 중',
-};
-
-const CARD_ISSUER_MAP: Record<string, string> = {
-    '31': '비씨카드',
-    '33': '현대카드',
-    '34': '하나카드',
-    '35': '전북은행',
-    '36': '씨티카드',
-    '37': '우리카드',
-    '38': '수협은행',
-    '39': '제주은행',
-    '41': 'KB국민카드',
-    '42': '수협카드',
-    '51': '삼성카드',
-    '61': '신한카드',
-    '71': '롯데카드',
-    '91': '농협카드',
-    '21': '하나은행',
-    '62': '신협',
-    '32': '광주은행',
-    '46': '카카오뱅크',
-    '48': '케이뱅크',
-    '토스뱅크': '토스뱅크',
-    'HYUNDAI': '현대카드',
-    'SHINHAN': '신한카드',
-    'SAMSUNG': '삼성카드',
-    'KOOKMIN': 'KB국민카드',
-    'LOTTE': '롯데카드',
-    'NH': '농협카드',
-    'KB': 'KB국민카드',
-    'BC': '비씨카드',
-    'HANA': '하나카드',
-    'WOORI': '우리카드',
-    'KAKAOBANK': '카카오뱅크',
-};
+import { useTranslation } from 'react-i18next';
 
 const CANCELLABLE_STATUSES = ['PENDING', 'CONFIRMED', 'PREPARING'];
 
@@ -84,6 +33,7 @@ const getFallbackImage = (name: string = '') => {
 };
 
 export default function OrderDetailView() {
+    const { t } = useTranslation();
     const { id } = useParams();
     const orderId = Number(id);
     const navigate = useNavigate();
@@ -91,6 +41,30 @@ export default function OrderDetailView() {
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [cancelReason, setCancelReason] = useState<CancelReason>('CHANGE_OF_MIND');
     const [cancelDetail, setCancelDetail] = useState('');
+
+    const STATUS_STEPS = useMemo(
+        () => [
+            { key: 'PENDING', label: t('orderStatus.PENDING'), icon: Receipt },
+            { key: 'CONFIRMED', label: t('orderStatus.CONFIRMED_LIST'), icon: CheckCircle2 },
+            { key: 'PREPARING', label: t('orderStatus.PREPARING'), icon: Package },
+            { key: 'SHIPPING', label: t('orderStatus.SHIPPING'), icon: Truck },
+            { key: 'DELIVERED', label: t('orderStatus.DELIVERED'), icon: CheckCircle2 },
+        ],
+        [t]
+    );
+
+    const statusBadgeLabel = (status: string) => {
+        const map: Record<string, string> = {
+            PENDING: t('orderStatus.PENDING'),
+            CONFIRMED: t('orderStatus.CONFIRMED_BADGE'),
+            PREPARING: t('orderStatus.PREPARING'),
+            SHIPPING: t('orderStatus.SHIPPING'),
+            DELIVERED: t('orderStatus.DELIVERED'),
+            CANCELLED: t('orderStatus.CANCELLED'),
+            CANCEL_REQUESTED: t('orderStatus.CANCEL_REQUESTED_DETAIL'),
+        };
+        return map[status];
+    };
 
     const { data: order, isLoading } = useQuery<OrderDetailResponse>({
         queryKey: ['order', orderId],
@@ -117,7 +91,7 @@ export default function OrderDetailView() {
             cancelDetail: cancelDetail.trim() || undefined,
             items: (order.items || []).map(item => ({
                 productId: item.productId,
-                productName: item.productName || '상품 정보 없음',
+                productName: item.productName || t('orderDetail.product_unknown'),
                 quantity: item.quantity || 1,
                 unitPrice: item.unitPrice || 0,
             })),
@@ -142,13 +116,13 @@ export default function OrderDetailView() {
                 <div className="mx-auto w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center text-rose-500 mb-6">
                     <Info size={32} />
                 </div>
-                <h3 className="text-xl font-bold text-stone-900 mb-2">주문 정보를 찾을 수 없습니다.</h3>
-                <p className="text-stone-500 mb-10">요청하신 주문 내역이 존재하지 않거나 액세스 권한이 없습니다.</p>
+                <h3 className="text-xl font-bold text-stone-900 mb-2">{t('orderDetail.not_found_title')}</h3>
+                <p className="text-stone-500 mb-10">{t('orderDetail.not_found_desc')}</p>
                 <button 
                     onClick={() => navigate('/me/orders')} 
                     className="px-10 py-4 bg-black text-white rounded-2xl font-black text-sm hover:scale-105 active:scale-95 transition-all"
                 >
-                    주문 목록으로 돌아가기
+                    {t('orderDetail.back_list')}
                 </button>
             </div>
         );
@@ -170,14 +144,14 @@ export default function OrderDetailView() {
                         <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
                     </button>
                     <div>
-                        <h2 className="text-2xl font-black tracking-tighter uppercase italic">Order Detail</h2>
+                        <h2 className="text-2xl font-black tracking-tighter uppercase italic">{t('orderDetail.title')}</h2>
                         <p className="text-stone-400 text-xs font-bold mt-0.5">#{order.orderNumber}</p>
                     </div>
                 </div>
                 
                 <div className="flex items-center gap-3">
                     <div className="flex flex-col items-end">
-                        <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Order Placed</span>
+                        <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">{t('orderDetail.order_placed')}</span>
                         <span className="text-sm font-bold text-stone-900">{formatDateTime(order.createdAt).split(' ')[0]}</span>
                     </div>
                     <div className="h-8 w-px bg-stone-100 mx-1"></div>
@@ -186,7 +160,7 @@ export default function OrderDetailView() {
                         isCancelled ? 'bg-rose-50 text-rose-600' :
                         'bg-blue-50 text-blue-600'
                     }`}>
-                        {STATUS_LABELS[order.status] || order.statusDescription}
+                        {statusBadgeLabel(order.status) || order.statusDescription}
                     </span>
                 </div>
             </header>
@@ -222,7 +196,7 @@ export default function OrderDetailView() {
                                             {step.label}
                                         </span>
                                         {isCurrent && (
-                                            <span className="text-[9px] font-bold text-blue-500 animate-pulse hidden sm:block">Current</span>
+                                            <span className="text-[9px] font-bold text-blue-500 animate-pulse hidden sm:block">{t('orderDetail.current_step')}</span>
                                         )}
                                     </div>
                                 </div>
@@ -239,9 +213,9 @@ export default function OrderDetailView() {
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-xl font-black tracking-tighter uppercase italic flex items-center">
                                 <Package size={20} className="mr-3" />
-                                Order Items
+                                {t('orderDetail.items_title')}
                             </h3>
-                            <span className="text-xs font-bold text-stone-400">{orderItems.length} items</span>
+                            <span className="text-xs font-bold text-stone-400">{t('orderDetail.items_count', { count: orderItems.length })}</span>
                         </div>
                         
                         <div className="space-y-4">
@@ -286,10 +260,18 @@ export default function OrderDetailView() {
                                         </div>
                                         <div className="flex justify-between items-center mt-4">
                                             <div className="flex items-center gap-2">
-                                                <span className="px-2.5 py-1 rounded-lg bg-stone-50 border border-stone-100 text-[10px] font-black uppercase tracking-wider text-stone-500">QTY: {item.quantity || 1}</span>
-                                                <span className="text-xs text-stone-300 font-medium tracking-tight">× {(item.unitPrice || 0).toLocaleString()}원</span>
+                                                <span className="px-2.5 py-1 rounded-lg bg-stone-50 border border-stone-100 text-[10px] font-black uppercase tracking-wider text-stone-500">
+                                                    {t('orderDetail.qty_badge', { count: item.quantity || 1 })}
+                                                </span>
+                                                <span className="text-xs text-stone-300 font-medium tracking-tight">
+                                                    × {(item.unitPrice || 0).toLocaleString()}
+                                                    {t('common.currency_won')}
+                                                </span>
                                             </div>
-                                            <span className="font-black text-stone-900">{(item.totalPrice || (item.unitPrice * item.quantity) || 0).toLocaleString()}원</span>
+                                            <span className="font-black text-stone-900">
+                                                {(item.totalPrice || (item.unitPrice * item.quantity) || 0).toLocaleString()}
+                                                {t('common.currency_won')}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
@@ -297,7 +279,7 @@ export default function OrderDetailView() {
                             {orderItems.length === 0 && (
                                 <div className="p-12 text-center bg-stone-50 rounded-3xl border border-stone-100">
                                     <Package size={32} className="mx-auto text-stone-200 mb-4" />
-                                    <p className="text-stone-400 text-sm font-bold uppercase tracking-widest">상품 정보를 불러올 수 없습니다.</p>
+                                    <p className="text-stone-400 text-sm font-bold uppercase tracking-widest">{t('orderDetail.no_items')}</p>
                                 </div>
                             )}
                         </div>
@@ -307,26 +289,33 @@ export default function OrderDetailView() {
                         <div className="relative z-10">
                             <h3 className="text-xl font-black tracking-tighter uppercase italic mb-8 flex items-center text-white/90">
                                 <Receipt size={20} className="mr-3" />
-                                Total Payment
+                                {t('orderDetail.total_payment')}
                             </h3>
                             <div className="space-y-4 mb-8">
                                 <div className="flex justify-between text-sm text-white/50">
-                                    <span>상품 금액</span>
-                                    <span>{(order.totalAmount || 0).toLocaleString()}원</span>
+                                    <span>{t('checkout.product_amount')}</span>
+                                    <span>
+                                        {(order.totalAmount || 0).toLocaleString()}
+                                        {t('common.currency_won')}
+                                    </span>
                                 </div>
                                 <div className="flex justify-between text-sm text-white/50">
-                                    <span>할인 금액</span>
-                                    <span className="text-rose-400">-{(order.discountAmount || 0).toLocaleString()}원</span>
+                                    <span>{t('orderDetail.discount_amount')}</span>
+                                    <span className="text-rose-400">
+                                        -{(order.discountAmount || 0).toLocaleString()}
+                                        {t('common.currency_won')}
+                                    </span>
                                 </div>
                                 <div className="flex justify-between text-sm text-white/50">
-                                    <span>배송비</span>
-                                    <span className="uppercase">Free</span>
+                                    <span>{t('checkout.shipping_fee')}</span>
+                                    <span className="uppercase">{t('orderDetail.free_shipping')}</span>
                                 </div>
                                 <div className="h-px bg-white/10 my-2"></div>
                                 <div className="flex justify-between items-end">
-                                    <span className="text-sm font-bold opacity-80 uppercase tracking-widest">Final Total</span>
+                                    <span className="text-sm font-bold opacity-80 uppercase tracking-widest">{t('orderDetail.final_total')}</span>
                                     <span className="text-4xl font-black italic tracking-tighter">
-                                        {(order.finalAmount || 0).toLocaleString()}원
+                                        {(order.finalAmount || 0).toLocaleString()}
+                                        {t('common.currency_won')}
                                     </span>
                                 </div>
                             </div>
@@ -344,7 +333,7 @@ export default function OrderDetailView() {
                     <section className="bg-white rounded-[2.5rem] border border-stone-100 p-8 shadow-sm">
                         <h3 className="text-lg font-black tracking-tighter uppercase italic mb-6 flex items-center">
                             <MapPin size={20} className="mr-3" />
-                            Shipping Info
+                            {t('orderDetail.shipping_title')}
                         </h3>
                         <div className="space-y-6">
                             <div className="bg-stone-50/50 rounded-2xl p-5 border border-stone-100 hover:border-black/10 transition-all">
@@ -352,7 +341,7 @@ export default function OrderDetailView() {
                                     <div className="w-8 h-8 rounded-xl bg-white border border-stone-100 flex items-center justify-center">
                                         <Info size={14} className="text-stone-400" />
                                     </div>
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-stone-400">Recipient Details</span>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-stone-400">{t('orderDetail.recipient_details')}</span>
                                 </div>
                                 <p className="text-sm font-black text-stone-900 mb-1">{order.recipientName}</p>
                                 <p className="text-xs text-stone-500 font-medium tracking-tight mb-4">{order.recipientPhone}</p>
@@ -360,7 +349,7 @@ export default function OrderDetailView() {
                                 <div className="p-3 bg-white rounded-xl border border-stone-100">
                                     <div className="flex items-center gap-2 mb-1.5">
                                         <MapPin size={12} className="text-stone-400" />
-                                        <span className="text-[9px] font-black uppercase tracking-widest text-stone-300">Delivery Address</span>
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-stone-300">{t('orderDetail.delivery_address')}</span>
                                     </div>
                                     <p className="text-xs text-stone-600 leading-relaxed font-medium">
                                         {order.shippingAddress}
@@ -373,9 +362,11 @@ export default function OrderDetailView() {
                                     <Calendar size={16} />
                                 </div>
                                 <div>
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 block mb-1">Estimated Arrival</span>
-                                    <p className="text-sm font-black text-stone-900">{getEstimatedArrivalDate(order.createdAt)} 도착 예정</p>
-                                    <p className="text-[10px] text-emerald-600/70 font-bold mt-0.5 select-none animate-pulse">Express Delivery Active</p>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 block mb-1">{t('orderDetail.estimated_arrival')}</span>
+                                    <p className="text-sm font-black text-stone-900">
+                                        {t('orderDetail.arrival_by', { date: getEstimatedArrivalDate(order.createdAt) })}
+                                    </p>
+                                    <p className="text-[10px] text-emerald-600/70 font-bold mt-0.5 select-none animate-pulse">{t('orderDetail.express_note')}</p>
                                 </div>
                             </div>
                         </div>
@@ -384,7 +375,7 @@ export default function OrderDetailView() {
                     <section className="bg-white rounded-[2.5rem] border border-stone-100 p-8 shadow-sm">
                         <h3 className="text-lg font-black tracking-tighter uppercase italic mb-6 flex items-center">
                             <CreditCard size={20} className="mr-3" />
-                            Payment Method
+                            {t('orderDetail.payment_title')}
                         </h3>
                         {order.payment ? (
                             <div className="space-y-4">
@@ -397,20 +388,33 @@ export default function OrderDetailView() {
                                             <p className="text-xs font-black uppercase tracking-tighter text-stone-900">
                                                 {(() => {
                                                     const details = order.payment?.paymentDetails;
-                                                    if (!details) return order.payment?.paymentMethod || '결제 수단 정보 없음';
-                                                    
+                                                    if (!details) {
+                                                        return order.payment?.paymentMethod || t('paymentDisplay.no_method');
+                                                    }
+
                                                     try {
                                                         const parsed = JSON.parse(details);
                                                         if (parsed.card) {
-                                                            const issuer = CARD_ISSUER_MAP[parsed.card.issuerCode] || parsed.card.issuerCode || '카드';
-                                                            const installment = parsed.card.installmentPlanMonths === 0 ? '일시불' : `${parsed.card.installmentPlanMonths}개월 할부`;
+                                                            const code = String(parsed.card.issuerCode ?? '');
+                                                            const issuer = t(`paymentIssuer.${code}`, {
+                                                                defaultValue:
+                                                                    parsed.card.issuerCode || t('paymentDisplay.card_fallback'),
+                                                            });
+                                                            const installment =
+                                                                parsed.card.installmentPlanMonths === 0
+                                                                    ? t('paymentDisplay.single_pay')
+                                                                    : t('paymentDisplay.installment', {
+                                                                          months: parsed.card.installmentPlanMonths,
+                                                                      });
                                                             return `${issuer} (${installment})`;
                                                         }
                                                         if (parsed.easyPay) {
-                                                            return `${parsed.easyPay.provider} (급속 결제)`;
+                                                            return t('paymentDisplay.easy_pay', {
+                                                                provider: parsed.easyPay.provider,
+                                                            });
                                                         }
                                                         return details;
-                                                    } catch (e) {
+                                                    } catch {
                                                         return details;
                                                     }
                                                 })()}
@@ -419,7 +423,7 @@ export default function OrderDetailView() {
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-[10px] text-stone-400 font-bold uppercase mb-0.5 tracking-widest">Paid Date</p>
+                                        <p className="text-[10px] text-stone-400 font-bold uppercase mb-0.5 tracking-widest">{t('orderDetail.paid_date')}</p>
                                         <p className="text-xs font-black text-stone-900 tracking-tighter">
                                             {order.payment?.paidAt ? formatDateTime(order.payment.paidAt).split(' ')[0] : '-'}
                                         </p>
@@ -428,7 +432,7 @@ export default function OrderDetailView() {
                             </div>
                         ) : (
                             <div className="py-4 text-center border-2 border-dashed border-stone-100 rounded-3xl">
-                                <p className="text-xs font-bold text-stone-300 uppercase tracking-widest">No Payment Data</p>
+                                <p className="text-xs font-bold text-stone-300 uppercase tracking-widest">{t('orderDetail.no_payment')}</p>
                             </div>
                         )}
 
@@ -437,7 +441,7 @@ export default function OrderDetailView() {
                                 onClick={() => setShowCancelModal(true)}
                                 className="w-full mt-10 py-5 bg-white border border-stone-100 text-rose-500 rounded-[2rem] text-xs font-black uppercase tracking-widest hover:bg-rose-50 hover:border-rose-100 hover:scale-[1.02] active:scale-95 transition-all shadow-sm"
                             >
-                                Request Cancellation
+                                {t('orderDetail.request_cancel')}
                             </button>
                         )}
                     </section>
@@ -453,15 +457,15 @@ export default function OrderDetailView() {
                                 <AlertCircle size={24} />
                             </div>
                             <div>
-                                <h3 className="font-black text-xl tracking-tighter uppercase italic">Cancel Order</h3>
-                                <p className="text-stone-400 text-[10px] font-black uppercase tracking-widest">Final Step Confirmation</p>
+                                <h3 className="font-black text-xl tracking-tighter uppercase italic">{t('orderDetail.cancel_title')}</h3>
+                                <p className="text-stone-400 text-[10px] font-black uppercase tracking-widest">{t('orderDetail.cancel_subtitle')}</p>
                             </div>
                         </div>
 
                         <div className="mb-8">
-                            <label className="block text-xs font-black uppercase tracking-widest text-stone-400 mb-4">Reason for cancellation</label>
+                            <label className="block text-xs font-black uppercase tracking-widest text-stone-400 mb-4">{t('orderDetail.cancel_reason_label')}</label>
                             <div className="space-y-2">
-                                {(Object.entries(CANCEL_REASON_LABELS) as [CancelReason, string][]).map(([value, label]) => (
+                                {(Object.keys(CANCEL_REASON_LABELS) as CancelReason[]).map((value) => (
                                     <label
                                         key={value}
                                         className={`flex items-center p-4 rounded-2xl border cursor-pointer transition-all duration-300 ${cancelReason === value
@@ -481,18 +485,20 @@ export default function OrderDetailView() {
                                             }`}>
                                             {cancelReason === value && <div className="w-2.5 h-2.5 bg-black rounded-full" />}
                                         </div>
-                                        <span className={`text-sm font-bold ${cancelReason === value ? 'text-black' : 'text-stone-500'}`}>{label}</span>
+                                        <span className={`text-sm font-bold ${cancelReason === value ? 'text-black' : 'text-stone-500'}`}>
+                                            {t(`cancelReason.${value}` as const)}
+                                        </span>
                                     </label>
                                 ))}
                             </div>
                         </div>
 
                         <div className="mb-8">
-                            <label className="block text-xs font-black uppercase tracking-widest text-stone-400 mb-3">Optional Details</label>
+                            <label className="block text-xs font-black uppercase tracking-widest text-stone-400 mb-3">{t('orderDetail.cancel_optional')}</label>
                             <textarea
                                 value={cancelDetail}
                                 onChange={(e) => setCancelDetail(e.target.value)}
-                                placeholder="추가 설명을 입력해주세요..."
+                                placeholder={t('orderDetail.cancel_placeholder')}
                                 rows={3}
                                 className="w-full border border-stone-100 rounded-2xl p-4 text-sm font-medium focus:outline-none focus:ring-4 focus:ring-black/5 focus:border-black/20 transition-all resize-none placeholder:text-stone-300"
                             />
@@ -504,7 +510,7 @@ export default function OrderDetailView() {
                                 disabled={cancelMutation.isPending}
                                 className="flex-[2] py-4 bg-rose-500 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-rose-600 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 shadow-lg shadow-rose-200"
                             >
-                                {cancelMutation.isPending ? 'Processing...' : 'Confirm'}
+                                {cancelMutation.isPending ? t('orderDetail.cancel_processing') : t('orderDetail.cancel_confirm')}
                             </button>
                             <button
                                 onClick={() => {
@@ -514,7 +520,7 @@ export default function OrderDetailView() {
                                 }}
                                 className="flex-1 py-4 bg-stone-50 text-stone-900 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-stone-100 transition-all active:scale-95"
                             >
-                                Close
+                                {t('orderDetail.cancel_close')}
                             </button>
                         </div>
                     </div>

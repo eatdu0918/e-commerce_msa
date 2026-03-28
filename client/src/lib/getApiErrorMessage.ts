@@ -1,4 +1,5 @@
 import type { AxiosError } from 'axios';
+import i18n from '../i18n';
 
 type ApiErrorBody = {
     message?: string;
@@ -8,7 +9,8 @@ type ApiErrorBody = {
 /**
  * 게이트웨이/백엔드 ApiResponse 형식과 axios 기본 메시지를 통일해 표시용 문구로 반환합니다.
  */
-export function getApiErrorMessage(error: unknown, fallback = '요청 처리 중 오류가 발생했습니다.'): string {
+export function getApiErrorMessage(error: unknown, fallback?: string): string {
+    const defaultFallback = fallback ?? i18n.t('api.fallback');
     if (error && typeof error === 'object' && 'response' in error) {
         const ax = error as AxiosError<ApiErrorBody>;
         const data = ax.response?.data;
@@ -25,7 +27,7 @@ export function getApiErrorMessage(error: unknown, fallback = '요청 처리 중
         }
 
         if (typeof status === 'number') {
-            return `서버 오류가 발생했습니다. (HTTP ${status})`;
+            return i18n.t('api.server_error', { status });
         }
     }
 
@@ -33,5 +35,5 @@ export function getApiErrorMessage(error: unknown, fallback = '요청 처리 중
         return error.message;
     }
 
-    return fallback;
+    return defaultFallback;
 }

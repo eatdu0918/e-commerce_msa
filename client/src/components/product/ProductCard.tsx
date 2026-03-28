@@ -1,4 +1,5 @@
 import type { Product } from '../../types/product';
+import { useTranslation } from 'react-i18next';
 
 interface ProductCardProps {
     product: Product;
@@ -6,6 +7,8 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, timer }: ProductCardProps) {
+    const { t } = useTranslation();
+    const cur = t('common.currency_won');
     return (
         <div className="bg-white rounded-3xl p-6 shadow-sm border border-stone-100 relative group overflow-hidden">
             {timer && (
@@ -28,9 +31,9 @@ export default function ProductCard({ product, timer }: ProductCardProps) {
                 <p className="text-xs text-stone-400 uppercase tracking-widest">{product.badge}</p>
                 <h4 className="font-medium">{product.name}</h4>
                 <div className="flex items-center space-x-2 mt-2">
-                    <span className="font-bold">{product.price.toLocaleString()}원</span>
+                    <span className="font-bold">{product.price.toLocaleString()}{cur}</span>
                     {product.originalPrice && (
-                        <span className="text-stone-300 line-through text-sm">{product.originalPrice.toLocaleString()}원</span>
+                        <span className="text-stone-300 line-through text-sm">{product.originalPrice.toLocaleString()}{cur}</span>
                     )}
                 </div>
             </div>

@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { adminApi, User } from '../../api/services/admin';
 import { ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 
 const AdminUserList = () => {
+  const { t, i18n } = useTranslation();
   const [page, setPage] = useState(0);
   const queryClient = useQueryClient();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['admin-users', page],
     queryFn: () => adminApi.getUsers(page, 10),
   });
@@ -17,10 +19,10 @@ const AdminUserList = () => {
       adminApi.updateUserRole(id, role),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      alert('권한이 변경되었습니다.');
+      alert(t('admin.role_change_ok'));
     },
     onError: () => {
-      alert('권한 변경에 실패했습니다.');
+      alert(t('admin.role_change_fail'));
     },
   });
 
@@ -28,21 +30,21 @@ const AdminUserList = () => {
     mutationFn: (id: number) => adminApi.deleteUser(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-users'] });
-      alert('사용자가 삭제되었습니다.');
+      alert(t('admin.user_deleted'));
     },
     onError: () => {
-      alert('사용자 삭제에 실패했습니다.');
+      alert(t('admin.user_delete_fail'));
     },
   });
 
   const handleRoleChange = (userId: number, newRole: string) => {
-    if (window.confirm('정말 권한을 변경하시겠습니까?')) {
+    if (window.confirm(t('admin.confirm_role'))) {
       updateRoleMutation.mutate({ id: userId, role: newRole });
     }
   };
 
   const handleDelete = (userId: number, email: string) => {
-    if (window.confirm(`${email} 사용자를 삭제하시겠습니까?`)) {
+    if (window.confirm(t('admin.confirm_delete_user', { email }))) {
       deleteUserMutation.mutate(userId);
     }
   };
@@ -50,20 +52,29 @@ const AdminUserList = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">로딩 중...</div>
+        <div className="text-gray-500">{t('admin.loading')}</div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-red-500">{t('admin.error_load')}</div>
       </div>
     );
   }
 
   const users = data?.data?.content || [];
   const pageData = data?.data;
+  const dateLocale = i18n.language.startsWith('ko') ? 'ko-KR' : undefined;
 
   return (
     <div>
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">사용자 관리</h2>
+        <h2 className="text-2xl font-bold text-gray-900">{t('admin.users_title')}</h2>
         <p className="text-gray-600 mt-1">
-          전체 {pageData?.totalElements || 0}명
+          {t('admin.total_people', { count: pageData?.totalElements || 0 })}
         </p>
       </div>
 
@@ -75,22 +86,22 @@ const AdminUserList = () => {
                 ID
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                이메일
+                {t('admin.email')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                사용자명
+                {t('admin.username')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                권한
+                {t('admin.role')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                상태
+                {t('admin.status')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                가입일
+                {t('admin.joined')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                작업
+                {t('admin.actions')}
               </th>
             </tr>
           </thead>
@@ -104,7 +115,7 @@ const AdminUserList = () => {
                   {user.email}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {user.username}
+                  {user.name}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <select
@@ -118,17 +129,16 @@ const AdminUserList = () => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
-                    className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      user.isActive
+                    className={`px-2 py-1 text-xs font-medium rounded-full ${user.isActive
                         ? 'bg-green-100 text-green-800'
                         : 'bg-red-100 text-red-800'
-                    }`}
+                      }`}
                   >
-                    {user.isActive ? '활성' : '비활성'}
+                    {user.isActive ? t('admin.active') : t('admin.inactive')}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {new Date(user.createdAt).toLocaleDateString('ko-KR')}
+                  {new Date(user.createdAt).toLocaleDateString(dateLocale)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <button
@@ -144,7 +154,6 @@ const AdminUserList = () => {
         </table>
       </div>
 
-      {/* Pagination */}
       <div className="flex items-center justify-between mt-6">
         <button
           onClick={() => setPage((p) => Math.max(0, p - 1))}
@@ -152,7 +161,7 @@ const AdminUserList = () => {
           className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <ChevronLeft className="w-4 h-4 mr-1" />
-          이전
+          {t('admin.prev')}
         </button>
         <span className="text-sm text-gray-700">
           {page + 1} / {pageData?.totalPages || 1}
@@ -162,7 +171,7 @@ const AdminUserList = () => {
           disabled={pageData?.last}
           className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          다음
+          {t('admin.next')}
           <ChevronRight className="w-4 h-4 ml-1" />
         </button>
       </div>

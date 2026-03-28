@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { adminApi, Coupon, CreateCouponRequest } from '../../api/services/admin';
 import { ChevronLeft, ChevronRight, Trash2, Plus, X } from 'lucide-react';
 
 const AdminCouponList = () => {
+  const { t, i18n } = useTranslation();
   const [page, setPage] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const queryClient = useQueryClient();
@@ -19,7 +21,7 @@ const AdminCouponList = () => {
     validUntil: '',
   });
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['admin-coupons', page],
     queryFn: () => adminApi.getCoupons(page, 10),
   });
@@ -28,12 +30,12 @@ const AdminCouponList = () => {
     mutationFn: (data: CreateCouponRequest) => adminApi.createCoupon(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-coupons'] });
-      alert('쿠폰이 생성되었습니다.');
+      alert(t('admin.coupon_create_ok'));
       setShowModal(false);
       resetForm();
     },
     onError: () => {
-      alert('쿠폰 생성에 실패했습니다.');
+      alert(t('admin.coupon_create_fail'));
     },
   });
 
@@ -41,10 +43,10 @@ const AdminCouponList = () => {
     mutationFn: (id: number) => adminApi.deleteCoupon(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-coupons'] });
-      alert('쿠폰이 삭제되었습니다.');
+      alert(t('admin.coupon_deleted'));
     },
     onError: () => {
-      alert('쿠폰 삭제에 실패했습니다.');
+      alert(t('admin.coupon_delete_fail'));
     },
   });
 
@@ -67,7 +69,7 @@ const AdminCouponList = () => {
   };
 
   const handleDelete = (id: number, code: string) => {
-    if (window.confirm(`${code} 쿠폰을 삭제하시겠습니까?`)) {
+    if (window.confirm(t('admin.confirm_delete_coupon', { code }))) {
       deleteMutation.mutate(id);
     }
   };
@@ -75,21 +77,22 @@ const AdminCouponList = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">로딩 중...</div>
+        <div className="text-gray-500">{t('admin.loading')}</div>
       </div>
     );
   }
 
   const coupons = data?.data?.content || [];
   const pageData = data?.data;
+  const dateLocale = i18n.language.startsWith('ko') ? 'ko-KR' : undefined;
 
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">쿠폰 관리</h2>
+          <h2 className="text-2xl font-bold text-gray-900">{t('admin.coupons_title')}</h2>
           <p className="text-gray-600 mt-1">
-            전체 {pageData?.totalElements || 0}개
+            {t('admin.total_count', { count: pageData?.totalElements || 0 })}
           </p>
         </div>
         <button
@@ -97,7 +100,7 @@ const AdminCouponList = () => {
           className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
         >
           <Plus className="w-4 h-4 mr-2" />
-          쿠폰 생성
+          {t('admin.create_coupon')}
         </button>
       </div>
 
@@ -106,25 +109,25 @@ const AdminCouponList = () => {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                코드
+                {t('admin.code')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                이름
+                {t('admin.name')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                할인
+                {t('admin.discount')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                최소 구매액
+                {t('admin.min_purchase')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                유효기간
+                {t('admin.valid_range')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                상태
+                {t('admin.status')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                작업
+                {t('admin.actions')}
               </th>
             </tr>
           </thead>
@@ -140,14 +143,14 @@ const AdminCouponList = () => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {coupon.discountType === 'PERCENTAGE'
                     ? `${coupon.discountValue}%`
-                    : `${coupon.discountValue.toLocaleString()}원`}
+                    : `${coupon.discountValue.toLocaleString()}${t('common.currency_won')}`}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {coupon.minimumPurchaseAmount.toLocaleString()}원
+                  {coupon.minimumPurchaseAmount.toLocaleString()}{t('common.currency_won')}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {new Date(coupon.validFrom).toLocaleDateString('ko-KR')} ~{' '}
-                  {new Date(coupon.validUntil).toLocaleDateString('ko-KR')}
+                  {new Date(coupon.validFrom).toLocaleDateString(dateLocale)} ~{' '}
+                  {new Date(coupon.validUntil).toLocaleDateString(dateLocale)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
@@ -157,7 +160,7 @@ const AdminCouponList = () => {
                         : 'bg-gray-100 text-gray-800'
                     }`}
                   >
-                    {coupon.isActive ? '활성' : '비활성'}
+                    {coupon.isActive ? t('admin.active') : t('admin.inactive')}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
@@ -182,7 +185,7 @@ const AdminCouponList = () => {
           className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <ChevronLeft className="w-4 h-4 mr-1" />
-          이전
+          {t('admin.prev')}
         </button>
         <span className="text-sm text-gray-700">
           {page + 1} / {pageData?.totalPages || 1}
@@ -192,7 +195,7 @@ const AdminCouponList = () => {
           disabled={pageData?.last}
           className="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          다음
+          {t('admin.next')}
           <ChevronRight className="w-4 h-4 ml-1" />
         </button>
       </div>
@@ -202,7 +205,7 @@ const AdminCouponList = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">쿠폰 생성</h3>
+              <h3 className="text-lg font-semibold">{t('admin.modal_create_title')}</h3>
               <button onClick={() => setShowModal(false)}>
                 <X className="w-5 h-5" />
               </button>
@@ -210,7 +213,7 @@ const AdminCouponList = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  쿠폰 코드
+                  {t('admin.coupon_code')}
                 </label>
                 <input
                   type="text"
@@ -222,7 +225,7 @@ const AdminCouponList = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  쿠폰 이름
+                  {t('admin.coupon_name')}
                 </label>
                 <input
                   type="text"
@@ -234,7 +237,7 @@ const AdminCouponList = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  할인 타입
+                  {t('admin.discount_type')}
                 </label>
                 <select
                   value={formData.discountType}
@@ -243,13 +246,13 @@ const AdminCouponList = () => {
                   }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                 >
-                  <option value="PERCENTAGE">퍼센트</option>
-                  <option value="FIXED">정액</option>
+                  <option value="PERCENTAGE">{t('admin.type_percent')}</option>
+                  <option value="FIXED">{t('admin.type_fixed')}</option>
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  할인 값
+                  {t('admin.discount_value')}
                 </label>
                 <input
                   type="number"
@@ -263,7 +266,7 @@ const AdminCouponList = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  최소 구매액
+                  {t('admin.min_purchase')}
                 </label>
                 <input
                   type="number"
@@ -280,7 +283,7 @@ const AdminCouponList = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  최대 할인액
+                  {t('admin.max_discount')}
                 </label>
                 <input
                   type="number"
@@ -297,7 +300,7 @@ const AdminCouponList = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  시작일
+                  {t('admin.start_date')}
                 </label>
                 <input
                   type="datetime-local"
@@ -311,7 +314,7 @@ const AdminCouponList = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  종료일
+                  {t('admin.end_date')}
                 </label>
                 <input
                   type="datetime-local"
@@ -327,7 +330,7 @@ const AdminCouponList = () => {
                 type="submit"
                 className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
-                생성
+                {t('admin.create_submit')}
               </button>
             </form>
           </div>
