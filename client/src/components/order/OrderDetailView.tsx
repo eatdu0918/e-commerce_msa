@@ -246,7 +246,25 @@ export default function OrderDetailView() {
                         
                         <div className="space-y-4">
                             {orderItems.map((item) => (
-                                <div key={item.id} className="group flex items-center bg-white border border-stone-100 rounded-3xl p-4 hover:shadow-xl hover:shadow-stone-200/50 transition-all duration-500">
+                                <div
+                                    key={item.id}
+                                    role="button"
+                                    tabIndex={0}
+                                    className="group flex items-center bg-white border border-stone-100 rounded-3xl p-4 hover:shadow-xl hover:shadow-stone-200/50 transition-all duration-500 cursor-pointer"
+                                    onClick={() => {
+                                        if (item.productId != null && item.productId > 0) {
+                                            navigate(`/product/${item.productId}`);
+                                        }
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            e.preventDefault();
+                                            if (item.productId != null && item.productId > 0) {
+                                                navigate(`/product/${item.productId}`);
+                                            }
+                                        }
+                                    }}
+                                >
                                     <div className="relative w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0 bg-stone-50 border border-stone-100">
                                         <img
                                             src={item.imageUrl && item.imageUrl !== '' ? item.imageUrl : getFallbackImage(item.productName)}
