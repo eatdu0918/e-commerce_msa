@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createOrder } from '../../api/services/order';
 import { createPayment } from '../../api/services/payment';
 import type { CreateOrderRequest, OrderItemRequest } from '../../api/services/order';
 import { Check, Loader2 } from 'lucide-react';
+import { getApiErrorMessage } from '../../lib/getApiErrorMessage';
 
 export default function PaymentSuccessPage() {
     const [searchParams] = useSearchParams();
@@ -12,6 +13,7 @@ export default function PaymentSuccessPage() {
     const queryClient = useQueryClient();
     const [error, setError] = useState('');
     const [processing, setProcessing] = useState(true);
+    const processedPaymentKeyRef = useRef<string | null>(null);
 
     const paymentKey = searchParams.get('paymentKey');
     const orderId = searchParams.get('orderId');
@@ -82,20 +84,26 @@ export default function PaymentSuccessPage() {
                 navigate(`/me/orders/${order.id}`, { replace: true });
             }, 1500);
         },
-        onError: (err: any) => {
-            setError(err.response?.data?.message || err.message || '주문 처리 중 오류가 발생했습니다.');
+        onError: (err: unknown) => {
+            setError(getApiErrorMessage(err, '주문 처리 중 오류가 발생했습니다.'));
             setProcessing(false);
         },
     });
 
     useEffect(() => {
-        if (paymentKey && orderId && amount) {
-            orderMutation.mutate();
-        } else {
+        if (!paymentKey || !orderId || !amount) {
             setError('결제 정보가 올바르지 않습니다.');
             setProcessing(false);
+            return;
         }
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+        if (processedPaymentKeyRef.current === paymentKey) {
+            return;
+        }
+        processedPaymentKeyRef.current = paymentKey;
+        orderMutation.mutate();
+        // 동일 paymentKey당 1회만 실행 (Strict Mode 이중 effect 방지)
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- mutate는 안정 참조
+    }, [paymentKey, orderId, amount]);
 
     if (error) {
         return (
