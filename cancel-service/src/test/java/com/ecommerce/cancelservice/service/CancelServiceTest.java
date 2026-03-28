@@ -2,6 +2,8 @@ package com.ecommerce.cancelservice.service;
 
 import com.ecommerce.cancelservice.dto.request.CancelItemRequest;
 import com.ecommerce.cancelservice.dto.request.CreateCancelRequest;
+import com.ecommerce.cancelservice.client.OrderServiceClient;
+import com.ecommerce.cancelservice.client.dto.OrderPayload;
 import com.ecommerce.cancelservice.dto.response.CancelResponse;
 import com.ecommerce.cancelservice.dto.response.PageResponse;
 import com.ecommerce.cancelservice.entity.Cancel;
@@ -12,6 +14,7 @@ import com.ecommerce.cancelservice.enums.CancelStatus;
 import com.ecommerce.cancelservice.exception.CancelDomainException;
 import com.ecommerce.cancelservice.outbox.OutboxEventPublisher;
 import com.ecommerce.cancelservice.repository.CancelRepository;
+import com.ecommerce.cancelservice.response.ApiResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -46,6 +49,9 @@ class CancelServiceTest {
     @Mock
     OutboxEventPublisher outboxEventPublisher;
 
+    @Mock
+    OrderServiceClient orderServiceClient;
+
     @InjectMocks
     CancelService cancelService;
 
@@ -79,6 +85,8 @@ class CancelServiceTest {
 
             when(cancelRepository.existsByOrderIdAndUserIdAndStatusIn(anyLong(), anyLong(), any()))
                     .thenReturn(false);
+            when(orderServiceClient.getMyOrder(ORDER_ID))
+                    .thenReturn(ApiResponse.success(userOrderPayload("PENDING")));
             when(cancelRepository.save(any(Cancel.class))).thenAnswer(invocation -> {
                 Cancel cancel = invocation.getArgument(0);
                 ReflectionTestUtils.setField(cancel, "id", CANCEL_ID);
@@ -113,6 +121,8 @@ class CancelServiceTest {
 
             when(cancelRepository.existsByOrderIdAndUserIdAndStatusIn(anyLong(), anyLong(), any()))
                     .thenReturn(false);
+            when(orderServiceClient.getMyOrder(ORDER_ID))
+                    .thenReturn(ApiResponse.success(userOrderPayload("DELIVERED")));
             when(cancelRepository.save(any(Cancel.class))).thenAnswer(invocation -> {
                 Cancel cancel = invocation.getArgument(0);
                 ReflectionTestUtils.setField(cancel, "id", CANCEL_ID);
@@ -123,6 +133,26 @@ class CancelServiceTest {
             CancelResponse response = cancelService.createCancel(USER_ID, request);
 
             assertThat(response.getRequestType()).isEqualTo(CancelRequestType.RETURN_REFUND);
+        }
+
+        @Test
+        @DisplayName("취소 요청 생성 실패 - 배송 중")
+        void createCancel_shippingBlocked() {
+            CancelItemRequest itemRequest = new CancelItemRequest(
+                    1L, "테스트 상품", 2, new BigDecimal("10000")
+            );
+            CreateCancelRequest request = new CreateCancelRequest(
+                    ORDER_ID, ORDER_NUMBER, CancelReason.CHANGE_OF_MIND, "단순 변심", null, List.of(itemRequest)
+            );
+
+            when(cancelRepository.existsByOrderIdAndUserIdAndStatusIn(anyLong(), anyLong(), any()))
+                    .thenReturn(false);
+            when(orderServiceClient.getMyOrder(ORDER_ID))
+                    .thenReturn(ApiResponse.success(userOrderPayload("SHIPPING")));
+
+            assertThatThrownBy(() -> cancelService.createCancel(USER_ID, request))
+                    .isInstanceOf(CancelDomainException.class)
+                    .hasMessageContaining("배송 중");
         }
 
         @Test
@@ -314,6 +344,8 @@ class CancelServiceTest {
         void approveCancel_success() {
             // given
             when(cancelRepository.findByIdWithItems(CANCEL_ID)).thenReturn(Optional.of(testCancel));
+            when(orderServiceClient.getAdminOrder(ORDER_ID)).thenReturn(
+                    ApiResponse.success(adminOrderPayload("CANCEL_REQUESTED", "CONFIRMED")));
             doNothing().when(outboxEventPublisher).publishCancelApprovedEvent(any());
 
             // when
@@ -363,6 +395,8 @@ class CancelServiceTest {
             String rejectedReason = "재고 부족으로 인한 거부";
 
             when(cancelRepository.findByIdWithItems(CANCEL_ID)).thenReturn(Optional.of(testCancel));
+            when(orderServiceClient.getAdminOrder(ORDER_ID)).thenReturn(
+                    ApiResponse.success(adminOrderPayload("CANCEL_REQUESTED", "PREPARING")));
             doNothing().when(outboxEventPublisher).publishCancelRejectedEvent(any());
 
             // when
@@ -400,6 +434,19 @@ class CancelServiceTest {
                     .isInstanceOf(CancelDomainException.class)
                     .hasMessageContaining("취소 요청 상태가 아닙니다");
         }
+    }
+
+    private static OrderPayload userOrderPayload(String status) {
+        OrderPayload p = new OrderPayload();
+        p.setStatus(status);
+        return p;
+    }
+
+    private static OrderPayload adminOrderPayload(String status, String statusBefore) {
+        OrderPayload p = new OrderPayload();
+        p.setStatus(status);
+        p.setStatusBeforeCancelRequest(statusBefore);
+        return p;
     }
 
     private Cancel createTestCancel(Long id, Long orderId, Long userId, String orderNumber, CancelStatus status) {

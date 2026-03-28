@@ -1,5 +1,6 @@
 package com.ecommerce.orderservice.entity;
 
+import com.ecommerce.orderservice.enums.CancelRequestKind;
 import com.ecommerce.orderservice.enums.OrderStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -112,12 +113,12 @@ public class Order extends BaseEntity {
         this.statusBeforeCancelRequest = null;
     }
 
-    /** 취소 서비스에서 취소 신청 접수 시 진행 상태 표시용 */
-    public void markCancelRequested() {
+    /** 취소 서비스에서 취소·반품 신청 접수 시 진행 상태 표시용 */
+    public void markCancelRequested(CancelRequestKind kind) {
         if (this.status == OrderStatus.CANCELLED || this.status == OrderStatus.CANCEL_REQUESTED) {
             return;
         }
-        if (!this.status.canMarkCancelRequested()) {
+        if (!this.status.allowsInboundCancelRequest(kind)) {
             return;
         }
         this.statusBeforeCancelRequest = this.status;

@@ -23,6 +23,7 @@ public class CancelRequestedEvent {
     String orderNumber;
     Long userId;
     String cancelReason;
+    String requestType;
     List<CancelItemEvent> items;
 
     @Getter

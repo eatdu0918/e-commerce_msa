@@ -190,6 +190,35 @@ class KafkaConsumerIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
+    @DisplayName("cancel-requested 이벤트는 배송 중 주문에 반영되지 않음")
+    void handleCancelRequested_ignoredWhenShipping() throws Exception {
+        OrderResponse order = createTestOrder(8L);
+        Long orderId = order.getId();
+        Order entity = orderRepository.findById(orderId).orElseThrow();
+        entity.updateStatus(OrderStatus.SHIPPING);
+        orderRepository.save(entity);
+
+        CancelRequestedEvent event = CancelRequestedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .cancelId(3L)
+                .cancelNumber("CAN-SHIP01")
+                .orderId(orderId)
+                .orderNumber(order.getOrderNumber())
+                .userId(8L)
+                .cancelReason("CHANGE_OF_MIND")
+                .requestType("ORDER_CANCEL")
+                .items(List.of())
+                .build();
+
+        kafkaTemplate.send("cancel-requested", event.getOrderNumber(), event).get();
+
+        await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> {
+            Order updatedOrder = orderRepository.findById(orderId).orElseThrow();
+            assertThat(updatedOrder.getStatus()).isEqualTo(OrderStatus.SHIPPING);
+        });
+    }
+
+    @Test
     @DisplayName("cancel-rejected 이벤트 수신 시 취소 요청 직전 주문 상태로 복귀")
     void handleCancelRejected_restoresPreviousStatus() throws Exception {
         OrderResponse order = createTestOrder(7L);

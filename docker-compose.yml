@@ -420,6 +420,7 @@ services:
       SPRING_DATA_REDIS_PORT: 6379
       KAFKA_SERVERS: kafka:29092
       JWT_SECRET: your-256-bit-secret-key-here-minimum-32-characters-required
+      ORDER_SERVICE_URL: http://order-service:8082
     depends_on:
       cancel-mysql:
         condition: service_healthy

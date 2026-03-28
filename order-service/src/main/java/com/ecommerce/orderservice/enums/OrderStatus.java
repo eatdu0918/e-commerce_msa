@@ -22,11 +22,20 @@ public enum OrderStatus {
     }
 
     /**
-     * cancel-service 취소·반품 신청(cancel-requested) 시 주문을 취소 요청 중으로 둘 수 있는 상태.
-     * ({@link #canCancel()}는 출고 전 즉시 취소 API 등에만 사용)
+     * cancel-service 취소·반품 신청(cancel-requested) 시, 요청 유형별로 주문을 취소 요청 중으로 둘 수 있는지.
+     * 배송 중(SHIPPING)에는 취소 파이프라인 진입 불가. 반품·환불은 배송 완료 후에만.
      */
-    public boolean canMarkCancelRequested() {
-        return this != CANCELLED && this != CANCEL_REQUESTED;
+    public boolean allowsInboundCancelRequest(CancelRequestKind kind) {
+        if (this == CANCELLED || this == CANCEL_REQUESTED) {
+            return false;
+        }
+        if (this == SHIPPING) {
+            return false;
+        }
+        if (kind == CancelRequestKind.RETURN_REFUND) {
+            return this == DELIVERED;
+        }
+        return this == PENDING || this == CONFIRMED || this == PREPARING;
     }
 
     public boolean canUpdateStatus() {

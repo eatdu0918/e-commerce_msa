@@ -20,6 +20,11 @@ public enum CancelDomainExceptionCode {
     CancelNotInRequestedStatusException(HttpStatus.BAD_REQUEST, "취소 요청 상태가 아닙니다."),
     EmptyCancelItemsException(HttpStatus.BAD_REQUEST, "취소 상품이 비어있습니다."),
     DuplicateCancelRequestException(HttpStatus.CONFLICT, "해당 주문에 대한 취소 요청이 이미 접수되었습니다."),
+    OrderInfoUnavailableException(HttpStatus.BAD_GATEWAY, "주문 정보를 확인할 수 없습니다. 잠시 후 다시 시도해 주세요."),
+    CancelBlockedWhileShippingException(HttpStatus.BAD_REQUEST, "배송 중인 주문은 취소·반품 요청을 할 수 없습니다."),
+    ReturnRefundOnlyAfterDeliveredException(HttpStatus.BAD_REQUEST, "반품·환불은 배송 완료 후에만 요청할 수 있습니다."),
+    OrderCancelOnlyBeforeShippingException(HttpStatus.BAD_REQUEST, "주문 취소는 배송 시작 전(상품 준비까지)만 요청할 수 있습니다."),
+    CancelAdminActionBlockedException(HttpStatus.BAD_REQUEST, "배송 중인 주문에 대한 취소 건은 승인·거절 처리할 수 없습니다."),
 
     // JWT 관련 예외
     InvalidTokenException(HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다."),

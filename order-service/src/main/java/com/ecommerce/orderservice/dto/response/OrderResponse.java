@@ -22,6 +22,11 @@ public class OrderResponse {
     Long userId;
     String orderNumber;
     OrderStatus status;
+    /**
+     * {@link com.ecommerce.orderservice.entity.Order#getStatusBeforeCancelRequest()}
+     * — 취소 요청 처리 UI·검증용 (없으면 null).
+     */
+    OrderStatus statusBeforeCancelRequest;
     String statusDescription;
     BigDecimal totalAmount;
     BigDecimal discountAmount;
@@ -44,6 +49,9 @@ public class OrderResponse {
      */
     String activeCancelStatus;
 
+    /** 집계 조회 시 진행 중 취소 건 ID. 관리자 화면에서 승인·거절 연동용. */
+    Long activeCancelId;
+
     public static OrderResponse from(Order order) {
         List<OrderItemResponse> items = order.getOrderItems().stream()
                 .map(OrderItemResponse::from)
@@ -54,6 +62,7 @@ public class OrderResponse {
                 .userId(order.getUserId())
                 .orderNumber(order.getOrderNumber())
                 .status(order.getStatus())
+                .statusBeforeCancelRequest(order.getStatusBeforeCancelRequest())
                 .statusDescription(order.getStatus().getDescription())
                 .totalAmount(order.getTotalAmount())
                 .discountAmount(order.getDiscountAmount())
@@ -75,6 +84,7 @@ public class OrderResponse {
                 .userId(order.getUserId())
                 .orderNumber(order.getOrderNumber())
                 .status(order.getStatus())
+                .statusBeforeCancelRequest(order.getStatusBeforeCancelRequest())
                 .statusDescription(order.getStatus().getDescription())
                 .totalAmount(order.getTotalAmount())
                 .discountAmount(order.getDiscountAmount())

@@ -1,5 +1,7 @@
 package com.ecommerce.cancelservice.service;
 
+import com.ecommerce.cancelservice.client.OrderServiceClient;
+import com.ecommerce.cancelservice.client.dto.OrderPayload;
 import com.ecommerce.cancelservice.dto.request.CancelItemRequest;
 import com.ecommerce.cancelservice.dto.request.CreateCancelRequest;
 import com.ecommerce.cancelservice.dto.response.CancelResponse;
@@ -7,6 +9,7 @@ import com.ecommerce.cancelservice.dto.response.OrderCancelSummaryResponse;
 import com.ecommerce.cancelservice.dto.response.PageResponse;
 import com.ecommerce.cancelservice.entity.Cancel;
 import com.ecommerce.cancelservice.entity.CancelItem;
+import com.ecommerce.cancelservice.enums.CancelRequestType;
 import com.ecommerce.cancelservice.enums.CancelStatus;
 import com.ecommerce.cancelservice.event.CancelApprovedEvent;
 import com.ecommerce.cancelservice.event.CancelRejectedEvent;
@@ -15,6 +18,7 @@ import com.ecommerce.cancelservice.exception.CancelDomainException;
 import com.ecommerce.cancelservice.exception.CancelDomainExceptionCode;
 import com.ecommerce.cancelservice.outbox.OutboxEventPublisher;
 import com.ecommerce.cancelservice.repository.CancelRepository;
+import com.ecommerce.cancelservice.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -36,8 +40,12 @@ public class CancelService {
     private static final Set<CancelStatus> BLOCK_DUPLICATE_CREATE_STATUSES =
             EnumSet.of(CancelStatus.REQUESTED, CancelStatus.APPROVED, CancelStatus.COMPLETED);
 
+    private static final Set<String> PRE_SHIP_ORDER_CANCEL_STATUSES =
+            Set.of("PENDING", "CONFIRMED", "PREPARING");
+
     private final CancelRepository cancelRepository;
     private final OutboxEventPublisher outboxEventPublisher;
+    private final OrderServiceClient orderServiceClient;
 
     @Transactional
     public CancelResponse createCancel(Long userId, CreateCancelRequest request) {
@@ -51,6 +59,10 @@ public class CancelService {
                 request.getOrderId(), userId, BLOCK_DUPLICATE_CREATE_STATUSES)) {
             throw new CancelDomainException(CancelDomainExceptionCode.DuplicateCancelRequestException);
         }
+
+        CancelRequestType resolvedType =
+                request.getRequestType() != null ? request.getRequestType() : CancelRequestType.ORDER_CANCEL;
+        validateUserCancelAgainstOrder(request.getOrderId(), resolvedType);
 
         Cancel cancel = Cancel.create(
                 request.getOrderId(),
@@ -99,8 +111,58 @@ public class CancelService {
                 .orderNumber(cancel.getOrderNumber())
                 .userId(cancel.getUserId())
                 .cancelReason(cancel.getCancelReason().name())
+                .requestType(cancel.getRequestType().name())
                 .items(items)
                 .build();
+    }
+
+    private void validateUserCancelAgainstOrder(Long orderId, CancelRequestType type) {
+        OrderPayload payload = fetchUserOrderOrThrow(orderId);
+        assertUserCancelAllowed(payload, type);
+    }
+
+    private OrderPayload fetchUserOrderOrThrow(Long orderId) {
+        ApiResponse<OrderPayload> res = orderServiceClient.getMyOrder(orderId);
+        if (res == null || !res.isSuccess() || res.getData() == null) {
+            throw new CancelDomainException(CancelDomainExceptionCode.OrderInfoUnavailableException);
+        }
+        return res.getData();
+    }
+
+    private void assertUserCancelAllowed(OrderPayload payload, CancelRequestType type) {
+        String st = normalizeStatus(payload.getStatus());
+        if ("SHIPPING".equals(st)) {
+            throw new CancelDomainException(CancelDomainExceptionCode.CancelBlockedWhileShippingException);
+        }
+        if (type == CancelRequestType.RETURN_REFUND) {
+            if (!"DELIVERED".equals(st)) {
+                throw new CancelDomainException(CancelDomainExceptionCode.ReturnRefundOnlyAfterDeliveredException);
+            }
+        } else {
+            if (!PRE_SHIP_ORDER_CANCEL_STATUSES.contains(st)) {
+                throw new CancelDomainException(CancelDomainExceptionCode.OrderCancelOnlyBeforeShippingException);
+            }
+        }
+    }
+
+    private void assertAdminMayProcessCancel(Long orderId) {
+        ApiResponse<OrderPayload> res = orderServiceClient.getAdminOrder(orderId);
+        if (res == null || !res.isSuccess() || res.getData() == null) {
+            throw new CancelDomainException(CancelDomainExceptionCode.OrderInfoUnavailableException);
+        }
+        OrderPayload p = res.getData();
+        String st = normalizeStatus(p.getStatus());
+        String before = normalizeStatus(p.getStatusBeforeCancelRequest());
+        if ("SHIPPING".equals(st)) {
+            throw new CancelDomainException(CancelDomainExceptionCode.CancelAdminActionBlockedException);
+        }
+        if ("CANCEL_REQUESTED".equals(st) && "SHIPPING".equals(before)) {
+            throw new CancelDomainException(CancelDomainExceptionCode.CancelAdminActionBlockedException);
+        }
+    }
+
+    private static String normalizeStatus(String raw) {
+        return raw == null ? "" : raw.trim().toUpperCase();
     }
 
     @Transactional(readOnly = true)
@@ -177,6 +239,8 @@ public class CancelService {
             throw new CancelDomainException(CancelDomainExceptionCode.CancelNotInRequestedStatusException);
         }
 
+        assertAdminMayProcessCancel(cancel.getOrderId());
+
         cancel.approve();
 
         List<CancelApprovedEvent.CancelItemEvent> items = cancel.getCancelItems().stream()
@@ -214,6 +278,8 @@ public class CancelService {
         if (!cancel.isRequested()) {
             throw new CancelDomainException(CancelDomainExceptionCode.CancelNotInRequestedStatusException);
         }
+
+        assertAdminMayProcessCancel(cancel.getOrderId());
 
         cancel.reject(rejectedReason);
 

@@ -24,7 +24,18 @@ repositories {
 	mavenCentral()
 }
 
+ext {
+	set('springCloudVersion', "2023.0.5")
+}
+
+dependencyManagement {
+	imports {
+		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+	}
+}
+
 dependencies {
+	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 	implementation('org.springframework.boot:spring-boot-starter-web') {
 		exclude group: 'org.springframework.boot', module: 'spring-boot-starter-tomcat'
 	}

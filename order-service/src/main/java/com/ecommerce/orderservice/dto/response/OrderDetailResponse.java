@@ -23,6 +23,7 @@ public class OrderDetailResponse {
     Long userId;
     String orderNumber;
     OrderStatus status;
+    OrderStatus statusBeforeCancelRequest;
     String statusDescription;
     BigDecimal totalAmount;
     BigDecimal discountAmount;
@@ -45,11 +46,15 @@ public class OrderDetailResponse {
      */
     String activeCancelStatus;
 
+    /** 진행 중 취소·반품 요청 건 ID(관리자 승인·거절 UI 연동). 없으면 null. */
+    Long activeCancelId;
+
     public static OrderDetailResponse from(
             OrderResponse order,
             List<OrderItemDetailResponse> items,
             PaymentInfo payment,
-            String activeCancelStatus) {
+            String activeCancelStatus,
+            Long activeCancelId) {
         String pay = payment != null ? payment.getStatus() : null;
         OrderStatus progress = OrderProgressStatusResolver.resolveForDisplayWithActiveCancel(
                 order.getStatus(), pay, activeCancelStatus);
@@ -58,6 +63,7 @@ public class OrderDetailResponse {
                 .userId(order.getUserId())
                 .orderNumber(order.getOrderNumber())
                 .status(order.getStatus())
+                .statusBeforeCancelRequest(order.getStatusBeforeCancelRequest())
                 .statusDescription(order.getStatusDescription())
                 .totalAmount(order.getTotalAmount())
                 .discountAmount(order.getDiscountAmount())
@@ -72,6 +78,7 @@ public class OrderDetailResponse {
                 .updatedAt(order.getUpdatedAt())
                 .progressStatus(progress)
                 .activeCancelStatus(activeCancelStatus)
+                .activeCancelId(activeCancelId)
                 .build();
     }
 }

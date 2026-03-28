@@ -1,6 +1,7 @@
 package com.ecommerce.orderservice.kafka;
 
 import com.ecommerce.orderservice.entity.ProcessedEvent;
+import com.ecommerce.orderservice.enums.CancelRequestKind;
 import com.ecommerce.orderservice.enums.OrderStatus;
 import com.ecommerce.orderservice.event.*;
 import com.ecommerce.orderservice.repository.OrderRepository;
@@ -201,7 +202,8 @@ public class OrderEventConsumer {
                 log.warn("cancel-requested 사용자 불일치로 무시: orderId={}, orderUserId={}, eventUserId={}",
                         event.getOrderId(), order.getUserId(), event.getUserId());
             } else {
-                order.markCancelRequested();
+                CancelRequestKind kind = CancelRequestKind.fromEventPayload(event.getRequestType());
+                order.markCancelRequested(kind);
                 log.info("주문 취소 요청 상태 반영: orderId={}, status={}", order.getId(), order.getStatus());
             }
         });

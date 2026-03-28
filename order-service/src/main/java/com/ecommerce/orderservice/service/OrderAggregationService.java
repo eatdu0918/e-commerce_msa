@@ -50,9 +50,14 @@ public class OrderAggregationService {
         OrderResponse order = orderService.getOrder(orderId, userId);
         List<OrderItemDetailResponse> enrichedItems = enrichOrderItems(order.getItems());
         PaymentInfo paymentInfo = fetchPaymentInfo(orderId);
-        String activeCancel = fetchActiveCancelStatus(orderId);
+        OrderCancelSummaryResponse cancelSummary = fetchActiveCancelSummaryUser(orderId);
 
-        return OrderDetailResponse.from(order, enrichedItems, paymentInfo, activeCancel);
+        return OrderDetailResponse.from(
+                order,
+                enrichedItems,
+                paymentInfo,
+                statusOf(cancelSummary),
+                cancelIdOf(cancelSummary));
     }
 
     public OrderDetailResponse getOrderDetailAdmin(Long orderId) {
@@ -61,9 +66,14 @@ public class OrderAggregationService {
         OrderResponse order = orderService.getOrderById(orderId);
         List<OrderItemDetailResponse> enrichedItems = enrichOrderItems(order.getItems());
         PaymentInfo paymentInfo = fetchPaymentInfo(orderId);
-        String activeCancel = fetchActiveCancelStatusAdmin(orderId);
+        OrderCancelSummaryResponse cancelSummary = fetchActiveCancelSummaryAdmin(orderId);
 
-        return OrderDetailResponse.from(order, enrichedItems, paymentInfo, activeCancel);
+        return OrderDetailResponse.from(
+                order,
+                enrichedItems,
+                paymentInfo,
+                statusOf(cancelSummary),
+                cancelIdOf(cancelSummary));
     }
 
     public PageResponse<OrderResponse> getAllOrdersForAdmin(Pageable pageable) {
@@ -99,10 +109,12 @@ public class OrderAggregationService {
     private OrderResponse withPaymentStatusForAdmin(OrderResponse order) {
         PaymentInfo info = fetchPaymentInfo(order.getId());
         String paymentStatus = info != null ? info.getStatus() : null;
-        String activeCancel = fetchActiveCancelStatusAdmin(order.getId());
+        OrderCancelSummaryResponse cancelSummary = fetchActiveCancelSummaryAdmin(order.getId());
+        String activeCancel = statusOf(cancelSummary);
         return order.toBuilder()
                 .paymentStatus(paymentStatus)
                 .activeCancelStatus(activeCancel)
+                .activeCancelId(cancelIdOf(cancelSummary))
                 .progressStatus(OrderProgressStatusResolver.resolveForDisplayWithActiveCancel(
                         order.getStatus(), paymentStatus, activeCancel))
                 .build();
@@ -141,12 +153,12 @@ public class OrderAggregationService {
         }
     }
 
-    private String fetchActiveCancelStatus(Long orderId) {
+    private OrderCancelSummaryResponse fetchActiveCancelSummaryUser(Long orderId) {
         try {
             ApiResponse<OrderCancelSummaryResponse> response =
                     cancelServiceClient.getActiveCancelForOrder(orderId);
             if (response != null && response.isSuccess() && response.getData() != null) {
-                return response.getData().getStatus();
+                return response.getData();
             }
         } catch (Exception e) {
             log.warn("진행 중 취소 요약 조회 실패: orderId={}, error={}", orderId, e.getMessage());
@@ -154,12 +166,12 @@ public class OrderAggregationService {
         return null;
     }
 
-    private String fetchActiveCancelStatusAdmin(Long orderId) {
+    private OrderCancelSummaryResponse fetchActiveCancelSummaryAdmin(Long orderId) {
         try {
             ApiResponse<OrderCancelSummaryResponse> response =
                     cancelServiceClient.getActiveCancelForOrderAdmin(orderId);
             if (response != null && response.isSuccess() && response.getData() != null) {
-                return response.getData().getStatus();
+                return response.getData();
             }
         } catch (Exception e) {
             log.warn("관리자용 진행 중 취소 요약 조회 실패: orderId={}, error={}", orderId, e.getMessage());
@@ -167,13 +179,23 @@ public class OrderAggregationService {
         return null;
     }
 
+    private static String statusOf(OrderCancelSummaryResponse summary) {
+        return summary != null ? summary.getStatus() : null;
+    }
+
+    private static Long cancelIdOf(OrderCancelSummaryResponse summary) {
+        return summary != null ? summary.getCancelId() : null;
+    }
+
     private OrderResponse withPaymentStatus(OrderResponse order) {
         PaymentInfo info = fetchPaymentInfo(order.getId());
         String paymentStatus = info != null ? info.getStatus() : null;
-        String activeCancel = fetchActiveCancelStatus(order.getId());
+        OrderCancelSummaryResponse cancelSummary = fetchActiveCancelSummaryUser(order.getId());
+        String activeCancel = statusOf(cancelSummary);
         return order.toBuilder()
                 .paymentStatus(paymentStatus)
                 .activeCancelStatus(activeCancel)
+                .activeCancelId(cancelIdOf(cancelSummary))
                 .progressStatus(OrderProgressStatusResolver.resolveForDisplayWithActiveCancel(
                         order.getStatus(), paymentStatus, activeCancel))
                 .build();
