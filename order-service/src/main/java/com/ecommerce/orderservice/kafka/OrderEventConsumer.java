@@ -185,6 +185,56 @@ public class OrderEventConsumer {
     }
 
     /**
+     * 고객 취소 신청 접수 — 주문 상태를 취소 요청 중으로 표시 (상세·재신청 방지와 동기화)
+     */
+    @KafkaListener(topics = "cancel-requested", groupId = "order-service")
+    @Transactional
+    public void handleCancelRequested(CancelRequestedEvent event) {
+        if (isDuplicate(event.getEventId(), "cancel-requested"))
+            return;
+
+        log.info("Received cancel-requested event: cancelId={}, orderId={}",
+                event.getCancelId(), event.getOrderId());
+
+        orderRepository.findByIdWithItems(event.getOrderId()).ifPresent(order -> {
+            if (event.getUserId() != null && !event.getUserId().equals(order.getUserId())) {
+                log.warn("cancel-requested 사용자 불일치로 무시: orderId={}, orderUserId={}, eventUserId={}",
+                        event.getOrderId(), order.getUserId(), event.getUserId());
+            } else {
+                order.markCancelRequested();
+                log.info("주문 취소 요청 상태 반영: orderId={}, status={}", order.getId(), order.getStatus());
+            }
+        });
+
+        markProcessed(event.getEventId(), "cancel-requested");
+    }
+
+    /**
+     * 취소 거부 시 취소 요청 표시 해제 후 주문 정상 처리 재개
+     */
+    @KafkaListener(topics = "cancel-rejected", groupId = "order-service")
+    @Transactional
+    public void handleCancelRejected(CancelRejectedEvent event) {
+        if (isDuplicate(event.getEventId(), "cancel-rejected"))
+            return;
+
+        log.info("Received cancel-rejected event: cancelId={}, orderId={}",
+                event.getCancelId(), event.getOrderId());
+
+        orderRepository.findByIdWithItems(event.getOrderId()).ifPresent(order -> {
+            if (event.getUserId() != null && !event.getUserId().equals(order.getUserId())) {
+                log.warn("cancel-rejected 사용자 불일치로 무시: orderId={}, orderUserId={}, eventUserId={}",
+                        event.getOrderId(), order.getUserId(), event.getUserId());
+            } else {
+                order.restoreAfterCancelRejected();
+                log.info("취소 거부 후 주문 상태 복귀: orderId={}, status={}", order.getId(), order.getStatus());
+            }
+        });
+
+        markProcessed(event.getEventId(), "cancel-rejected");
+    }
+
+    /**
      * 취소 승인 시 보상 트랜잭션: 주문 취소 + order-cancelled 이벤트 발행
      * → product-service: 재고 복원, discount-service: 쿠폰 복원, payment-service: 결제 취소
      */
@@ -198,7 +248,7 @@ public class OrderEventConsumer {
                 event.getCancelId(), event.getOrderId());
 
         orderRepository.findByIdWithItems(event.getOrderId()).ifPresent(order -> {
-            if (order.canCancel()) {
+            if (order.getStatus() == OrderStatus.CANCEL_REQUESTED || order.canCancel()) {
                 order.cancel();
 
                 List<OrderCancelledEvent.OrderItemEvent> items = order.getOrderItems().stream()

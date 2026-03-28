@@ -39,9 +39,20 @@ public class OrderDetailResponse {
     /** {@link OrderResponse#getProgressStatus()} 와 동일 규칙 */
     OrderStatus progressStatus;
 
-    public static OrderDetailResponse from(OrderResponse order, List<OrderItemDetailResponse> items, PaymentInfo payment) {
+    /**
+     * cancel-service 기준 진행 중 취소 상태(REQUESTED/APPROVED/COMPLETED). 없으면 null.
+     * 주문 DB 갱신(Kafka) 지연 시에도 취소 요청 버튼 숨김에 사용.
+     */
+    String activeCancelStatus;
+
+    public static OrderDetailResponse from(
+            OrderResponse order,
+            List<OrderItemDetailResponse> items,
+            PaymentInfo payment,
+            String activeCancelStatus) {
         String pay = payment != null ? payment.getStatus() : null;
-        OrderStatus progress = OrderProgressStatusResolver.resolveForDisplay(order.getStatus(), pay);
+        OrderStatus progress = OrderProgressStatusResolver.resolveForDisplayWithActiveCancel(
+                order.getStatus(), pay, activeCancelStatus);
         return OrderDetailResponse.builder()
                 .id(order.getId())
                 .userId(order.getUserId())
@@ -60,6 +71,7 @@ public class OrderDetailResponse {
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())
                 .progressStatus(progress)
+                .activeCancelStatus(activeCancelStatus)
                 .build();
     }
 }

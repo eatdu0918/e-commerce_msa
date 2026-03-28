@@ -17,6 +17,25 @@ public final class OrderProgressStatusResolver {
         return orderStatus;
     }
 
+    /**
+     * cancel-service 기준 진행 중 취소와 주문 DB를 맞춰 표시한다.
+     * 승인·완료 후 주문 서비스 Kafka 반영 전에도 상세·목록에서 취소 완료로 보이게 한다.
+     */
+    public static OrderStatus resolveForDisplayWithActiveCancel(
+            OrderStatus orderStatus, String paymentStatus, String activeCancelStatus) {
+        OrderStatus progress = resolveForDisplay(orderStatus, paymentStatus);
+        if (activeCancelStatus == null || orderStatus == OrderStatus.CANCELLED) {
+            return progress;
+        }
+        if ("REQUESTED".equals(activeCancelStatus)) {
+            return OrderStatus.CANCEL_REQUESTED;
+        }
+        if ("APPROVED".equals(activeCancelStatus) || "COMPLETED".equals(activeCancelStatus)) {
+            return OrderStatus.CANCELLED;
+        }
+        return progress;
+    }
+
     private static boolean isPaymentCompleted(String paymentStatus) {
         return paymentStatus != null && "COMPLETED".equalsIgnoreCase(paymentStatus.trim());
     }

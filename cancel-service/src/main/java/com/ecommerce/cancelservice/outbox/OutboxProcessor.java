@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Component
@@ -21,6 +22,7 @@ public class OutboxProcessor {
     private static final int BATCH_SIZE = 100;
     private static final int MAX_RETRY_COUNT = 3;
     private static final int CLEANUP_DAYS = 7;
+    private static final int KAFKA_SEND_TIMEOUT_SEC = 30;
 
     private final OutboxEventRepository outboxEventRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
@@ -40,11 +42,7 @@ public class OutboxProcessor {
         for (OutboxEvent event : events) {
             try {
                 kafkaTemplate.send(event.getTopic(), event.getAggregateId(), event.getPayload())
-                        .whenComplete((result, ex) -> {
-                            if (ex != null) {
-                                log.error("Kafka 발행 실패: eventId={}, topic={}", event.getId(), event.getTopic(), ex);
-                            }
-                        });
+                        .get(KAFKA_SEND_TIMEOUT_SEC, TimeUnit.SECONDS);
 
                 event.markAsProcessed();
                 log.debug("Outbox 이벤트 처리 완료: eventId={}, eventType={}", event.getId(), event.getEventType());

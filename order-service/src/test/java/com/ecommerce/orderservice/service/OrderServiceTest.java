@@ -234,6 +234,19 @@ class OrderServiceTest {
                 .hasMessageContaining("상태를 변경할 수 없는");
     }
 
+    @Test
+    @DisplayName("주문 상태 변경 실패 - 취소 요청 중")
+    void updateOrderStatus_cancelRequested_throwsException() {
+        Long orderId = 1L;
+        Order order = createTestOrder(orderId, 1L, OrderStatus.CANCEL_REQUESTED);
+
+        when(orderRepository.findByIdWithItems(orderId)).thenReturn(Optional.of(order));
+
+        assertThatThrownBy(() -> orderService.updateOrderStatus(orderId, OrderStatus.PREPARING))
+                .isInstanceOf(OrderDomainException.class)
+                .hasMessageContaining("상태를 변경할 수 없는");
+    }
+
     private Order createTestOrder(Long id, Long userId, OrderStatus status) {
         Order order = Order.create(userId, new BigDecimal("20000"), null, "서울시", "홍길동", "010-1234-5678");
         ReflectionTestUtils.setField(order, "id", id);

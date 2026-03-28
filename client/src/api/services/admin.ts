@@ -68,16 +68,33 @@ export interface Coupon {
   createdAt: string;
 }
 
+export interface CancelItemRow {
+  id: number;
+  productId: number;
+  productName: string;
+  quantity: number;
+  unitPrice: number | string;
+  totalPrice?: number | string;
+}
+
 export interface Cancel {
   id: number;
   orderId: number;
+  orderNumber?: string;
+  cancelNumber?: string;
   userId: number;
   cancelReason: string;
+  cancelReasonDescription?: string;
   cancelDetail?: string;
   status: string;
+  statusDescription?: string;
   createdAt: string;
   updatedAt: string;
   rejectedReason?: string;
+  items?: CancelItemRow[];
+  approvedAt?: string | null;
+  rejectedAt?: string | null;
+  completedAt?: string | null;
 }
 
 export interface Refund {

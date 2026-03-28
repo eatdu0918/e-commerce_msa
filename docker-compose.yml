@@ -329,6 +329,7 @@ services:
       JWT_SECRET: your-256-bit-secret-key-here-minimum-32-characters-required
       PRODUCT_SERVICE_URL: http://product-service:8081
       PAYMENT_SERVICE_URL: http://payment-service:8084
+      CANCEL_SERVICE_URL: http://cancel-service:8085
     depends_on:
       order-mysql:
         condition: service_healthy
@@ -339,6 +340,8 @@ services:
       product-service:
         condition: service_started
       payment-service:
+        condition: service_started
+      cancel-service:
         condition: service_started
     deploy:
       resources:

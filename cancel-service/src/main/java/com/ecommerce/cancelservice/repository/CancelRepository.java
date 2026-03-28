@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.Optional;
 
 public interface CancelRepository extends JpaRepository<Cancel, Long> {
@@ -25,4 +26,12 @@ public interface CancelRepository extends JpaRepository<Cancel, Long> {
     Optional<Cancel> findByIdAndUserIdWithItems(@Param("id") Long id, @Param("userId") Long userId);
 
     Optional<Cancel> findByOrderId(Long orderId);
+
+    boolean existsByOrderIdAndUserIdAndStatusIn(Long orderId, Long userId, Collection<CancelStatus> statuses);
+
+    /**
+     * 진행 중인 취소(요청·승인·완료 처리) 중 가장 최근 건 — 주문 상세에서 버튼 노출 여부 판단용
+     */
+    Optional<Cancel> findFirstByOrderIdAndUserIdAndStatusInOrderByIdDesc(
+            Long orderId, Long userId, Collection<CancelStatus> statuses);
 }

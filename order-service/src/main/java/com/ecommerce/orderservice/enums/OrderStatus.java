@@ -11,6 +11,8 @@ public enum OrderStatus {
     PREPARING("상품 준비중"),
     SHIPPING("배송중"),
     DELIVERED("배송 완료"),
+    /** 고객 취소 신청 후 관리자 승인 대기 */
+    CANCEL_REQUESTED("취소 요청 중"),
     CANCELLED("주문 취소");
 
     private final String description;
@@ -20,6 +22,6 @@ public enum OrderStatus {
     }
 
     public boolean canUpdateStatus() {
-        return this != CANCELLED && this != DELIVERED;
+        return this != CANCELLED && this != DELIVERED && this != CANCEL_REQUESTED;
     }
 }

@@ -45,6 +45,10 @@ public class Order extends BaseEntity {
     @Builder.Default
     OrderStatus status = OrderStatus.PENDING;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status_before_cancel_request", length = 20)
+    OrderStatus statusBeforeCancelRequest;
+
     @Column(name = "total_amount", nullable = false, precision = 12, scale = 2)
     BigDecimal totalAmount;
 
@@ -105,6 +109,30 @@ public class Order extends BaseEntity {
 
     public void cancel() {
         this.status = OrderStatus.CANCELLED;
+        this.statusBeforeCancelRequest = null;
+    }
+
+    /** 취소 서비스에서 취소 신청 접수 시 진행 상태 표시용 */
+    public void markCancelRequested() {
+        if (this.status == OrderStatus.CANCELLED || this.status == OrderStatus.CANCEL_REQUESTED) {
+            return;
+        }
+        if (!this.status.canCancel()) {
+            return;
+        }
+        this.statusBeforeCancelRequest = this.status;
+        this.status = OrderStatus.CANCEL_REQUESTED;
+    }
+
+    /** 관리자가 취소 신청을 거부한 경우 취소 신청 직전 상태로 복귀 */
+    public void restoreAfterCancelRejected() {
+        if (this.status != OrderStatus.CANCEL_REQUESTED) {
+            return;
+        }
+        this.status = this.statusBeforeCancelRequest != null
+                ? this.statusBeforeCancelRequest
+                : OrderStatus.CONFIRMED;
+        this.statusBeforeCancelRequest = null;
     }
 
     public void updateStatus(OrderStatus newStatus) {

@@ -3,6 +3,7 @@ package com.ecommerce.cancelservice.controller;
 import com.ecommerce.cancelservice.config.SecurityConfig;
 import com.ecommerce.cancelservice.dto.response.CancelItemResponse;
 import com.ecommerce.cancelservice.dto.response.CancelResponse;
+import com.ecommerce.cancelservice.dto.response.OrderCancelSummaryResponse;
 import com.ecommerce.cancelservice.dto.response.PageResponse;
 import com.ecommerce.cancelservice.enums.CancelReason;
 import com.ecommerce.cancelservice.enums.CancelStatus;
@@ -36,6 +37,8 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
+import java.util.Optional;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -102,6 +105,34 @@ class CancelControllerTest {
                     .andExpect(jsonPath("$.message").value("취소 요청이 생성되었습니다."))
                     .andExpect(jsonPath("$.data.id").value(1))
                     .andExpect(jsonPath("$.data.status").value("REQUESTED"));
+        }
+
+        @Test
+        @DisplayName("주문별 진행 중 취소 요약 - 있을 때")
+        void getActiveCancelForOrder_found() throws Exception {
+            OrderCancelSummaryResponse summary = OrderCancelSummaryResponse.builder()
+                    .cancelId(10L)
+                    .cancelNumber("CAN-X")
+                    .status(CancelStatus.REQUESTED)
+                    .build();
+            when(cancelService.getActiveCancelForOrder(100L, 200L)).thenReturn(Optional.of(summary));
+
+            mockMvc.perform(get("/api/cancels/by-order/100/active"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data.cancelId").value(10))
+                    .andExpect(jsonPath("$.data.status").value("REQUESTED"));
+        }
+
+        @Test
+        @DisplayName("주문별 진행 중 취소 요약 - 없을 때")
+        void getActiveCancelForOrder_empty() throws Exception {
+            when(cancelService.getActiveCancelForOrder(100L, 200L)).thenReturn(Optional.empty());
+
+            mockMvc.perform(get("/api/cancels/by-order/100/active"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data").doesNotExist());
         }
 
         @Test

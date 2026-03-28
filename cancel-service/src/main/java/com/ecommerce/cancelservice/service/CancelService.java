@@ -3,6 +3,7 @@ package com.ecommerce.cancelservice.service;
 import com.ecommerce.cancelservice.dto.request.CancelItemRequest;
 import com.ecommerce.cancelservice.dto.request.CreateCancelRequest;
 import com.ecommerce.cancelservice.dto.response.CancelResponse;
+import com.ecommerce.cancelservice.dto.response.OrderCancelSummaryResponse;
 import com.ecommerce.cancelservice.dto.response.PageResponse;
 import com.ecommerce.cancelservice.entity.Cancel;
 import com.ecommerce.cancelservice.entity.CancelItem;
@@ -21,13 +22,19 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class CancelService {
+
+    private static final Set<CancelStatus> BLOCK_DUPLICATE_CREATE_STATUSES =
+            EnumSet.of(CancelStatus.REQUESTED, CancelStatus.APPROVED, CancelStatus.COMPLETED);
 
     private final CancelRepository cancelRepository;
     private final OutboxEventPublisher outboxEventPublisher;
@@ -38,6 +45,11 @@ public class CancelService {
 
         if (request.getItems() == null || request.getItems().isEmpty()) {
             throw new CancelDomainException(CancelDomainExceptionCode.EmptyCancelItemsException);
+        }
+
+        if (cancelRepository.existsByOrderIdAndUserIdAndStatusIn(
+                request.getOrderId(), userId, BLOCK_DUPLICATE_CREATE_STATUSES)) {
+            throw new CancelDomainException(CancelDomainExceptionCode.DuplicateCancelRequestException);
         }
 
         Cancel cancel = Cancel.create(
@@ -95,6 +107,20 @@ public class CancelService {
         Cancel cancel = cancelRepository.findByIdAndUserIdWithItems(cancelId, userId)
                 .orElseThrow(() -> new CancelDomainException(CancelDomainExceptionCode.CancelNotFoundException));
         return CancelResponse.from(cancel);
+    }
+
+    /**
+     * 해당 주문에 진행 중인 취소(요청·승인·완료 처리)가 있으면 요약 반환. 주문 상세와 UI 동기화용.
+     */
+    @Transactional(readOnly = true)
+    public Optional<OrderCancelSummaryResponse> getActiveCancelForOrder(Long orderId, Long userId) {
+        return cancelRepository.findFirstByOrderIdAndUserIdAndStatusInOrderByIdDesc(
+                        orderId, userId, BLOCK_DUPLICATE_CREATE_STATUSES)
+                .map(c -> OrderCancelSummaryResponse.builder()
+                        .cancelId(c.getId())
+                        .cancelNumber(c.getCancelNumber())
+                        .status(c.getStatus())
+                        .build());
     }
 
     @Transactional(readOnly = true)

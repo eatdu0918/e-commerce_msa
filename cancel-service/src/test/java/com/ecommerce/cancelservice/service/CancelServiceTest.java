@@ -32,6 +32,8 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -74,6 +76,8 @@ class CancelServiceTest {
                     ORDER_ID, ORDER_NUMBER, CancelReason.CHANGE_OF_MIND, "단순 변심", List.of(itemRequest)
             );
 
+            when(cancelRepository.existsByOrderIdAndUserIdAndStatusIn(anyLong(), anyLong(), any()))
+                    .thenReturn(false);
             when(cancelRepository.save(any(Cancel.class))).thenAnswer(invocation -> {
                 Cancel cancel = invocation.getArgument(0);
                 ReflectionTestUtils.setField(cancel, "id", CANCEL_ID);
@@ -121,6 +125,24 @@ class CancelServiceTest {
                     .isInstanceOf(CancelDomainException.class)
                     .hasMessageContaining("취소 상품이 비어있습니다");
         }
+
+        @Test
+        @DisplayName("취소 요청 생성 실패 - 동일 주문에 진행 중인 취소가 이미 있음")
+        void createCancel_duplicate_throwsException() {
+            CancelItemRequest itemRequest = new CancelItemRequest(
+                    1L, "테스트 상품", 2, new BigDecimal("10000")
+            );
+            CreateCancelRequest request = new CreateCancelRequest(
+                    ORDER_ID, ORDER_NUMBER, CancelReason.CHANGE_OF_MIND, "단순 변심", List.of(itemRequest)
+            );
+
+            when(cancelRepository.existsByOrderIdAndUserIdAndStatusIn(anyLong(), anyLong(), any()))
+                    .thenReturn(true);
+
+            assertThatThrownBy(() -> cancelService.createCancel(USER_ID, request))
+                    .isInstanceOf(CancelDomainException.class)
+                    .hasMessageContaining("이미 접수");
+        }
     }
 
     @Nested
@@ -154,6 +176,28 @@ class CancelServiceTest {
             assertThatThrownBy(() -> cancelService.getCancel(999L, USER_ID))
                     .isInstanceOf(CancelDomainException.class)
                     .hasMessageContaining("취소 요청을 찾을 수 없습니다");
+        }
+
+        @Test
+        @DisplayName("주문별 진행 중 취소 요약 조회 성공")
+        void getActiveCancelForOrder_found() {
+            when(cancelRepository.findFirstByOrderIdAndUserIdAndStatusInOrderByIdDesc(eq(ORDER_ID), eq(USER_ID), any()))
+                    .thenReturn(Optional.of(testCancel));
+
+            var opt = cancelService.getActiveCancelForOrder(ORDER_ID, USER_ID);
+
+            assertThat(opt).isPresent();
+            assertThat(opt.get().getStatus()).isEqualTo(CancelStatus.REQUESTED);
+            assertThat(opt.get().getCancelNumber()).isEqualTo(testCancel.getCancelNumber());
+        }
+
+        @Test
+        @DisplayName("주문별 진행 중 취소 요약 없음")
+        void getActiveCancelForOrder_empty() {
+            when(cancelRepository.findFirstByOrderIdAndUserIdAndStatusInOrderByIdDesc(eq(ORDER_ID), eq(USER_ID), any()))
+                    .thenReturn(Optional.empty());
+
+            assertThat(cancelService.getActiveCancelForOrder(ORDER_ID, USER_ID)).isEmpty();
         }
 
         @Test

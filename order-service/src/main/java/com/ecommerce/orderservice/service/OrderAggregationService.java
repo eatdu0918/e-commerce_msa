@@ -1,7 +1,9 @@
 package com.ecommerce.orderservice.service;
 
+import com.ecommerce.orderservice.client.CancelServiceClient;
 import com.ecommerce.orderservice.client.PaymentServiceClient;
 import com.ecommerce.orderservice.client.ProductServiceClient;
+import com.ecommerce.orderservice.client.dto.OrderCancelSummaryResponse;
 import com.ecommerce.orderservice.client.dto.PaymentInfo;
 import com.ecommerce.orderservice.client.dto.ProductInfo;
 import com.ecommerce.orderservice.dto.OrderProgressStatusResolver;
@@ -23,6 +25,7 @@ public class OrderAggregationService {
     private final OrderService orderService;
     private final ProductServiceClient productServiceClient;
     private final PaymentServiceClient paymentServiceClient;
+    private final CancelServiceClient cancelServiceClient;
 
     public PageResponse<OrderResponse> getMyOrders(Long userId, Pageable pageable) {
         PageResponse<OrderResponse> page = orderService.getMyOrders(userId, pageable);
@@ -46,8 +49,9 @@ public class OrderAggregationService {
         OrderResponse order = orderService.getOrder(orderId, userId);
         List<OrderItemDetailResponse> enrichedItems = enrichOrderItems(order.getItems());
         PaymentInfo paymentInfo = fetchPaymentInfo(orderId);
+        String activeCancel = fetchActiveCancelStatus(orderId);
 
-        return OrderDetailResponse.from(order, enrichedItems, paymentInfo);
+        return OrderDetailResponse.from(order, enrichedItems, paymentInfo, activeCancel);
     }
 
     public OrderDetailResponse getOrderDetailAdmin(Long orderId) {
@@ -57,7 +61,7 @@ public class OrderAggregationService {
         List<OrderItemDetailResponse> enrichedItems = enrichOrderItems(order.getItems());
         PaymentInfo paymentInfo = fetchPaymentInfo(orderId);
 
-        return OrderDetailResponse.from(order, enrichedItems, paymentInfo);
+        return OrderDetailResponse.from(order, enrichedItems, paymentInfo, null);
     }
 
     private List<OrderItemDetailResponse> enrichOrderItems(List<OrderItemResponse> items) {
@@ -93,12 +97,27 @@ public class OrderAggregationService {
         }
     }
 
+    private String fetchActiveCancelStatus(Long orderId) {
+        try {
+            ApiResponse<OrderCancelSummaryResponse> response =
+                    cancelServiceClient.getActiveCancelForOrder(orderId);
+            if (response != null && response.isSuccess() && response.getData() != null) {
+                return response.getData().getStatus();
+            }
+        } catch (Exception e) {
+            log.warn("진행 중 취소 요약 조회 실패: orderId={}, error={}", orderId, e.getMessage());
+        }
+        return null;
+    }
+
     private OrderResponse withPaymentStatus(OrderResponse order) {
         PaymentInfo info = fetchPaymentInfo(order.getId());
         String paymentStatus = info != null ? info.getStatus() : null;
+        String activeCancel = fetchActiveCancelStatus(order.getId());
         return order.toBuilder()
                 .paymentStatus(paymentStatus)
-                .progressStatus(OrderProgressStatusResolver.resolveForDisplay(order.getStatus(), paymentStatus))
+                .progressStatus(OrderProgressStatusResolver.resolveForDisplayWithActiveCancel(
+                        order.getStatus(), paymentStatus, activeCancel))
                 .build();
     }
 }

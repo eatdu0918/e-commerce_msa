@@ -19,6 +19,7 @@ public enum CancelDomainExceptionCode {
     InvalidCancelStatusException(HttpStatus.BAD_REQUEST, "유효하지 않은 취소 상태입니다."),
     CancelNotInRequestedStatusException(HttpStatus.BAD_REQUEST, "취소 요청 상태가 아닙니다."),
     EmptyCancelItemsException(HttpStatus.BAD_REQUEST, "취소 상품이 비어있습니다."),
+    DuplicateCancelRequestException(HttpStatus.CONFLICT, "해당 주문에 대한 취소 요청이 이미 접수되었습니다."),
 
     // JWT 관련 예외
     InvalidTokenException(HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다."),

@@ -2,6 +2,7 @@ package com.ecommerce.cancelservice.controller;
 
 import com.ecommerce.cancelservice.dto.request.CreateCancelRequest;
 import com.ecommerce.cancelservice.dto.response.CancelResponse;
+import com.ecommerce.cancelservice.dto.response.OrderCancelSummaryResponse;
 import com.ecommerce.cancelservice.dto.response.PageResponse;
 import com.ecommerce.cancelservice.response.ApiResponse;
 import com.ecommerce.cancelservice.security.CustomUserDetails;
@@ -32,6 +33,16 @@ public class CancelController {
             @Valid @RequestBody CreateCancelRequest request) {
         CancelResponse response = cancelService.createCancel(userDetails.getUserId(), request);
         return ResponseEntity.ok(ApiResponse.success(response, "취소 요청이 생성되었습니다."));
+    }
+
+    @Operation(summary = "주문별 진행 중 취소 요약 (주문 상세 동기화)")
+    @GetMapping("/by-order/{orderId}/active")
+    public ResponseEntity<ApiResponse<OrderCancelSummaryResponse>> getActiveCancelForOrder(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @PathVariable Long orderId) {
+        return cancelService.getActiveCancelForOrder(orderId, userDetails.getUserId())
+                .map(r -> ResponseEntity.ok(ApiResponse.success(r)))
+                .orElse(ResponseEntity.ok(ApiResponse.success(null)));
     }
 
     @Operation(summary = "내 취소 목록 조회")

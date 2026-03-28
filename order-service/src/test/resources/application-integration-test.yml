@@ -76,6 +76,8 @@ feign:
       url: "http://localhost:8081"
     payment-service:
       url: "http://localhost:8084"
+    cancel-service:
+      url: "http://localhost:8085"
 
 logging:
   level:

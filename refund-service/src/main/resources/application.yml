@@ -35,14 +35,6 @@ spring:
     consumer:
       group-id: refund-service
       auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      properties:
-        spring.json.trusted.packages: "*"
-        spring.json.type.mapping: >-
-          CancelApprovedEvent:com.ecommerce.refundservice.event.CancelApprovedEvent,
-          RefundCompletedEvent:com.ecommerce.refundservice.event.RefundCompletedEvent,
-          RefundFailedEvent:com.ecommerce.refundservice.event.RefundFailedEvent
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer

@@ -151,14 +151,26 @@ export default function OrderDetailView() {
         );
     }
 
-    const isCancelled = order.status === 'CANCELLED' || order.status === 'CANCEL_REQUESTED';
     const progressStatus = getUiProgressStatus(order);
+    const isCancelledFlow =
+        progressStatus === 'CANCELLED' ||
+        progressStatus === 'CANCEL_REQUESTED' ||
+        order.status === 'CANCELLED' ||
+        order.status === 'CANCEL_REQUESTED';
     const { completedThrough: stepperCompletedThrough, pulseAt: stepperPulseAt } = getOrderStepperDisplay(
         progressStatus,
         STATUS_STEPS.length
     );
-    const canCancel = CANCELLABLE_STATUSES.includes(order.status);
+    const blockingCancelStatuses = ['REQUESTED', 'APPROVED', 'COMPLETED'];
+    const hasActiveCancelPipeline =
+        !!order.activeCancelStatus && blockingCancelStatuses.includes(order.activeCancelStatus);
+    const canCancel =
+        CANCELLABLE_STATUSES.includes(order.status) &&
+        order.status !== 'CANCEL_REQUESTED' &&
+        !hasActiveCancelPipeline;
+    const orderIsCancelled = order.status === 'CANCELLED' || progressStatus === 'CANCELLED';
     const orderItems = order.items || [];
+    const headerStatusKey = (progressStatus || order.status || '').toUpperCase();
 
     return (
         <div className="max-w-5xl mx-auto px-4 py-12">
@@ -183,17 +195,35 @@ export default function OrderDetailView() {
                     </div>
                     <div className="h-8 w-px bg-stone-100 mx-1"></div>
                     <span className={`px-5 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest ${
-                        order.status === 'DELIVERED' ? 'bg-emerald-50 text-emerald-600' :
-                        isCancelled ? 'bg-rose-50 text-rose-600' :
+                        headerStatusKey === 'DELIVERED' ? 'bg-emerald-50 text-emerald-600' :
+                        headerStatusKey === 'CANCEL_REQUESTED' ? 'bg-amber-50 text-amber-800' :
+                        headerStatusKey === 'CANCELLED' ? 'bg-rose-50 text-rose-600' :
                         'bg-blue-50 text-blue-600'
                     }`}>
-                        {statusBadgeLabel((progressStatus || '').toUpperCase()) || order.statusDescription}
+                        {statusBadgeLabel(headerStatusKey) || order.statusDescription}
                     </span>
                 </div>
             </header>
 
+            {(headerStatusKey === 'CANCEL_REQUESTED' || order.status === 'CANCEL_REQUESTED') && (
+                <div
+                    className="mb-10 flex gap-4 rounded-[2rem] border border-amber-200/80 bg-amber-50/90 p-6 text-amber-950 shadow-sm"
+                    role="status"
+                >
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
+                        <AlertCircle size={22} />
+                    </div>
+                    <div>
+                        <p className="text-sm font-black uppercase tracking-tight">{t('orderDetail.cancel_pending_notice')}</p>
+                        <p className="mt-1 text-xs font-medium leading-relaxed text-amber-900/80">
+                            {t('orderDetail.cancel_pending_hint')}
+                        </p>
+                    </div>
+                </div>
+            )}
+
             {/* Visual Status Stepper */}
-            {!isCancelled && (
+            {!isCancelledFlow && (
                 <div className="bg-white rounded-[2.5rem] border border-stone-100 p-8 mb-10 shadow-sm overflow-hidden border-b-4 border-b-black/5">
                     <div className="flex flex-col sm:flex-row justify-between items-start gap-8 relative">
                         {/* Connection Line (Desktop) */}
@@ -408,7 +438,21 @@ export default function OrderDetailView() {
                         </h3>
                         {order.payment ? (
                             <div className="space-y-4">
-                                <div className="flex items-center justify-between p-4 bg-stone-50 rounded-2xl border border-stone-100">
+                                {orderIsCancelled && (
+                                    <div
+                                        className="rounded-2xl border border-rose-200 bg-rose-50/90 p-4 text-sm font-bold text-rose-900"
+                                        role="status"
+                                    >
+                                        {t('orderDetail.order_cancelled_notice')}
+                                    </div>
+                                )}
+                                <div
+                                    className={`flex items-center justify-between p-4 rounded-2xl border ${
+                                        orderIsCancelled
+                                            ? 'border-stone-200 bg-stone-50/80 opacity-95'
+                                            : 'border-stone-100 bg-stone-50'
+                                    }`}
+                                >
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-xl bg-white border border-stone-100 flex items-center justify-center font-black italic tracking-tighter text-stone-900">
                                             {(order.payment?.paymentMethod || 'PAY').substring(0, 2).toUpperCase()}
@@ -448,7 +492,18 @@ export default function OrderDetailView() {
                                                     }
                                                 })()}
                                             </p>
-                                            <p className="text-[10px] text-stone-400 font-bold uppercase">{order.payment?.status}</p>
+                                            <p
+                                                className={`text-[10px] font-bold uppercase ${
+                                                    orderIsCancelled ? 'text-rose-600' : 'text-stone-400'
+                                                }`}
+                                            >
+                                                {(order.payment?.status || '').toUpperCase() === 'COMPLETED' &&
+                                                orderIsCancelled
+                                                    ? t('orderDetail.payment_status_order_cancelled')
+                                                    : (order.payment?.status || '').toUpperCase() === 'CANCELLED'
+                                                      ? t('orderDetail.payment_status_cancelled')
+                                                      : order.payment?.status}
+                                            </p>
                                         </div>
                                     </div>
                                     <div className="text-right">

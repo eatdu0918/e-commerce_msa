@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { adminApi, Payment } from '../../api/services/admin';
+import { adminApi, type Payment } from '../../api/services/admin';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const AdminPaymentList = () => {
@@ -52,7 +52,7 @@ const AdminPaymentList = () => {
   const payments = data?.data?.content || [];
   const pageData = data?.data;
 
-  const statusOptions = ['PENDING', 'COMPLETED', 'FAILED', 'CANCELLED'];
+  const statusOptions = ['PENDING', 'COMPLETED', 'FAILED', 'CANCELLED', 'REFUNDED'];
   const dateLocale = i18n.language.startsWith('ko') ? 'ko-KR' : undefined;
 
   return (

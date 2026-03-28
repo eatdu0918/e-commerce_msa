@@ -6,6 +6,8 @@ import com.ecommerce.orderservice.dto.response.OrderResponse;
 import com.ecommerce.orderservice.entity.Order;
 import com.ecommerce.orderservice.entity.ProcessedEvent;
 import com.ecommerce.orderservice.enums.OrderStatus;
+import com.ecommerce.orderservice.event.CancelRejectedEvent;
+import com.ecommerce.orderservice.event.CancelRequestedEvent;
 import com.ecommerce.orderservice.event.CouponUsedEvent;
 import com.ecommerce.orderservice.event.PaymentCompletedEvent;
 import com.ecommerce.orderservice.event.PaymentFailedEvent;
@@ -159,6 +161,71 @@ class KafkaConsumerIntegrationTest extends IntegrationTestBase {
         await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> {
             Order updatedOrder = orderRepository.findById(orderId).orElseThrow();
             assertThat(updatedOrder.getStatus()).isEqualTo(OrderStatus.CANCELLED);
+        });
+    }
+
+    @Test
+    @DisplayName("cancel-requested 이벤트 수신 시 주문이 취소 요청 중 상태로 변경")
+    void handleCancelRequested_setsCancelRequested() throws Exception {
+        OrderResponse order = createTestOrder(6L);
+        Long orderId = order.getId();
+
+        CancelRequestedEvent event = CancelRequestedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .cancelId(1L)
+                .cancelNumber("CAN-TEST01")
+                .orderId(orderId)
+                .orderNumber(order.getOrderNumber())
+                .userId(6L)
+                .cancelReason("CHANGE_OF_MIND")
+                .items(List.of())
+                .build();
+
+        kafkaTemplate.send("cancel-requested", event.getOrderNumber(), event).get();
+
+        await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> {
+            Order updatedOrder = orderRepository.findById(orderId).orElseThrow();
+            assertThat(updatedOrder.getStatus()).isEqualTo(OrderStatus.CANCEL_REQUESTED);
+        });
+    }
+
+    @Test
+    @DisplayName("cancel-rejected 이벤트 수신 시 취소 요청 직전 주문 상태로 복귀")
+    void handleCancelRejected_restoresPreviousStatus() throws Exception {
+        OrderResponse order = createTestOrder(7L);
+        Long orderId = order.getId();
+
+        CancelRequestedEvent requested = CancelRequestedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .cancelId(2L)
+                .cancelNumber("CAN-TEST02")
+                .orderId(orderId)
+                .orderNumber(order.getOrderNumber())
+                .userId(7L)
+                .cancelReason("CHANGE_OF_MIND")
+                .items(List.of())
+                .build();
+        kafkaTemplate.send("cancel-requested", requested.getOrderNumber(), requested).get();
+
+        await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> {
+            assertThat(orderRepository.findById(orderId).orElseThrow().getStatus())
+                    .isEqualTo(OrderStatus.CANCEL_REQUESTED);
+        });
+
+        CancelRejectedEvent rejected = CancelRejectedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .cancelId(2L)
+                .cancelNumber("CAN-TEST02")
+                .orderId(orderId)
+                .orderNumber(order.getOrderNumber())
+                .userId(7L)
+                .rejectedReason("승인 불가")
+                .build();
+        kafkaTemplate.send("cancel-rejected", rejected.getOrderNumber(), rejected).get();
+
+        await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> {
+            assertThat(orderRepository.findById(orderId).orElseThrow().getStatus())
+                    .isEqualTo(OrderStatus.PENDING);
         });
     }
 

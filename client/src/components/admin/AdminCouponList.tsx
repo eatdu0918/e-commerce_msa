@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { adminApi, Coupon, CreateCouponRequest } from '../../api/services/admin';
+import { adminApi, type Coupon, type CreateCouponRequest } from '../../api/services/admin';
 import { ChevronLeft, ChevronRight, Trash2, Plus, X } from 'lucide-react';
 
 const AdminCouponList = () => {

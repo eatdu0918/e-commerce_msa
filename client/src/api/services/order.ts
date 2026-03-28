@@ -55,6 +55,8 @@ export interface OrderItemDetailResponse extends OrderItemResponse {
 
 export interface OrderDetailResponse extends OrderResponse {
     items: OrderItemDetailResponse[];
+    /** REQUESTED | APPROVED | COMPLETED 등. 진행 중 취소가 없으면 undefined */
+    activeCancelStatus?: string | null;
     payment?: {
         paymentId: number;
         paymentMethod: string;
