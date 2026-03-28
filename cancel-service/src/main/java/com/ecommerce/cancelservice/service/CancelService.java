@@ -57,7 +57,8 @@ public class CancelService {
                 request.getOrderNumber(),
                 userId,
                 request.getCancelReason(),
-                request.getCancelDetail()
+                request.getCancelDetail(),
+                request.getRequestType()
         );
 
         for (CancelItemRequest itemRequest : request.getItems()) {

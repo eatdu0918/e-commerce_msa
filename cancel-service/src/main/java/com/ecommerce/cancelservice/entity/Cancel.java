@@ -1,6 +1,7 @@
 package com.ecommerce.cancelservice.entity;
 
 import com.ecommerce.cancelservice.enums.CancelReason;
+import com.ecommerce.cancelservice.enums.CancelRequestType;
 import com.ecommerce.cancelservice.enums.CancelStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -54,6 +55,11 @@ public class Cancel extends BaseEntity {
     CancelStatus status = CancelStatus.REQUESTED;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "request_type", nullable = false, length = 20)
+    @Builder.Default
+    CancelRequestType requestType = CancelRequestType.ORDER_CANCEL;
+
+    @Enumerated(EnumType.STRING)
     @Column(name = "cancel_reason", nullable = false, length = 20)
     CancelReason cancelReason;
 
@@ -77,7 +83,9 @@ public class Cancel extends BaseEntity {
     List<CancelItem> cancelItems = new ArrayList<>();
 
     public static Cancel create(Long orderId, String orderNumber, Long userId,
-                                 CancelReason cancelReason, String cancelDetail) {
+                                 CancelReason cancelReason, String cancelDetail,
+                                 CancelRequestType requestType) {
+        CancelRequestType type = requestType != null ? requestType : CancelRequestType.ORDER_CANCEL;
         return Cancel.builder()
                 .orderId(orderId)
                 .orderNumber(orderNumber)
@@ -85,6 +93,7 @@ public class Cancel extends BaseEntity {
                 .cancelNumber(generateCancelNumber())
                 .cancelReason(cancelReason)
                 .cancelDetail(cancelDetail)
+                .requestType(type)
                 .build();
     }
 

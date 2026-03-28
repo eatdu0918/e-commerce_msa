@@ -2,6 +2,7 @@ package com.ecommerce.cancelservice.dto.response;
 
 import com.ecommerce.cancelservice.entity.Cancel;
 import com.ecommerce.cancelservice.enums.CancelReason;
+import com.ecommerce.cancelservice.enums.CancelRequestType;
 import com.ecommerce.cancelservice.enums.CancelStatus;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -25,6 +26,8 @@ public class CancelResponse {
     String cancelNumber;
     CancelStatus status;
     String statusDescription;
+    CancelRequestType requestType;
+    String requestTypeDescription;
     CancelReason cancelReason;
     String cancelReasonDescription;
     String cancelDetail;
@@ -49,6 +52,8 @@ public class CancelResponse {
                 .cancelNumber(cancel.getCancelNumber())
                 .status(cancel.getStatus())
                 .statusDescription(cancel.getStatus().getDescription())
+                .requestType(cancel.getRequestType())
+                .requestTypeDescription(cancel.getRequestType().getDescription())
                 .cancelReason(cancel.getCancelReason())
                 .cancelReasonDescription(cancel.getCancelReason().getDescription())
                 .cancelDetail(cancel.getCancelDetail())
@@ -71,6 +76,8 @@ public class CancelResponse {
                 .cancelNumber(cancel.getCancelNumber())
                 .status(cancel.getStatus())
                 .statusDescription(cancel.getStatus().getDescription())
+                .requestType(cancel.getRequestType())
+                .requestTypeDescription(cancel.getRequestType().getDescription())
                 .cancelReason(cancel.getCancelReason())
                 .cancelReasonDescription(cancel.getCancelReason().getDescription())
                 .cancelDetail(cancel.getCancelDetail())

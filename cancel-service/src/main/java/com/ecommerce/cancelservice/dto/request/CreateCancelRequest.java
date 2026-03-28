@@ -1,6 +1,7 @@
 package com.ecommerce.cancelservice.dto.request;
 
 import com.ecommerce.cancelservice.enums.CancelReason;
+import com.ecommerce.cancelservice.enums.CancelRequestType;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -29,6 +30,9 @@ public class CreateCancelRequest {
     CancelReason cancelReason;
 
     String cancelDetail;
+
+    /** null이면 출고 전 취소(ORDER_CANCEL)로 처리 */
+    CancelRequestType requestType;
 
     @NotEmpty(message = "취소 상품은 필수입니다.")
     @Valid

@@ -7,6 +7,7 @@ import com.ecommerce.cancelservice.dto.response.PageResponse;
 import com.ecommerce.cancelservice.entity.Cancel;
 import com.ecommerce.cancelservice.entity.CancelItem;
 import com.ecommerce.cancelservice.enums.CancelReason;
+import com.ecommerce.cancelservice.enums.CancelRequestType;
 import com.ecommerce.cancelservice.enums.CancelStatus;
 import com.ecommerce.cancelservice.exception.CancelDomainException;
 import com.ecommerce.cancelservice.outbox.OutboxEventPublisher;
@@ -73,7 +74,7 @@ class CancelServiceTest {
                     1L, "테스트 상품", 2, new BigDecimal("10000")
             );
             CreateCancelRequest request = new CreateCancelRequest(
-                    ORDER_ID, ORDER_NUMBER, CancelReason.CHANGE_OF_MIND, "단순 변심", List.of(itemRequest)
+                    ORDER_ID, ORDER_NUMBER, CancelReason.CHANGE_OF_MIND, "단순 변심", null, List.of(itemRequest)
             );
 
             when(cancelRepository.existsByOrderIdAndUserIdAndStatusIn(anyLong(), anyLong(), any()))
@@ -94,8 +95,34 @@ class CancelServiceTest {
             assertThat(response.getUserId()).isEqualTo(USER_ID);
             assertThat(response.getCancelReason()).isEqualTo(CancelReason.CHANGE_OF_MIND);
             assertThat(response.getStatus()).isEqualTo(CancelStatus.REQUESTED);
+            assertThat(response.getRequestType()).isEqualTo(CancelRequestType.ORDER_CANCEL);
             verify(cancelRepository).save(any(Cancel.class));
             verify(outboxEventPublisher).publishCancelRequestedEvent(any());
+        }
+
+        @Test
+        @DisplayName("반품·환불 요청 생성 시 requestType 저장")
+        void createCancel_returnRefundType_success() {
+            CancelItemRequest itemRequest = new CancelItemRequest(
+                    1L, "테스트 상품", 2, new BigDecimal("10000")
+            );
+            CreateCancelRequest request = new CreateCancelRequest(
+                    ORDER_ID, ORDER_NUMBER, CancelReason.CHANGE_OF_MIND, "단순 변심",
+                    CancelRequestType.RETURN_REFUND, List.of(itemRequest)
+            );
+
+            when(cancelRepository.existsByOrderIdAndUserIdAndStatusIn(anyLong(), anyLong(), any()))
+                    .thenReturn(false);
+            when(cancelRepository.save(any(Cancel.class))).thenAnswer(invocation -> {
+                Cancel cancel = invocation.getArgument(0);
+                ReflectionTestUtils.setField(cancel, "id", CANCEL_ID);
+                return cancel;
+            });
+            doNothing().when(outboxEventPublisher).publishCancelRequestedEvent(any());
+
+            CancelResponse response = cancelService.createCancel(USER_ID, request);
+
+            assertThat(response.getRequestType()).isEqualTo(CancelRequestType.RETURN_REFUND);
         }
 
         @Test
@@ -103,7 +130,7 @@ class CancelServiceTest {
         void createCancel_emptyItems_throwsException() {
             // given
             CreateCancelRequest request = new CreateCancelRequest(
-                    ORDER_ID, ORDER_NUMBER, CancelReason.CHANGE_OF_MIND, "단순 변심", List.of()
+                    ORDER_ID, ORDER_NUMBER, CancelReason.CHANGE_OF_MIND, "단순 변심", null, List.of()
             );
 
             // when & then
@@ -117,7 +144,7 @@ class CancelServiceTest {
         void createCancel_nullItems_throwsException() {
             // given
             CreateCancelRequest request = new CreateCancelRequest(
-                    ORDER_ID, ORDER_NUMBER, CancelReason.CHANGE_OF_MIND, "단순 변심", null
+                    ORDER_ID, ORDER_NUMBER, CancelReason.CHANGE_OF_MIND, "단순 변심", null, null
             );
 
             // when & then
@@ -133,7 +160,7 @@ class CancelServiceTest {
                     1L, "테스트 상품", 2, new BigDecimal("10000")
             );
             CreateCancelRequest request = new CreateCancelRequest(
-                    ORDER_ID, ORDER_NUMBER, CancelReason.CHANGE_OF_MIND, "단순 변심", List.of(itemRequest)
+                    ORDER_ID, ORDER_NUMBER, CancelReason.CHANGE_OF_MIND, "단순 변심", null, List.of(itemRequest)
             );
 
             when(cancelRepository.existsByOrderIdAndUserIdAndStatusIn(anyLong(), anyLong(), any()))
@@ -377,7 +404,8 @@ class CancelServiceTest {
 
     private Cancel createTestCancel(Long id, Long orderId, Long userId, String orderNumber, CancelStatus status) {
         Cancel cancel = Cancel.create(
-                orderId, orderNumber, userId, CancelReason.CHANGE_OF_MIND, "단순 변심"
+                orderId, orderNumber, userId, CancelReason.CHANGE_OF_MIND, "단순 변심",
+                CancelRequestType.ORDER_CANCEL
         );
         ReflectionTestUtils.setField(cancel, "id", id);
         ReflectionTestUtils.setField(cancel, "cancelNumber", CANCEL_NUMBER);

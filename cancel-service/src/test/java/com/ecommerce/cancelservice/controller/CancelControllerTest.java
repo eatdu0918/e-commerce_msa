@@ -6,6 +6,7 @@ import com.ecommerce.cancelservice.dto.response.CancelResponse;
 import com.ecommerce.cancelservice.dto.response.OrderCancelSummaryResponse;
 import com.ecommerce.cancelservice.dto.response.PageResponse;
 import com.ecommerce.cancelservice.enums.CancelReason;
+import com.ecommerce.cancelservice.enums.CancelRequestType;
 import com.ecommerce.cancelservice.enums.CancelStatus;
 import com.ecommerce.cancelservice.enums.UserRole;
 import com.ecommerce.cancelservice.exception.CancelDomainException;
@@ -315,6 +316,8 @@ class CancelControllerTest {
                 .cancelNumber("CAN-ABC123")
                 .status(status)
                 .statusDescription(status.getDescription())
+                .requestType(CancelRequestType.ORDER_CANCEL)
+                .requestTypeDescription(CancelRequestType.ORDER_CANCEL.getDescription())
                 .cancelReason(CancelReason.CHANGE_OF_MIND)
                 .cancelReasonDescription(CancelReason.CHANGE_OF_MIND.getDescription())
                 .cancelDetail("단순 변심으로 취소합니다.")
