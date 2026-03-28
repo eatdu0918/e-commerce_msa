@@ -1,10 +1,11 @@
 package com.ecommerce.refundservice.outbox;
 
+import com.ecommerce.refundservice.config.OutboxKafkaConfig;
 import com.ecommerce.refundservice.entity.OutboxEvent;
 import com.ecommerce.refundservice.enums.OutboxStatus;
 import com.ecommerce.refundservice.repository.OutboxEventRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -15,7 +16,6 @@ import java.util.List;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class OutboxProcessor {
 
     private static final int BATCH_SIZE = 100;
@@ -24,6 +24,13 @@ public class OutboxProcessor {
 
     private final OutboxEventRepository outboxEventRepository;
     private final KafkaTemplate<String, String> kafkaTemplate;
+
+    public OutboxProcessor(
+            OutboxEventRepository outboxEventRepository,
+            @Qualifier(OutboxKafkaConfig.OUTBOX_KAFKA_TEMPLATE) KafkaTemplate<String, String> kafkaTemplate) {
+        this.outboxEventRepository = outboxEventRepository;
+        this.kafkaTemplate = kafkaTemplate;
+    }
 
     @Scheduled(fixedDelay = 1000)
     @Transactional
