@@ -2,6 +2,9 @@ import api from '../axios';
 
 export type CancelReason = 'CHANGE_OF_MIND' | 'WRONG_ORDER' | 'DUPLICATE_ORDER' | 'PRICE_CHANGE' | 'DELIVERY_DELAY' | 'OTHER';
 
+/** 출고 전 취소 vs 배송 중/후 반품·환불 (API 미전달 시 서버에서 주문 취소로 처리) */
+export type CancelRequestType = 'ORDER_CANCEL' | 'RETURN_REFUND';
+
 export const CANCEL_REASON_LABELS: Record<CancelReason, string> = {
     CHANGE_OF_MIND: '단순 변심',
     WRONG_ORDER: '잘못된 주문',
@@ -23,6 +26,7 @@ export interface CreateCancelRequest {
     orderNumber: string;
     cancelReason: CancelReason;
     cancelDetail?: string;
+    requestType?: CancelRequestType;
     items: CancelItemRequest[];
 }
 
@@ -40,6 +44,8 @@ export interface CancelResponse {
     orderId: number;
     orderNumber: string;
     userId: number;
+    requestType?: CancelRequestType;
+    requestTypeDescription?: string;
     cancelReason: string;
     cancelDetail: string | null;
     status: string;

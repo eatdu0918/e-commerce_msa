@@ -117,6 +117,8 @@ export interface Cancel {
   orderNumber?: string;
   cancelNumber?: string;
   userId: number;
+  requestType?: string;
+  requestTypeDescription?: string;
   cancelReason: string;
   cancelReasonDescription?: string;
   cancelDetail?: string;

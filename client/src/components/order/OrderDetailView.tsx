@@ -4,12 +4,13 @@ import { CreditCard, MapPin, Package, ArrowLeft, CheckCircle2, Truck, Receipt, C
 import { getOrderDetail, getUiProgressStatus } from '../../api/services/order';
 import type { OrderDetailResponse } from '../../api/services/order';
 import { createCancel, CANCEL_REASON_LABELS } from '../../api/services/cancel';
-import type { CancelReason, CreateCancelRequest } from '../../api/services/cancel';
+import type { CancelReason, CreateCancelRequest, CancelRequestType } from '../../api/services/cancel';
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
-const CANCELLABLE_STATUSES = ['PENDING', 'CONFIRMED', 'PREPARING'];
+/** cancel-service 신청 가능: 출고 전 취소 + 배송 중/완료 후 반품·환불 */
+const CANCELLABLE_STATUSES = ['PENDING', 'CONFIRMED', 'PREPARING', 'SHIPPING', 'DELIVERED'];
 
 const FALLBACK_IMAGES = {
     watch: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=400&h=400',
@@ -107,11 +108,15 @@ export default function OrderDetailView() {
 
     const handleCancelSubmit = () => {
         if (!order) return;
+        const postShipment =
+            order.status === 'SHIPPING' || order.status === 'DELIVERED';
+        const requestType: CancelRequestType = postShipment ? 'RETURN_REFUND' : 'ORDER_CANCEL';
         const request: CreateCancelRequest = {
             orderId: order.id,
             orderNumber: order.orderNumber,
             cancelReason,
             cancelDetail: cancelDetail.trim() || undefined,
+            requestType,
             items: (order.items || []).map(item => ({
                 productId: item.productId,
                 productName: item.productName || t('orderDetail.product_unknown'),
@@ -170,6 +175,7 @@ export default function OrderDetailView() {
         CANCELLABLE_STATUSES.includes(order.status) &&
         order.status !== 'CANCEL_REQUESTED' &&
         !hasActiveCancelPipeline;
+    const isPostShipmentReturn = order.status === 'SHIPPING' || order.status === 'DELIVERED';
     const orderIsCancelled = order.status === 'CANCELLED' || progressStatus === 'CANCELLED';
     const orderItems = order.items || [];
     const headerStatusKey = (progressStatus || order.status || '').toUpperCase();
@@ -539,7 +545,9 @@ export default function OrderDetailView() {
                                 onClick={() => setShowCancelModal(true)}
                                 className="w-full mt-10 py-5 bg-white border border-stone-100 text-rose-500 rounded-[2rem] text-xs font-black uppercase tracking-widest hover:bg-rose-50 hover:border-rose-100 hover:scale-[1.02] active:scale-95 transition-all shadow-sm"
                             >
-                                {t('orderDetail.request_cancel')}
+                                {isPostShipmentReturn
+                                    ? t('orderDetail.request_return_refund')
+                                    : t('orderDetail.request_cancel')}
                             </button>
                         )}
                     </section>
@@ -555,13 +563,25 @@ export default function OrderDetailView() {
                                 <AlertCircle size={24} />
                             </div>
                             <div>
-                                <h3 className="font-black text-xl tracking-tighter uppercase italic">{t('orderDetail.cancel_title')}</h3>
-                                <p className="text-stone-400 text-[10px] font-black uppercase tracking-widest">{t('orderDetail.cancel_subtitle')}</p>
+                                <h3 className="font-black text-xl tracking-tighter uppercase italic">
+                                    {isPostShipmentReturn
+                                        ? t('orderDetail.return_refund_title')
+                                        : t('orderDetail.cancel_title')}
+                                </h3>
+                                <p className="text-stone-400 text-[10px] font-black uppercase tracking-widest">
+                                    {isPostShipmentReturn
+                                        ? t('orderDetail.return_refund_subtitle')
+                                        : t('orderDetail.cancel_subtitle')}
+                                </p>
                             </div>
                         </div>
 
                         <div className="mb-8">
-                            <label className="block text-xs font-black uppercase tracking-widest text-stone-400 mb-4">{t('orderDetail.cancel_reason_label')}</label>
+                            <label className="block text-xs font-black uppercase tracking-widest text-stone-400 mb-4">
+                                {isPostShipmentReturn
+                                    ? t('orderDetail.return_reason_label')
+                                    : t('orderDetail.cancel_reason_label')}
+                            </label>
                             <div className="space-y-2">
                                 {(Object.keys(CANCEL_REASON_LABELS) as CancelReason[]).map((value) => (
                                     <label
