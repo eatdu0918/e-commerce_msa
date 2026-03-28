@@ -12,6 +12,7 @@ import com.ecommerce.paymentservice.security.jwt.JwtTokenProvider;
 import com.ecommerce.paymentservice.service.PaymentService;
 import com.ecommerce.paymentservice.service.TokenService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -21,7 +22,10 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -30,15 +34,13 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(PaymentController.class)
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false)
 class PaymentControllerTest {
 
     private static final CustomUserDetails TEST_USER =
@@ -58,6 +60,20 @@ class PaymentControllerTest {
 
     @MockBean
     TokenService tokenService;
+
+    @AfterEach
+    void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
+    }
+
+    private static RequestPostProcessor mockUser(CustomUserDetails user) {
+        return request -> {
+            var authentication = new UsernamePasswordAuthenticationToken(
+                    user, null, user.getAuthorities());
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            return request;
+        };
+    }
 
     @Nested
     @DisplayName("POST /api/payments - 결제 생성")
@@ -82,8 +98,7 @@ class PaymentControllerTest {
 
             // when & then
             mockMvc.perform(post("/api/payments")
-                            .with(csrf())
-                            .with(user(TEST_USER))
+                            .with(mockUser(TEST_USER))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestBody))
                     .andExpect(status().isOk())
@@ -104,8 +119,7 @@ class PaymentControllerTest {
 
             // when & then
             mockMvc.perform(post("/api/payments")
-                            .with(csrf())
-                            .with(user(TEST_USER))
+                            .with(mockUser(TEST_USER))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestBody))
                     .andExpect(status().isBadRequest());
@@ -135,7 +149,7 @@ class PaymentControllerTest {
             when(paymentService.getMyPayments(anyLong(), any(Pageable.class))).thenReturn(pageResponse);
 
             // when & then
-            mockMvc.perform(get("/api/payments").with(user(TEST_USER)))
+            mockMvc.perform(get("/api/payments").with(mockUser(TEST_USER)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data.content").isArray())
@@ -156,7 +170,7 @@ class PaymentControllerTest {
             when(paymentService.getPayment(1L, 200L)).thenReturn(response);
 
             // when & then
-            mockMvc.perform(get("/api/payments/1").with(user(TEST_USER)))
+            mockMvc.perform(get("/api/payments/1").with(mockUser(TEST_USER)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data.id").value(1));
@@ -170,7 +184,7 @@ class PaymentControllerTest {
                     .thenThrow(new PaymentDomainException(PaymentDomainExceptionCode.PaymentNotFoundException));
 
             // when & then
-            mockMvc.perform(get("/api/payments/999").with(user(TEST_USER)))
+            mockMvc.perform(get("/api/payments/999").with(mockUser(TEST_USER)))
                     .andExpect(status().isNotFound());
         }
     }
@@ -188,7 +202,7 @@ class PaymentControllerTest {
             when(paymentService.getPaymentByOrderId(100L, 200L)).thenReturn(response);
 
             // when & then
-            mockMvc.perform(get("/api/payments/order/100").with(user(TEST_USER)))
+            mockMvc.perform(get("/api/payments/order/100").with(mockUser(TEST_USER)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data.orderId").value(100));
@@ -202,7 +216,7 @@ class PaymentControllerTest {
                     .thenThrow(new PaymentDomainException(PaymentDomainExceptionCode.PaymentNotFoundException));
 
             // when & then
-            mockMvc.perform(get("/api/payments/order/999").with(user(TEST_USER)))
+            mockMvc.perform(get("/api/payments/order/999").with(mockUser(TEST_USER)))
                     .andExpect(status().isNotFound());
         }
     }

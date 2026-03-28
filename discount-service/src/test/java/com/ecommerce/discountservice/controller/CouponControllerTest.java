@@ -13,6 +13,7 @@ import com.ecommerce.discountservice.service.CouponService;
 import com.ecommerce.discountservice.service.DiscountCalculationService;
 import com.ecommerce.discountservice.service.TokenService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -21,7 +22,10 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -31,15 +35,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(CouponController.class)
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false)
 class CouponControllerTest {
 
     private static final CustomUserDetails TEST_USER =
@@ -63,6 +65,20 @@ class CouponControllerTest {
     @MockBean
     TokenService tokenService;
 
+    @AfterEach
+    void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
+    }
+
+    private static RequestPostProcessor mockUser(CustomUserDetails user) {
+        return request -> {
+            var authentication = new UsernamePasswordAuthenticationToken(
+                    user, null, user.getAuthorities());
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            return request;
+        };
+    }
+
     @Nested
     @DisplayName("GET /api/coupons - 내 쿠폰 목록 조회")
     class GetMyCouponsTest {
@@ -77,7 +93,7 @@ class CouponControllerTest {
             when(couponService.getUserCoupons(anyLong())).thenReturn(List.of(coupon1, coupon2));
 
             // when & then
-            mockMvc.perform(get("/api/coupons").with(user(TEST_USER)))
+            mockMvc.perform(get("/api/coupons").with(mockUser(TEST_USER)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data").isArray())
@@ -91,7 +107,7 @@ class CouponControllerTest {
             when(couponService.getUserCoupons(anyLong())).thenReturn(List.of());
 
             // when & then
-            mockMvc.perform(get("/api/coupons").with(user(TEST_USER)))
+            mockMvc.perform(get("/api/coupons").with(mockUser(TEST_USER)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data").isArray())
@@ -112,7 +128,7 @@ class CouponControllerTest {
             when(couponService.getAvailableUserCoupons(anyLong())).thenReturn(List.of(availableCoupon));
 
             // when & then
-            mockMvc.perform(get("/api/coupons/available").with(user(TEST_USER)))
+            mockMvc.perform(get("/api/coupons/available").with(mockUser(TEST_USER)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data").isArray())
@@ -134,8 +150,7 @@ class CouponControllerTest {
 
             // when & then
             mockMvc.perform(post("/api/coupons/claim/SAVE10")
-                            .with(csrf())
-                            .with(user(TEST_USER)))
+                            .with(mockUser(TEST_USER)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data.couponCode").value("SAVE10"));
@@ -150,8 +165,7 @@ class CouponControllerTest {
 
             // when & then
             mockMvc.perform(post("/api/coupons/claim/INVALID")
-                            .with(csrf())
-                            .with(user(TEST_USER)))
+                            .with(mockUser(TEST_USER)))
                     .andExpect(status().isNotFound());
         }
 
@@ -164,8 +178,7 @@ class CouponControllerTest {
 
             // when & then
             mockMvc.perform(post("/api/coupons/claim/SAVE10")
-                            .with(csrf())
-                            .with(user(TEST_USER)))
+                            .with(mockUser(TEST_USER)))
                     .andExpect(status().isConflict());
         }
 
@@ -178,8 +191,7 @@ class CouponControllerTest {
 
             // when & then
             mockMvc.perform(post("/api/coupons/claim/SOLDOUT")
-                            .with(csrf())
-                            .with(user(TEST_USER)))
+                            .with(mockUser(TEST_USER)))
                     .andExpect(status().isBadRequest());
         }
     }
@@ -207,8 +219,7 @@ class CouponControllerTest {
 
             // when & then
             mockMvc.perform(post("/api/coupons/calculate")
-                            .with(csrf())
-                            .with(user(TEST_USER))
+                            .with(mockUser(TEST_USER))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestBody))
                     .andExpect(status().isOk())
@@ -236,8 +247,7 @@ class CouponControllerTest {
 
             // when & then
             mockMvc.perform(post("/api/coupons/calculate")
-                            .with(csrf())
-                            .with(user(TEST_USER))
+                            .with(mockUser(TEST_USER))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestBody))
                     .andExpect(status().isOk())
