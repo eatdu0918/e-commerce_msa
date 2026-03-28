@@ -30,6 +30,7 @@ public class ProductEventConsumer {
     private final StockService stockService;
     private final ObjectMapper objectMapper;
 
+    @KafkaListener(topics = "order-created", groupId = "product-service")
     @Transactional
     public void handleOrderCreated(String message) {
         log.info("Received order-created raw message: {}", message);
