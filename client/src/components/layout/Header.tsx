@@ -18,6 +18,8 @@ export default function Header({ user, onLoginClick, onLogoutClick, onCartClick,
     const { t } = useTranslation();
     const navigate = useNavigate();
 
+    const unreadNotificationCount = 0;
+
     const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
     const [userDropdownOpen, setUserDropdownOpen] = useState(false);
     const [notificationOpen, setNotificationOpen] = useState(false);
@@ -154,7 +156,9 @@ export default function Header({ user, onLoginClick, onLogoutClick, onCartClick,
                             className="p-2 hover:bg-stone-100 rounded-full transition-colors relative"
                         >
                             <Bell size={20} strokeWidth={2} />
-                            <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                            {unreadNotificationCount > 0 && (
+                                <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-red-500 rounded-full" aria-hidden />
+                            )}
                         </button>
 
                         {notificationOpen && (
