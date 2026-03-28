@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getMyOrders } from '../../api/services/order'; // Using getMyOrders as proxy for now since true Admin API might be different
+import { adminApi } from '../../api/services/admin';
 import { Eye, Search, Filter } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -8,12 +8,13 @@ export default function AdminOrderList() {
   const navigate = useNavigate();
   const [page, setPage] = useState(0);
 
-  const { data: orderData, isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['admin-orders', page],
-    queryFn: getMyOrders, // Ideally allow pagination param
+    queryFn: () => adminApi.getOrders(page, 10),
   });
 
-  const orders = orderData || [];
+  const orders = data?.data?.content || [];
+  const totalPages = data?.data?.totalPages || 0;
 
   return (
     <div>

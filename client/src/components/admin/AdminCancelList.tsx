@@ -62,7 +62,7 @@ const AdminCancelList = () => {
     );
   }
 
-  const cancels = data?.data.content || [];
+  const cancels = data?.data?.content || [];
   const pageData = data?.data;
 
   const statusOptions = ['REQUESTED', 'APPROVED', 'REJECTED', 'COMPLETED'];

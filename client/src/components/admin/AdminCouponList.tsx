@@ -80,7 +80,7 @@ const AdminCouponList = () => {
     );
   }
 
-  const coupons = data?.data.content || [];
+  const coupons = data?.data?.content || [];
   const pageData = data?.data;
 
   return (

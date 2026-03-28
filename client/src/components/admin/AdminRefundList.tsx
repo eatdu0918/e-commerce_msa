@@ -38,7 +38,7 @@ const AdminRefundList = () => {
     );
   }
 
-  const refunds = data?.data.content || [];
+  const refunds = data?.data?.content || [];
   const pageData = data?.data;
 
   const statusOptions = ['PENDING', 'COMPLETED', 'FAILED'];

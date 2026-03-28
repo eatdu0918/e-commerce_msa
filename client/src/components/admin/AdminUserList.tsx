@@ -55,7 +55,7 @@ const AdminUserList = () => {
     );
   }
 
-  const users = data?.data.content || [];
+  const users = data?.data?.content || [];
   const pageData = data?.data;
 
   return (

@@ -39,7 +39,7 @@ const AdminPaymentList = () => {
     );
   }
 
-  const payments = data?.data.content || [];
+  const payments = data?.data?.content || [];
   const pageData = data?.data;
 
   const statusOptions = ['PENDING', 'COMPLETED', 'FAILED', 'CANCELLED'];
