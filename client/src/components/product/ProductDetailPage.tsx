@@ -42,7 +42,12 @@ export default function ProductDetailPage() {
         enabled: !!id,
     });
 
-    const { data: user } = useQuery({ queryKey: ['user'], queryFn: getMyProfile, retry: false });
+    const { data: user } = useQuery({
+        queryKey: ['user'],
+        queryFn: getMyProfile,
+        retry: false,
+        enabled: !!sessionStorage.getItem('accessToken'),
+    });
 
     const { data: isFavorite } = useQuery({
         queryKey: ['wishlist-check', id],
