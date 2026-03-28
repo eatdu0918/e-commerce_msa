@@ -115,6 +115,7 @@ class CancelControllerTest {
                     .cancelId(10L)
                     .cancelNumber("CAN-X")
                     .status(CancelStatus.REQUESTED)
+                    .requestType(CancelRequestType.ORDER_CANCEL)
                     .build();
             when(cancelService.getActiveCancelForOrder(100L, 200L)).thenReturn(Optional.of(summary));
 
@@ -122,7 +123,8 @@ class CancelControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data.cancelId").value(10))
-                    .andExpect(jsonPath("$.data.status").value("REQUESTED"));
+                    .andExpect(jsonPath("$.data.status").value("REQUESTED"))
+                    .andExpect(jsonPath("$.data.requestType").value("ORDER_CANCEL"));
         }
 
         @Test

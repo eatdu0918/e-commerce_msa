@@ -183,6 +183,7 @@ public class CancelService {
                         .cancelId(c.getId())
                         .cancelNumber(c.getCancelNumber())
                         .status(c.getStatus())
+                        .requestType(c.getRequestType())
                         .build());
     }
 
@@ -197,6 +198,7 @@ public class CancelService {
                         .cancelId(c.getId())
                         .cancelNumber(c.getCancelNumber())
                         .status(c.getStatus())
+                        .requestType(c.getRequestType())
                         .build());
     }
 
@@ -207,18 +209,34 @@ public class CancelService {
         return PageResponse.from(responsePage);
     }
 
+    /**
+     * 관리자 목록: 상태·요청 유형(출고 전 취소 / 반품·환불) 조합 필터.
+     */
     @Transactional(readOnly = true)
-    public PageResponse<CancelResponse> getAllCancels(Pageable pageable) {
-        Page<Cancel> cancels = cancelRepository.findAll(pageable);
+    public PageResponse<CancelResponse> getAdminCancels(
+            CancelStatus status, CancelRequestType requestType, Pageable pageable) {
+        Page<Cancel> cancels;
+        if (status != null && requestType != null) {
+            cancels = cancelRepository.findByStatusAndRequestType(status, requestType, pageable);
+        } else if (status != null) {
+            cancels = cancelRepository.findByStatus(status, pageable);
+        } else if (requestType != null) {
+            cancels = cancelRepository.findByRequestType(requestType, pageable);
+        } else {
+            cancels = cancelRepository.findAll(pageable);
+        }
         Page<CancelResponse> responsePage = cancels.map(CancelResponse::fromWithoutItems);
         return PageResponse.from(responsePage);
     }
 
     @Transactional(readOnly = true)
+    public PageResponse<CancelResponse> getAllCancels(Pageable pageable) {
+        return getAdminCancels(null, null, pageable);
+    }
+
+    @Transactional(readOnly = true)
     public PageResponse<CancelResponse> getCancelsByStatus(CancelStatus status, Pageable pageable) {
-        Page<Cancel> cancels = cancelRepository.findByStatus(status, pageable);
-        Page<CancelResponse> responsePage = cancels.map(CancelResponse::fromWithoutItems);
-        return PageResponse.from(responsePage);
+        return getAdminCancels(status, null, pageable);
     }
 
     @Transactional(readOnly = true)

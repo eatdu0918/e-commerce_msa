@@ -1,6 +1,7 @@
 package com.ecommerce.cancelservice.repository;
 
 import com.ecommerce.cancelservice.entity.Cancel;
+import com.ecommerce.cancelservice.enums.CancelRequestType;
 import com.ecommerce.cancelservice.enums.CancelStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +19,11 @@ public interface CancelRepository extends JpaRepository<Cancel, Long> {
     Optional<Cancel> findByIdAndUserId(Long id, Long userId);
 
     Page<Cancel> findByStatus(CancelStatus status, Pageable pageable);
+
+    Page<Cancel> findByRequestType(CancelRequestType requestType, Pageable pageable);
+
+    Page<Cancel> findByStatusAndRequestType(
+            CancelStatus status, CancelRequestType requestType, Pageable pageable);
 
     @Query("SELECT c FROM Cancel c LEFT JOIN FETCH c.cancelItems WHERE c.id = :id")
     Optional<Cancel> findByIdWithItems(@Param("id") Long id);

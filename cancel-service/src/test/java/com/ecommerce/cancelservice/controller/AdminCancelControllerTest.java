@@ -38,6 +38,7 @@ import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -87,7 +88,8 @@ class AdminCancelControllerTest {
                     .last(true)
                     .build();
 
-            when(cancelService.getAllCancels(any(Pageable.class))).thenReturn(pageResponse);
+            when(cancelService.getAdminCancels(isNull(), isNull(), any(Pageable.class)))
+                    .thenReturn(pageResponse);
 
             // when & then
             mockMvc.perform(get("/api/admin/cancels"))
@@ -113,7 +115,7 @@ class AdminCancelControllerTest {
                     .last(true)
                     .build();
 
-            when(cancelService.getCancelsByStatus(eq(CancelStatus.REQUESTED), any(Pageable.class)))
+            when(cancelService.getAdminCancels(eq(CancelStatus.REQUESTED), isNull(), any(Pageable.class)))
                     .thenReturn(pageResponse);
 
             // when & then
@@ -122,6 +124,31 @@ class AdminCancelControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data.content[0].status").value("REQUESTED"));
+        }
+
+        @Test
+        @DisplayName("요청 유형별 목록 조회 성공 (반품·환불)")
+        void getAllCancels_withRequestType() throws Exception {
+            CancelResponse cancel = createCancelResponse(1L, CancelStatus.REQUESTED, CancelRequestType.RETURN_REFUND);
+
+            PageResponse<CancelResponse> pageResponse = PageResponse.<CancelResponse>builder()
+                    .content(List.of(cancel))
+                    .pageNumber(0)
+                    .pageSize(20)
+                    .totalElements(1L)
+                    .totalPages(1)
+                    .first(true)
+                    .last(true)
+                    .build();
+
+            when(cancelService.getAdminCancels(isNull(), eq(CancelRequestType.RETURN_REFUND), any(Pageable.class)))
+                    .thenReturn(pageResponse);
+
+            mockMvc.perform(get("/api/admin/cancels")
+                            .param("requestType", "RETURN_REFUND"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data.content[0].requestType").value("RETURN_REFUND"));
         }
 
         @Test
@@ -138,7 +165,8 @@ class AdminCancelControllerTest {
                     .last(true)
                     .build();
 
-            when(cancelService.getAllCancels(any(Pageable.class))).thenReturn(pageResponse);
+            when(cancelService.getAdminCancels(isNull(), isNull(), any(Pageable.class)))
+                    .thenReturn(pageResponse);
 
             // when & then
             mockMvc.perform(get("/api/admin/cancels"))
@@ -160,13 +188,15 @@ class AdminCancelControllerTest {
                     .cancelId(1L)
                     .cancelNumber("CN-1")
                     .status(CancelStatus.APPROVED)
+                    .requestType(CancelRequestType.RETURN_REFUND)
                     .build();
             when(cancelService.getActiveCancelForOrderAdmin(10L)).thenReturn(Optional.of(summary));
 
             mockMvc.perform(get("/api/admin/cancels/orders/10/active"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data.status").value("APPROVED"));
+                    .andExpect(jsonPath("$.data.status").value("APPROVED"))
+                    .andExpect(jsonPath("$.data.requestType").value("RETURN_REFUND"));
         }
 
         @Test
@@ -345,6 +375,10 @@ class AdminCancelControllerTest {
     }
 
     private CancelResponse createCancelResponse(Long id, CancelStatus status) {
+        return createCancelResponse(id, status, CancelRequestType.ORDER_CANCEL);
+    }
+
+    private CancelResponse createCancelResponse(Long id, CancelStatus status, CancelRequestType requestType) {
         CancelItemResponse item = CancelItemResponse.builder()
                 .id(1L)
                 .productId(1L)
@@ -362,8 +396,8 @@ class AdminCancelControllerTest {
                 .cancelNumber("CAN-ABC123")
                 .status(status)
                 .statusDescription(status.getDescription())
-                .requestType(CancelRequestType.ORDER_CANCEL)
-                .requestTypeDescription(CancelRequestType.ORDER_CANCEL.getDescription())
+                .requestType(requestType)
+                .requestTypeDescription(requestType.getDescription())
                 .cancelReason(CancelReason.CHANGE_OF_MIND)
                 .cancelReasonDescription(CancelReason.CHANGE_OF_MIND.getDescription())
                 .cancelDetail("단순 변심으로 취소합니다.")

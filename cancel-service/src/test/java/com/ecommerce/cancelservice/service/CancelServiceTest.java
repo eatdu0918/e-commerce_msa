@@ -245,6 +245,7 @@ class CancelServiceTest {
 
             assertThat(opt).isPresent();
             assertThat(opt.get().getStatus()).isEqualTo(CancelStatus.REQUESTED);
+            assertThat(opt.get().getRequestType()).isEqualTo(CancelRequestType.ORDER_CANCEL);
             assertThat(opt.get().getCancelNumber()).isEqualTo(testCancel.getCancelNumber());
         }
 

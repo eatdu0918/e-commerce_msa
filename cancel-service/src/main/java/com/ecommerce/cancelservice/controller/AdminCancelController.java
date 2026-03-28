@@ -4,6 +4,7 @@ import com.ecommerce.cancelservice.dto.request.RejectCancelRequest;
 import com.ecommerce.cancelservice.dto.response.CancelResponse;
 import com.ecommerce.cancelservice.dto.response.OrderCancelSummaryResponse;
 import com.ecommerce.cancelservice.dto.response.PageResponse;
+import com.ecommerce.cancelservice.enums.CancelRequestType;
 import com.ecommerce.cancelservice.enums.CancelStatus;
 import com.ecommerce.cancelservice.response.ApiResponse;
 import com.ecommerce.cancelservice.service.CancelService;
@@ -25,17 +26,14 @@ public class AdminCancelController {
 
     private final CancelService cancelService;
 
-    @Operation(summary = "전체 취소 목록 조회")
+    @Operation(summary = "취소·반품 목록 조회 (상태·요청 유형 필터)")
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<CancelResponse>>> getAllCancels(
             @RequestParam(required = false) CancelStatus status,
+            @RequestParam(required = false) CancelRequestType requestType,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        PageResponse<CancelResponse> response;
-        if (status != null) {
-            response = cancelService.getCancelsByStatus(status, pageable);
-        } else {
-            response = cancelService.getAllCancels(pageable);
-        }
+        PageResponse<CancelResponse> response =
+                cancelService.getAdminCancels(status, requestType, pageable);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

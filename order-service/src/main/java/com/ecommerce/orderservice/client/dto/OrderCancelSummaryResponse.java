@@ -12,4 +12,6 @@ public class OrderCancelSummaryResponse {
     Long cancelId;
     String cancelNumber;
     String status;
+    /** ORDER_CANCEL | RETURN_REFUND (cancel-service request_type) */
+    String requestType;
 }

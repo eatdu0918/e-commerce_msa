@@ -49,12 +49,16 @@ public class OrderDetailResponse {
     /** 진행 중 취소·반품 요청 건 ID(관리자 승인·거절 UI 연동). 없으면 null. */
     Long activeCancelId;
 
+    /** 진행 중인 취소·반품 건의 요청 유형({@code ORDER_CANCEL} | {@code RETURN_REFUND}). 없으면 null. */
+    String activeCancelRequestType;
+
     public static OrderDetailResponse from(
             OrderResponse order,
             List<OrderItemDetailResponse> items,
             PaymentInfo payment,
             String activeCancelStatus,
-            Long activeCancelId) {
+            Long activeCancelId,
+            String activeCancelRequestType) {
         String pay = payment != null ? payment.getStatus() : null;
         OrderStatus progress = OrderProgressStatusResolver.resolveForDisplayWithActiveCancel(
                 order.getStatus(), pay, activeCancelStatus);
@@ -79,6 +83,7 @@ public class OrderDetailResponse {
                 .progressStatus(progress)
                 .activeCancelStatus(activeCancelStatus)
                 .activeCancelId(activeCancelId)
+                .activeCancelRequestType(activeCancelRequestType)
                 .build();
     }
 }

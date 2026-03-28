@@ -57,7 +57,8 @@ public class OrderAggregationService {
                 enrichedItems,
                 paymentInfo,
                 statusOf(cancelSummary),
-                cancelIdOf(cancelSummary));
+                cancelIdOf(cancelSummary),
+                requestTypeOf(cancelSummary));
     }
 
     public OrderDetailResponse getOrderDetailAdmin(Long orderId) {
@@ -73,7 +74,8 @@ public class OrderAggregationService {
                 enrichedItems,
                 paymentInfo,
                 statusOf(cancelSummary),
-                cancelIdOf(cancelSummary));
+                cancelIdOf(cancelSummary),
+                requestTypeOf(cancelSummary));
     }
 
     public PageResponse<OrderResponse> getAllOrdersForAdmin(Pageable pageable) {
@@ -115,6 +117,7 @@ public class OrderAggregationService {
                 .paymentStatus(paymentStatus)
                 .activeCancelStatus(activeCancel)
                 .activeCancelId(cancelIdOf(cancelSummary))
+                .activeCancelRequestType(requestTypeOf(cancelSummary))
                 .progressStatus(OrderProgressStatusResolver.resolveForDisplayWithActiveCancel(
                         order.getStatus(), paymentStatus, activeCancel))
                 .build();
@@ -196,8 +199,16 @@ public class OrderAggregationService {
                 .paymentStatus(paymentStatus)
                 .activeCancelStatus(activeCancel)
                 .activeCancelId(cancelIdOf(cancelSummary))
+                .activeCancelRequestType(requestTypeOf(cancelSummary))
                 .progressStatus(OrderProgressStatusResolver.resolveForDisplayWithActiveCancel(
                         order.getStatus(), paymentStatus, activeCancel))
                 .build();
+    }
+
+    private static String requestTypeOf(OrderCancelSummaryResponse summary) {
+        if (summary == null || summary.getRequestType() == null || summary.getRequestType().isBlank()) {
+            return null;
+        }
+        return summary.getRequestType().trim();
     }
 }

@@ -52,6 +52,11 @@ public class OrderResponse {
     /** 집계 조회 시 진행 중 취소 건 ID. 관리자 화면에서 승인·거절 연동용. */
     Long activeCancelId;
 
+    /**
+     * 진행 중 취소 건의 요청 유형({@code ORDER_CANCEL} | {@code RETURN_REFUND}). 집계 조회 시에만 채움.
+     */
+    String activeCancelRequestType;
+
     public static OrderResponse from(Order order) {
         List<OrderItemResponse> items = order.getOrderItems().stream()
                 .map(OrderItemResponse::from)
