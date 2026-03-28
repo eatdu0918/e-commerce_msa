@@ -12,7 +12,7 @@ const AdminCancelList = () => {
   const [rejectingId, setRejectingId] = useState<number | null>(null);
   const queryClient = useQueryClient();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['admin-cancels', page, statusFilter],
     queryFn: () => adminApi.getCancels(page, 10, statusFilter || undefined),
   });
@@ -60,6 +60,14 @@ const AdminCancelList = () => {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-gray-500">{t('admin.loading')}</div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-red-500">{t('admin.error_load')}</div>
       </div>
     );
   }
@@ -154,7 +162,7 @@ const AdminCancelList = () => {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {new Date(cancel.requestedAt).toLocaleDateString(dateLocale)}
+                  {new Date(cancel.createdAt).toLocaleDateString(dateLocale)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   {cancel.status === 'REQUESTED' && (

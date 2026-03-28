@@ -82,6 +82,14 @@ const AdminCouponList = () => {
     );
   }
 
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-red-500">{t('admin.error_load')}</div>
+      </div>
+    );
+  }
+
   const coupons = data?.data?.content || [];
   const pageData = data?.data;
   const dateLocale = i18n.language.startsWith('ko') ? 'ko-KR' : undefined;
@@ -142,11 +150,11 @@ const AdminCouponList = () => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {coupon.discountType === 'PERCENTAGE'
-                    ? `${coupon.discountValue}%`
-                    : `${coupon.discountValue.toLocaleString()}${t('common.currency_won')}`}
+                    ? `${coupon.discountValue ?? 0}%`
+                    : `${coupon.discountValue?.toLocaleString() ?? '-'}${t('common.currency_won')}`}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {coupon.minimumPurchaseAmount.toLocaleString()}{t('common.currency_won')}
+                  {coupon.minimumPurchaseAmount?.toLocaleString() ?? '-'}{t('common.currency_won')}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {new Date(coupon.validFrom).toLocaleDateString(dateLocale)} ~{' '}
