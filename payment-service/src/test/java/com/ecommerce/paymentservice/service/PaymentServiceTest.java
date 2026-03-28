@@ -62,7 +62,7 @@ class PaymentServiceTest {
         void createPayment_success() {
             // given
             CreatePaymentRequest request = new CreatePaymentRequest(
-                    ORDER_ID, ORDER_NUMBER, PaymentMethod.CREDIT_CARD, AMOUNT
+                    ORDER_ID, ORDER_NUMBER, PaymentMethod.CREDIT_CARD, AMOUNT, "카드 결제"
             );
 
             when(paymentRepository.save(any(Payment.class))).thenAnswer(invocation -> {
@@ -286,7 +286,7 @@ class PaymentServiceTest {
     }
 
     private Payment createTestPayment(Long id, Long orderId, Long userId, PaymentStatus status) {
-        Payment payment = Payment.create(orderId, ORDER_NUMBER, userId, PaymentMethod.CREDIT_CARD, AMOUNT);
+        Payment payment = Payment.create(orderId, ORDER_NUMBER, userId, PaymentMethod.CREDIT_CARD, AMOUNT, "카드 결제");
         ReflectionTestUtils.setField(payment, "id", id);
         ReflectionTestUtils.setField(payment, "status", status);
         ReflectionTestUtils.setField(payment, "paymentNumber", "PAY-TEST123456");

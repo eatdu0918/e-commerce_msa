@@ -50,6 +50,7 @@ export default function PaymentSuccessPage() {
                 orderNumber: order.orderNumber,
                 paymentMethod: orderData.paymentMethod,
                 amount: order.finalAmount,
+                paymentDetails: '카드 결제 (토스페이먼츠)', // 실제 연동 시에는 승인 API 응답에서 카테고리/카드사 추출
             });
 
             // 주문 정보 삭제

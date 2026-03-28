@@ -28,6 +28,7 @@ public class PaymentResponse {
     PaymentMethod paymentMethod;
     String paymentMethodDescription;
     BigDecimal amount;
+    String paymentDetails;
     LocalDateTime paidAt;
     LocalDateTime failedAt;
     String failureReason;
@@ -44,8 +45,9 @@ public class PaymentResponse {
                 .status(payment.getStatus())
                 .statusDescription(payment.getStatus().getDescription())
                 .paymentMethod(payment.getPaymentMethod())
-                .paymentMethodDescription(payment.getPaymentMethod().getDescription())
+                .paymentMethodDescription(payment.getPaymentMethod() != null ? payment.getPaymentMethod().getDescription() : null)
                 .amount(payment.getAmount())
+                .paymentDetails(payment.getPaymentDetails())
                 .paidAt(payment.getPaidAt())
                 .failedAt(payment.getFailedAt())
                 .failureReason(payment.getFailureReason())

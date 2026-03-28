@@ -5,6 +5,7 @@ export interface PaymentResponse {
     orderId: number;
     userId: number;
     paymentMethod: string;
+    paymentDetails?: string;
     payAmount: number;
     status: string;
     statusDescription: string;
@@ -18,6 +19,7 @@ export interface CreatePaymentRequest {
     orderNumber: string;
     paymentMethod: string;
     amount: number;
+    paymentDetails?: string;
 }
 
 export interface PageResponse<T> {

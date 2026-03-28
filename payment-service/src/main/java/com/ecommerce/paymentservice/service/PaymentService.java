@@ -31,7 +31,8 @@ public class PaymentService {
                 request.getOrderNumber(),
                 userId,
                 request.getPaymentMethod(),
-                request.getAmount()
+                request.getAmount(),
+                request.getPaymentDetails()
         );
 
         Payment savedPayment = paymentRepository.save(payment);

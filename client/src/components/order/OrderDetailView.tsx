@@ -342,7 +342,9 @@ export default function OrderDetailView() {
                                             {(order.payment?.paymentMethod || 'PAY').substring(0, 2).toUpperCase()}
                                         </div>
                                         <div>
-                                            <p className="text-xs font-black uppercase tracking-tighter text-stone-900">{order.payment?.paymentMethod || '결제 수단 정보 없음'}</p>
+                                            <p className="text-xs font-black uppercase tracking-tighter text-stone-900">
+                                                {order.payment?.paymentDetails || order.payment?.paymentMethod || '결제 수단 정보 없음'}
+                                            </p>
                                             <p className="text-[10px] text-stone-400 font-bold uppercase">{order.payment?.status}</p>
                                         </div>
                                     </div>

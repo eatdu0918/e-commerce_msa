@@ -59,6 +59,9 @@ public class Payment extends BaseEntity {
     @Column(nullable = false, precision = 12, scale = 2)
     BigDecimal amount;
 
+    @Column(name = "payment_details", length = 100)
+    String paymentDetails;
+
     @Column(name = "paid_at")
     LocalDateTime paidAt;
 
@@ -69,7 +72,7 @@ public class Payment extends BaseEntity {
     String failureReason;
 
     public static Payment create(Long orderId, String orderNumber, Long userId,
-                                  PaymentMethod paymentMethod, BigDecimal amount) {
+                                  PaymentMethod paymentMethod, BigDecimal amount, String paymentDetails) {
         return Payment.builder()
                 .orderId(orderId)
                 .orderNumber(orderNumber)
@@ -77,6 +80,7 @@ public class Payment extends BaseEntity {
                 .paymentNumber(generatePaymentNumber())
                 .paymentMethod(paymentMethod)
                 .amount(amount)
+                .paymentDetails(paymentDetails)
                 .build();
     }
 

@@ -21,5 +21,6 @@ public class PaymentInfo {
     String status;
     BigDecimal amount;
     String paymentMethod;
+    String paymentDetails;
     LocalDateTime paidAt;
 }

@@ -54,6 +54,7 @@ export interface OrderDetailResponse extends OrderResponse {
     payment?: {
         paymentId: number;
         paymentMethod: string;
+        paymentDetails?: string;
         payAmount: number;
         status: string;
         paidAt: string;
