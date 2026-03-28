@@ -15,7 +15,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 512M
     healthcheck:
       test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
       interval: 10s
@@ -38,7 +38,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 512M
     healthcheck:
       test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
       interval: 10s
@@ -61,7 +61,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 512M
     healthcheck:
       test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
       interval: 10s
@@ -84,7 +84,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 512M
     healthcheck:
       test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
       interval: 10s
@@ -107,7 +107,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 512M
     healthcheck:
       test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
       interval: 10s
@@ -130,7 +130,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 512M
     healthcheck:
       test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
       interval: 10s
@@ -153,7 +153,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 512M
     healthcheck:
       test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
       interval: 10s
@@ -327,6 +327,8 @@ services:
       SPRING_DATA_REDIS_PORT: 6379
       KAFKA_SERVERS: kafka:29092
       JWT_SECRET: your-256-bit-secret-key-here-minimum-32-characters-required
+      PRODUCT_SERVICE_URL: http://product-service:8081
+      PAYMENT_SERVICE_URL: http://payment-service:8084
     depends_on:
       order-mysql:
         condition: service_healthy
@@ -334,6 +336,10 @@ services:
         condition: service_healthy
       kafka:
         condition: service_healthy
+      product-service:
+        condition: service_started
+      payment-service:
+        condition: service_started
     deploy:
       resources:
         limits:
