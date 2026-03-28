@@ -24,7 +24,7 @@ export default function AdminLayout() {
 
   useEffect(() => {
     const userRole = sessionStorage.getItem('role');
-    if (userRole !== 'ROLE_ADMIN') {
+    if (userRole !== 'ADMIN') {
       alert('관리자 권한이 필요합니다.');
       navigate('/');
     }

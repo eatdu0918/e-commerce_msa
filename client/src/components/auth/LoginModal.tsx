@@ -41,6 +41,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess, onSignupCl
 
             const userProfile = await getMyProfile();
             sessionStorage.setItem('user', JSON.stringify(userProfile));
+            sessionStorage.setItem('role', userProfile.role);
 
             onLoginSuccess();
             onClose();

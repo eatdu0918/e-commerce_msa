@@ -131,6 +131,11 @@ export default function CheckoutPage() {
         }
     }, [finalAmount]);
 
+    // 단계(step)가 변경될 때 에러 메시지 초기화
+    useEffect(() => {
+        setError('');
+    }, [step]);
+
     const handlePayment = async () => {
         if (!shippingAddress.trim() || !recipientName.trim() || !recipientPhone.trim()) {
             setError('배송 정보를 모두 입력해주세요.');
