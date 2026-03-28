@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ShoppingBag, ChevronRight, Package, Truck, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { getMyOrders, getUiProgressStatus } from '../../api/services/order';
+import { getEffectiveCancelRequestTypeForDisplay, getMyOrders, getUiProgressStatus } from '../../api/services/order';
 import type { OrderItemResponse, OrderResponse } from '../../api/services/order';
 import { useTranslation } from 'react-i18next';
 import { formatDateTime, getEstimatedArrivalDate } from '../../utils/date';
@@ -108,6 +108,12 @@ export default function OrderListView() {
                     {orders.map((order: OrderResponse) => {
                         const displayStatus = getUiProgressStatus(order);
                         const theme = STATUS_THEME[displayStatus] || STATUS_THEME.PENDING;
+                        const effectiveRt = getEffectiveCancelRequestTypeForDisplay(order);
+                        const statusLabelKey =
+                            displayStatus === 'CANCEL_REQUESTED' &&
+                            (effectiveRt ?? '').toUpperCase() === 'RETURN_REFUND'
+                                ? 'RETURN_REFUND_REQUESTED_LIST'
+                                : theme.labelKey;
                         const StatusIcon = theme.icon;
                         const items = order.items || [];
                         const firstItem = items.length > 0 ? items[0] : null;
@@ -129,7 +135,7 @@ export default function OrderListView() {
                                         </div>
                                         <div>
                                             <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${theme.color}`}>
-                                                {t(`orderStatus.${theme.labelKey}`)}
+                                                {t(`orderStatus.${statusLabelKey}`)}
                                             </span>
                                             <div className="flex items-center gap-3 mt-1">
                                                 <span className="text-sm font-black text-stone-900">

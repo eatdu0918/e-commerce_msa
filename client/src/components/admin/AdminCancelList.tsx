@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { adminApi, type Cancel } from '../../api/services/admin';
 import { ChevronLeft, ChevronRight, Check, X, Eye } from 'lucide-react';
 
+export type AdminCancelListCategory = 'ORDER_CANCEL' | 'RETURN_REFUND';
+
 function normalizeCancelStatus(raw: unknown): string {
   if (raw == null) return '';
   if (typeof raw === 'string') return raw.toUpperCase();
@@ -14,7 +16,11 @@ function normalizeCancelStatus(raw: unknown): string {
   return String(raw).toUpperCase();
 }
 
-const AdminCancelList = () => {
+export interface AdminCancelListProps {
+  category: AdminCancelListCategory;
+}
+
+const AdminCancelList = ({ category }: AdminCancelListProps) => {
   const { t, i18n } = useTranslation();
   const [page, setPage] = useState(0);
   const [statusFilter, setStatusFilter] = useState('');
@@ -22,10 +28,12 @@ const AdminCancelList = () => {
   const [rejectingId, setRejectingId] = useState<number | null>(null);
   const [detailId, setDetailId] = useState<number | null>(null);
   const queryClient = useQueryClient();
+  const isReturns = category === 'RETURN_REFUND';
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['admin-cancels', page, statusFilter],
-    queryFn: () => adminApi.getCancels(page, 10, statusFilter || undefined),
+    queryKey: ['admin-cancels', category, page, statusFilter],
+    queryFn: () =>
+      adminApi.getCancels(page, 10, statusFilter || undefined, category),
   });
 
   const {
@@ -69,7 +77,7 @@ const AdminCancelList = () => {
   });
 
   const handleApprove = (id: number) => {
-    if (window.confirm(t('admin.confirm_approve'))) {
+    if (window.confirm(isReturns ? t('admin.confirm_approve_return') : t('admin.confirm_approve'))) {
       approveMutation.mutate(id);
     }
   };
@@ -104,12 +112,19 @@ const AdminCancelList = () => {
   const statusOptions = ['REQUESTED', 'APPROVED', 'REJECTED', 'COMPLETED'];
   const dateLocale = i18n.language.startsWith('ko') ? 'ko-KR' : undefined;
 
+  const pageTitle = isReturns ? t('admin.returns_title') : t('admin.cancels_title');
+  const pageSubtitle = isReturns ? t('admin.returns_subtitle') : t('admin.cancels_subtitle');
+  const emptyMessage = isReturns ? t('admin.empty_returns') : t('admin.empty_cancels');
+  const detailTitle = isReturns ? t('admin.return_detail_title') : t('admin.cancel_detail_title');
+  const rejectModalTitle = isReturns ? t('admin.return_reject_modal_title') : t('admin.reject_modal_title');
+
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">{t('admin.cancels_title')}</h2>
-          <p className="text-gray-600 mt-1">
+          <h2 className="text-2xl font-bold text-gray-900">{pageTitle}</h2>
+          <p className="text-gray-600 mt-1">{pageSubtitle}</p>
+          <p className="text-gray-500 text-sm mt-1">
             {t('admin.total_items', { count: pageData?.totalElements || 0 })}
           </p>
         </div>
@@ -144,7 +159,7 @@ const AdminCancelList = () => {
                 {t('admin.user_id')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                {t('admin.cancel_reason')}
+                {isReturns ? t('admin.return_reason') : t('admin.cancel_reason')}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                 {t('admin.status')}
@@ -161,85 +176,83 @@ const AdminCancelList = () => {
             {cancels.length === 0 && (
               <tr>
                 <td colSpan={7} className="px-6 py-12 text-center text-sm text-gray-500">
-                  {t('admin.empty_cancels')}
+                  {emptyMessage}
                 </td>
               </tr>
             )}
             {cancels.map((cancel: Cancel) => {
               const st = normalizeCancelStatus(cancel.status);
               return (
-              <tr key={cancel.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  #{cancel.id}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  #{cancel.orderId}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {cancel.userId}
-                </td>
-                <td className="px-6 py-4 text-sm text-gray-900 max-w-md">
-                  <p className="font-medium text-gray-900">
-                    {cancel.cancelReasonDescription || cancel.cancelReason}
-                  </p>
-                  {cancel.cancelDetail ? (
-                    <p className="mt-1 text-gray-600 text-xs whitespace-pre-wrap wrap-break-word line-clamp-3">
-                      {cancel.cancelDetail}
+                <tr key={cancel.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    #{cancel.id}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    #{cancel.orderId}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{cancel.userId}</td>
+                  <td className="px-6 py-4 text-sm text-gray-900 max-w-md">
+                    <p className="font-medium text-gray-900">
+                      {cancel.cancelReasonDescription || cancel.cancelReason}
                     </p>
-                  ) : null}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span
-                    className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      st === 'APPROVED'
-                        ? 'bg-green-100 text-green-800'
-                        : st === 'REJECTED'
-                        ? 'bg-red-100 text-red-800'
-                        : st === 'COMPLETED'
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}
-                  >
-                    {st || cancel.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {new Date(cancel.createdAt).toLocaleDateString(dateLocale)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center space-x-2">
-                    <button
-                      type="button"
-                      onClick={() => setDetailId(cancel.id)}
-                      className="p-2 text-gray-600 hover:bg-gray-100 rounded"
-                      title={t('admin.cancel_detail')}
+                    {cancel.cancelDetail ? (
+                      <p className="mt-1 text-gray-600 text-xs whitespace-pre-wrap wrap-break-word line-clamp-3">
+                        {cancel.cancelDetail}
+                      </p>
+                    ) : null}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span
+                      className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        st === 'APPROVED'
+                          ? 'bg-green-100 text-green-800'
+                          : st === 'REJECTED'
+                            ? 'bg-red-100 text-red-800'
+                            : st === 'COMPLETED'
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-yellow-100 text-yellow-800'
+                      }`}
                     >
-                      <Eye className="w-4 h-4" />
-                    </button>
-                    {st === 'REQUESTED' && (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => handleApprove(cancel.id)}
-                          className="p-2 text-green-600 hover:bg-green-50 rounded"
-                          title={t('admin.approve_title')}
-                        >
-                          <Check className="w-4 h-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setRejectingId(cancel.id)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded"
-                          title={t('admin.reject_title')}
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            );
+                      {st || cancel.status}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {new Date(cancel.createdAt).toLocaleDateString(dateLocale)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center space-x-2">
+                      <button
+                        type="button"
+                        onClick={() => setDetailId(cancel.id)}
+                        className="p-2 text-gray-600 hover:bg-gray-100 rounded"
+                        title={t('admin.cancel_detail')}
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      {st === 'REQUESTED' && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleApprove(cancel.id)}
+                            className="p-2 text-green-600 hover:bg-green-50 rounded"
+                            title={t('admin.approve_title')}
+                          >
+                            <Check className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setRejectingId(cancel.id)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded"
+                            title={t('admin.reject_title')}
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              );
             })}
           </tbody>
         </table>
@@ -279,8 +292,12 @@ const AdminCancelList = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">{t('admin.cancel_detail_title')}</h3>
-              <button type="button" onClick={() => setDetailId(null)} aria-label={t('admin.cancel_detail_close')}>
+              <h3 className="text-lg font-semibold">{detailTitle}</h3>
+              <button
+                type="button"
+                onClick={() => setDetailId(null)}
+                aria-label={t('admin.cancel_detail_close')}
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -311,7 +328,9 @@ const AdminCancelList = () => {
                   </span>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-gray-500 uppercase mb-1">{t('admin.cancel_reason')}</p>
+                  <p className="text-xs font-medium text-gray-500 uppercase mb-1">
+                    {isReturns ? t('admin.return_reason') : t('admin.cancel_reason')}
+                  </p>
                   <p className="text-gray-900">{detail.cancelReasonDescription || detail.cancelReason}</p>
                 </div>
                 <div>
@@ -322,12 +341,14 @@ const AdminCancelList = () => {
                 </div>
                 {detail.rejectedReason ? (
                   <div>
-                    <p className="text-xs font-medium text-gray-500 uppercase mb-1">{t('admin.reject_modal_title')}</p>
+                    <p className="text-xs font-medium text-gray-500 uppercase mb-1">{rejectModalTitle}</p>
                     <p className="text-gray-900 whitespace-pre-wrap">{detail.rejectedReason}</p>
                   </div>
                 ) : null}
                 <div>
-                  <p className="text-xs font-medium text-gray-500 uppercase mb-1">{t('admin.cancel_items_title')}</p>
+                  <p className="text-xs font-medium text-gray-500 uppercase mb-1">
+                    {isReturns ? t('admin.return_items_title') : t('admin.cancel_items_title')}
+                  </p>
                   {detail.items && detail.items.length > 0 ? (
                     <ul className="border border-gray-200 rounded-lg divide-y divide-gray-100">
                       {detail.items.map((item) => (
@@ -366,8 +387,8 @@ const AdminCancelList = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">{t('admin.reject_modal_title')}</h3>
-              <button onClick={() => setRejectingId(null)}>
+              <h3 className="text-lg font-semibold">{rejectModalTitle}</h3>
+              <button type="button" onClick={() => setRejectingId(null)}>
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -379,12 +400,14 @@ const AdminCancelList = () => {
             />
             <div className="flex space-x-3 mt-4">
               <button
+                type="button"
                 onClick={() => setRejectingId(null)}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
               >
                 {t('admin.cancel_btn')}
               </button>
               <button
+                type="button"
                 onClick={() => handleReject(rejectingId)}
                 className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
               >

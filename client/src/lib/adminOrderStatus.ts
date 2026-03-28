@@ -111,12 +111,17 @@ export function adminDisplayStatusLabel(
 export function orderStatusHeadlineLabel(
   t: (key: string) => string,
   displayStatusKey: string,
-  paymentStatus?: string | null
+  paymentStatus?: string | null,
+  activeCancelRequestType?: string | null
 ): string {
   const s = (displayStatusKey || '').toUpperCase();
   const pay = (paymentStatus ?? '').trim().toUpperCase();
   if (s === 'CANCELLED' && pay === 'REFUNDED') {
     return t('paymentHistory.status_REFUNDED');
+  }
+  const rt = (activeCancelRequestType ?? '').trim().toUpperCase();
+  if (s === 'CANCEL_REQUESTED' && rt === 'RETURN_REFUND') {
+    return t('orderStatus.RETURN_REFUND_REQUESTED_DETAIL');
   }
   return adminDisplayStatusLabel(t, displayStatusKey);
 }

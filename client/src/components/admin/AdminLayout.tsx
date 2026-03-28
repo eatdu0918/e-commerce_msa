@@ -12,6 +12,7 @@ import {
   Ticket,
   XCircle,
   RotateCcw,
+  PackageX,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useScrollLock } from '../../hooks/useScrollLock';
@@ -53,6 +54,7 @@ export default function AdminLayout() {
     { icon: CreditCard, label: t('admin.nav_payments'), path: '/admin/payments' },
     { icon: Ticket, label: t('admin.nav_coupons'), path: '/admin/coupons' },
     { icon: XCircle, label: t('admin.nav_cancels'), path: '/admin/cancels' },
+    { icon: PackageX, label: t('admin.nav_returns'), path: '/admin/returns' },
     { icon: RotateCcw, label: t('admin.nav_refunds'), path: '/admin/refunds' },
   ];
 

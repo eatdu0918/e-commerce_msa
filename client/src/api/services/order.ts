@@ -37,6 +37,9 @@ export interface OrderResponse {
     progressStatus?: string | null;
     /** 목록 API에서 결제 서비스와 통합 조회 시에만 설정 */
     paymentStatus?: string | null;
+    /** 진행 중 취소 건 요청 유형: ORDER_CANCEL | RETURN_REFUND */
+    /** 목록·상세 집계 시 cancel-service 요약 기준 */
+    activeCancelRequestType?: string | null;
     statusDescription: string;
     totalAmount: number;
     discountAmount: number;
@@ -76,6 +79,22 @@ export interface PageResponse<T> {
     totalElements: number;
     totalPages: number;
     last: boolean;
+}
+
+/**
+ * 진행 중 취소·반품 건의 표시용 요청 유형. 서버가 `activeCancelRequestType`을 주면 우선하고,
+ * 구버전 API에서는 취소 직전 상태가 배송 완료면 반품·환불로 간주한다.
+ */
+export function getEffectiveCancelRequestTypeForDisplay(order: {
+    activeCancelRequestType?: string | null;
+    statusBeforeCancelRequest?: string | null;
+}): string | null {
+    const raw = (order.activeCancelRequestType ?? '').trim();
+    if (raw) return raw;
+    if ((order.statusBeforeCancelRequest ?? '').toUpperCase() === 'DELIVERED') {
+        return 'RETURN_REFUND';
+    }
+    return null;
 }
 
 /** API `progressStatus`를 우선하고, 없을 때만 결제 정보로 보조(구버전·캐시 대비). */

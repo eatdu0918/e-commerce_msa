@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { formatDateTime, getEstimatedArrivalDate } from '../../utils/date';
 import { CreditCard, MapPin, Package, ArrowLeft, CheckCircle2, Truck, Receipt, Calendar, Info, ChevronRight, AlertCircle } from 'lucide-react';
-import { getOrderDetail, getUiProgressStatus } from '../../api/services/order';
+import { getEffectiveCancelRequestTypeForDisplay, getOrderDetail, getUiProgressStatus } from '../../api/services/order';
 import type { OrderDetailResponse } from '../../api/services/order';
 import { createCancel, CANCEL_REASON_LABELS } from '../../api/services/cancel';
 import type { CancelReason, CreateCancelRequest, CancelRequestType } from '../../api/services/cancel';
@@ -146,6 +146,7 @@ export default function OrderDetailView() {
     }
 
     const progressStatus = getUiProgressStatus(order);
+    const effectiveCancelRequestType = getEffectiveCancelRequestTypeForDisplay(order);
     const isCancelledFlow = ['CANCELLED', 'CANCEL_REQUESTED'].includes(
         (progressStatus || order.status || '').toUpperCase()
     );
@@ -174,8 +175,12 @@ export default function OrderDetailView() {
     const orderItems = order.items || [];
     const headerStatusKey = (progressStatus || order.status || '').toUpperCase();
     const headlineStatusLabel =
-        orderStatusHeadlineLabel(t, headerStatusKey, order.payment?.status) ||
-        order.statusDescription;
+        orderStatusHeadlineLabel(
+            t,
+            headerStatusKey,
+            order.payment?.status,
+            effectiveCancelRequestType
+        ) || order.statusDescription;
 
     return (
         <div className="max-w-5xl mx-auto px-4 py-12">
@@ -221,9 +226,15 @@ export default function OrderDetailView() {
                         <AlertCircle size={22} />
                     </div>
                     <div>
-                        <p className="text-sm font-black uppercase tracking-tight">{t('orderDetail.cancel_pending_notice')}</p>
+                        <p className="text-sm font-black uppercase tracking-tight">
+                            {(effectiveCancelRequestType ?? '').toUpperCase() === 'RETURN_REFUND'
+                                ? t('orderDetail.return_pending_notice')
+                                : t('orderDetail.cancel_pending_notice')}
+                        </p>
                         <p className="mt-1 text-xs font-medium leading-relaxed text-amber-900/80">
-                            {t('orderDetail.cancel_pending_hint')}
+                            {(effectiveCancelRequestType ?? '').toUpperCase() === 'RETURN_REFUND'
+                                ? t('orderDetail.return_pending_hint')
+                                : t('orderDetail.cancel_pending_hint')}
                         </p>
                     </div>
                 </div>

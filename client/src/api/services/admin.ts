@@ -27,6 +27,9 @@ export interface Order {
   activeCancelStatus?: string | null;
   /** 진행 중 취소 건 ID(관리자 승인·거절) */
   activeCancelId?: number | null;
+  /** ORDER_CANCEL | RETURN_REFUND */
+  activeCancelRequestType?: string | null;
+  statusBeforeCancelRequest?: string | null;
   recipientName: string;
   createdAt: string;
   updatedAt: string;
@@ -53,6 +56,8 @@ export interface OrderDetail {
   progressStatus?: string | null;
   activeCancelStatus?: string | null;
   activeCancelId?: number | null;
+  /** ORDER_CANCEL | RETURN_REFUND */
+  activeCancelRequestType?: string | null;
   /** 취소 요청 직전 주문 상태(예: SHIPPING 차단 판별) */
   statusBeforeCancelRequest?: string | null;
 }
@@ -364,11 +369,19 @@ export const adminApi = {
     return response.data;
   },
 
-  // Cancels
-  getCancels: async (page = 0, size = 10, status?: string) => {
-    const statusParam = status ? `&status=${status}` : '';
+  // Cancels / Returns (동일 API, requestType으로 구분)
+  getCancels: async (
+    page = 0,
+    size = 10,
+    status?: string,
+    requestType?: 'ORDER_CANCEL' | 'RETURN_REFUND'
+  ) => {
+    const statusParam = status ? `&status=${encodeURIComponent(status)}` : '';
+    const typeParam = requestType
+      ? `&requestType=${encodeURIComponent(requestType)}`
+      : '';
     const response = await api.get<ApiResponse<PageResponse<Cancel>>>(
-      `/api/admin/cancels?page=${page}&size=${size}${statusParam}`
+      `/api/admin/cancels?page=${page}&size=${size}${statusParam}${typeParam}`
     );
     return response.data;
   },

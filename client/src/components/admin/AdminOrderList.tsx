@@ -8,6 +8,7 @@ import {
   adminNextTargetLabel,
   getNextAdminOrderStatus,
 } from '../../lib/adminOrderStatus';
+import { getEffectiveCancelRequestTypeForDisplay } from '../../api/services/order';
 import { Eye, Search, Filter, ChevronLeft, ChevronRight, ChevronRightCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -144,7 +145,12 @@ export default function AdminOrderList() {
                                     : 'bg-blue-100 text-blue-800'
                         }`}
                       >
-                        {orderStatusHeadlineLabel(t, displayStatus, order.paymentStatus)}
+                        {orderStatusHeadlineLabel(
+                          t,
+                          displayStatus,
+                          order.paymentStatus,
+                          getEffectiveCancelRequestTypeForDisplay(order)
+                        )}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">

@@ -12,6 +12,7 @@ import {
   isAdminFulfillmentAdvanceBlocked,
   orderStatusHeadlineLabel,
 } from '../../lib/adminOrderStatus';
+import { getEffectiveCancelRequestTypeForDisplay } from '../../api/services/order';
 import { ArrowLeft, Check, Package, Truck, CircleDot, X } from 'lucide-react';
 
 export default function AdminOrderDetail() {
@@ -202,7 +203,12 @@ export default function AdminOrderDetail() {
               {t('admin.status')}
             </p>
             <p className="text-lg font-semibold text-stone-900">
-              {orderStatusHeadlineLabel(t, displayKey, payStatus)}
+              {orderStatusHeadlineLabel(
+                t,
+                displayKey,
+                payStatus,
+                getEffectiveCancelRequestTypeForDisplay(order)
+              )}
             </p>
             {order.activeCancelStatus && paymentNorm !== 'REFUNDED' && (
               <p className="text-xs text-amber-800 bg-amber-50 px-2 py-1 rounded-md inline-block">
@@ -237,7 +243,11 @@ export default function AdminOrderDetail() {
                 {t('admin.reject_title')}
               </button>
               <Link
-                to="/admin/cancels"
+                to={
+                  getEffectiveCancelRequestTypeForDisplay(order) === 'RETURN_REFUND'
+                    ? '/admin/returns'
+                    : '/admin/cancels'
+                }
                 className="text-sm text-amber-900 underline underline-offset-2 ml-1"
               >
                 {t('admin.order_cancel_open_list')}

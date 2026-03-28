@@ -108,7 +108,8 @@ function App() {
           <Route path="orders/:id" element={<AdminOrderDetail />} />
           <Route path="payments" element={<AdminPaymentList />} />
           <Route path="coupons" element={<AdminCouponList />} />
-          <Route path="cancels" element={<AdminCancelList />} />
+          <Route path="cancels" element={<AdminCancelList category="ORDER_CANCEL" />} />
+          <Route path="returns" element={<AdminCancelList category="RETURN_REFUND" />} />
           <Route path="refunds" element={<AdminRefundList />} />
         </Route>
 
