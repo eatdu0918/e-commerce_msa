@@ -159,6 +159,10 @@ export default function OrderDetailView() {
         progressStatus,
         STATUS_STEPS.length
     );
+    const stepperLineThroughIndex =
+        stepperPulseAt != null
+            ? Math.max(stepperCompletedThrough, stepperPulseAt)
+            : stepperCompletedThrough;
     const blockingCancelStatuses = ['REQUESTED', 'APPROVED', 'COMPLETED'];
     const hasActiveCancelPipeline =
         !!order.activeCancelStatus && blockingCancelStatuses.includes(order.activeCancelStatus);
@@ -229,31 +233,43 @@ export default function OrderDetailView() {
                             <div 
                                 className="h-full bg-black transition-all duration-1000 ease-out" 
                                 style={{
-                                    width: `${(stepperCompletedThrough / Math.max(1, STATUS_STEPS.length - 1)) * 100}%`,
+                                    width: `${(stepperLineThroughIndex / Math.max(1, STATUS_STEPS.length - 1)) * 100}%`,
                                 }}
                             />
                         </div>
 
                         {STATUS_STEPS.map((step, index) => {
                             const isCompleted = index <= stepperCompletedThrough;
-                            const isPulsing = stepperPulseAt !== null && index === stepperPulseAt;
+                            const isCurrent = stepperPulseAt !== null && index === stepperPulseAt;
                             const Icon = step.icon;
+
+                            const iconClass =
+                                isCompleted
+                                    ? `bg-black text-white shadow-lg shadow-black/20${
+                                          isCurrent ? ' ring-4 ring-black/10 scale-110' : ''
+                                      }`
+                                    : isCurrent
+                                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30 ring-4 ring-blue-500/30 scale-110'
+                                      : 'bg-stone-50 text-stone-300';
+
+                            const labelClass =
+                                isCompleted
+                                    ? 'text-black'
+                                    : isCurrent
+                                      ? 'text-blue-700'
+                                      : 'text-stone-300';
 
                             return (
                                 <div key={step.key} className="flex sm:flex-col items-center gap-4 sm:gap-3 flex-1 relative z-10 w-full sm:w-auto">
-                                    <div className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-500 ${
-                                        isCompleted ? 'bg-black text-white shadow-lg shadow-black/20' : 'bg-stone-50 text-stone-300'
-                                    } ${isPulsing ? 'ring-4 ring-black/5 scale-110' : ''}`}>
+                                    <div className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-500 ${iconClass}`}>
                                         <Icon size={index === 4 && isCompleted ? 20 : 18} />
                                     </div>
                                     <div className="flex flex-col sm:items-center">
-                                        <span className={`text-[11px] font-black uppercase tracking-tighter ${
-                                            isCompleted ? 'text-black' : 'text-stone-300'
-                                        }`}>
+                                        <span className={`text-[11px] font-black uppercase tracking-tighter ${labelClass}`}>
                                             {step.label}
                                         </span>
-                                        {isPulsing && (
-                                            <span className="text-[9px] font-bold text-blue-500 animate-pulse hidden sm:block">{t('orderDetail.current_step')}</span>
+                                        {isCurrent && (
+                                            <span className="text-[9px] font-bold text-blue-600 animate-pulse">{t('orderDetail.current_step')}</span>
                                         )}
                                     </div>
                                 </div>
