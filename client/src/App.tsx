@@ -2,9 +2,10 @@ import { Routes, Route, Outlet } from 'react-router-dom';
 import RootLayout from './components/layout/RootLayout';
 import AuthGuard from './components/auth/AuthGuard';
 import { useTranslation } from 'react-i18next';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getMyProfile } from './api/services/user';
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
+import { getStoredAccessToken, isAuthStorageKey } from './lib/authStorage';
 
 // Lazy load components
 const HomePage = lazy(() => import('./components/home/HomePage'));
@@ -42,14 +43,26 @@ import ScrollToTop from './components/common/ScrollToTop';
 
 function App() {
   useTranslation();
+  const queryClient = useQueryClient();
+  const [, setAuthSyncTick] = useState(0);
 
-  // Ensuring user data is loaded for protected routes
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (!isAuthStorageKey(e.key)) return;
+      setAuthSyncTick((n) => n + 1);
+      queryClient.invalidateQueries({ queryKey: ['user'] });
+      queryClient.invalidateQueries({ queryKey: ['cart'] });
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, [queryClient]);
+
   useQuery({
     queryKey: ['user'],
     queryFn: getMyProfile,
     retry: false,
     refetchOnWindowFocus: false,
-    enabled: !!sessionStorage.getItem('accessToken'),
+    enabled: !!getStoredAccessToken(),
   });
 
   return (

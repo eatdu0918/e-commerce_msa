@@ -1,11 +1,11 @@
 import { Navigate, useLocation } from 'react-router-dom';
+import { getStoredAccessToken } from '../../lib/authStorage';
 
 interface AuthGuardProps {
     children: React.ReactNode;
 }
-
 const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
-    const token = sessionStorage.getItem('accessToken');
+    const token = getStoredAccessToken();
     const location = useLocation();
 
     if (!token) {

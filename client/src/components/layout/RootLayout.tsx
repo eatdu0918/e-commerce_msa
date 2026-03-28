@@ -12,6 +12,7 @@ import { getCart } from '../../api/services/cart';
 import { getRootCategories } from '../../api/services/category';
 import { useTranslation } from 'react-i18next';
 import { catalogCategoryName } from '../../lib/catalogLocale';
+import { AUTH_STORAGE_KEYS, clearAuthStorage, getStoredAccessToken } from '../../lib/authStorage';
 
 export default function RootLayout() {
     const { i18n } = useTranslation();
@@ -41,9 +42,9 @@ export default function RootLayout() {
         queryFn: getMyProfile,
         retry: false,
         refetchOnWindowFocus: false,
-        enabled: !!sessionStorage.getItem('accessToken'),
+        enabled: !!getStoredAccessToken(),
         initialData: () => {
-            const savedUser = sessionStorage.getItem('user');
+            const savedUser = localStorage.getItem(AUTH_STORAGE_KEYS.user);
             return savedUser ? JSON.parse(savedUser) : undefined;
         },
     });
@@ -72,9 +73,9 @@ export default function RootLayout() {
                 user={user}
                 onLoginClick={() => setIsLoginOpen(true)}
                 onLogoutClick={() => {
-                    sessionStorage.removeItem('accessToken');
-                    sessionStorage.removeItem('user');
+                    clearAuthStorage();
                     queryClient.setQueryData(['user'], null);
+                    queryClient.invalidateQueries({ queryKey: ['cart'] });
                     navigate('/');
                 }}
                 onCartClick={() => setIsCartOpen(true)}

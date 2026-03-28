@@ -1,4 +1,5 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import ErrorBoundary from '../common/ErrorBoundary';
 import {
   LayoutDashboard,
   Package,
@@ -15,6 +16,7 @@ import {
 import { useState, useEffect } from 'react';
 import { useScrollLock } from '../../hooks/useScrollLock';
 import { useTranslation } from 'react-i18next';
+import { AUTH_STORAGE_KEYS, isAuthStorageKey } from '../../lib/authStorage';
 
 export default function AdminLayout() {
   const { t } = useTranslation();
@@ -25,11 +27,20 @@ export default function AdminLayout() {
   useScrollLock(sidebarOpen);
 
   useEffect(() => {
-    const userRole = sessionStorage.getItem('role');
-    if (userRole !== 'ADMIN') {
-      alert(t('admin.need_role'));
-      navigate('/');
-    }
+    const enforceAdmin = () => {
+      const userRole = localStorage.getItem(AUTH_STORAGE_KEYS.role);
+      if (userRole !== 'ADMIN') {
+        alert(t('admin.need_role'));
+        navigate('/');
+      }
+    };
+    enforceAdmin();
+    const onStorage = (e: StorageEvent) => {
+      if (!isAuthStorageKey(e.key)) return;
+      enforceAdmin();
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
   }, [navigate, t]);
 
   const isActive = (path: string) => location.pathname === path;
@@ -124,7 +135,9 @@ export default function AdminLayout() {
       {/* Main Content */}
       <main className="flex-1 md:ml-64 p-6 pt-24 md:pt-6">
         <div className="max-w-6xl mx-auto">
-          <Outlet />
+          <ErrorBoundary key={location.pathname}>
+            <Outlet />
+          </ErrorBoundary>
         </div>
       </main>
     </div>

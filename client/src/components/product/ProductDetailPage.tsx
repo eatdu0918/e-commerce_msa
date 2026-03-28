@@ -12,6 +12,7 @@ import { getStock } from '../../api/services/stock';
 import ReviewList from '../review/ReviewList';
 import ReviewForm from '../review/ReviewForm';
 import { Helmet } from 'react-helmet-async';
+import { getStoredAccessToken } from '../../lib/authStorage';
 
 interface OutletContextType {
     openLogin: () => void;
@@ -46,7 +47,7 @@ export default function ProductDetailPage() {
         queryKey: ['user'],
         queryFn: getMyProfile,
         retry: false,
-        enabled: !!sessionStorage.getItem('accessToken'),
+        enabled: !!getStoredAccessToken(),
     });
 
     const { data: isFavorite } = useQuery({
