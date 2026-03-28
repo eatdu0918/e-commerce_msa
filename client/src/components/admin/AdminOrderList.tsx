@@ -80,7 +80,7 @@ export default function AdminOrderList() {
                         <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold mr-2">
                           U
                         </div>
-                        <span>User #{order.userId}</span>
+                        <span>{order.recipientName || `User #${order.userId}`}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 font-bold">₩{order.totalAmount.toLocaleString()}</td>

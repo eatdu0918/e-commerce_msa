@@ -18,6 +18,7 @@ export interface Order {
   userId: number;
   totalAmount: number;
   status: string;
+  recipientName: string;
   createdAt: string;
   updatedAt: string;
 }
