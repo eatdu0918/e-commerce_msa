@@ -1,10 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { getTossPayments } from '../../lib/tossPayments';
+import { digitsOnlyPhone, isValidKoreanMobile } from '../../lib/koreanPhone';
+import { parseCheckoutShippingAddress } from '../../lib/parseCheckoutShippingAddress';
 import { v4 as uuidv4 } from 'uuid';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronLeft, Tag, Truck, CreditCard, ShoppingBag, Check, Ticket } from 'lucide-react';
 import { getCart } from '../../api/services/cart';
-import type { OrderItemRequest } from '../../api/services/order';
+import { getMyOrders, type OrderItemRequest } from '../../api/services/order';
+import { getMyProfile } from '../../api/services/user';
 import { getAvailableCoupons, calculateDiscount } from '../../api/services/coupon';
 import type { UserCouponResponse, DiscountCalculationResponse } from '../../api/services/coupon';
 import AddressSearchModal from '../common/AddressSearchModal';
@@ -42,6 +45,50 @@ export default function CheckoutPage() {
         queryKey: ['coupons', 'available'],
         queryFn: getAvailableCoupons,
     });
+
+    const { data: ordersPrefillPage, isFetched: ordersPrefillFetched } = useQuery({
+        queryKey: ['orders', 'checkout-prefill'],
+        queryFn: () => getMyOrders(0, 1),
+        staleTime: 60_000,
+        retry: false,
+    });
+
+    const { data: profilePrefill, isFetched: profilePrefillFetched } = useQuery({
+        queryKey: ['profile'],
+        queryFn: getMyProfile,
+        staleTime: 60_000,
+        retry: false,
+    });
+
+    const shippingPrefillAppliedRef = useRef(false);
+
+    useEffect(() => {
+        if (shippingPrefillAppliedRef.current) return;
+        if (!ordersPrefillFetched || !profilePrefillFetched) return;
+
+        const lastOrder = ordersPrefillPage?.content?.[0];
+        const hasLastShippingInfo =
+            lastOrder &&
+            (lastOrder.recipientName?.trim() || lastOrder.recipientPhone?.trim() || lastOrder.shippingAddress?.trim());
+
+        if (hasLastShippingInfo && lastOrder) {
+            if (lastOrder.recipientName?.trim()) setRecipientName(lastOrder.recipientName);
+            if (lastOrder.recipientPhone?.trim()) setRecipientPhone(lastOrder.recipientPhone);
+            if (lastOrder.shippingAddress?.trim()) {
+                const parsed = parseCheckoutShippingAddress(lastOrder.shippingAddress);
+                if (parsed) {
+                    setZonecode(parsed.zonecode);
+                    setRoadAddress(parsed.roadAddress);
+                    setDetailAddress(parsed.detailAddress);
+                }
+            }
+        } else if (profilePrefill) {
+            if (profilePrefill.name?.trim()) setRecipientName(profilePrefill.name);
+            if (profilePrefill.phoneNumber?.trim()) setRecipientPhone(profilePrefill.phoneNumber);
+        }
+
+        shippingPrefillAppliedRef.current = true;
+    }, [ordersPrefillFetched, ordersPrefillPage, profilePrefillFetched, profilePrefill]);
 
     const items = cart?.items || [];
     const totalPrice = cart?.totalPrice || 0;
@@ -136,9 +183,21 @@ export default function CheckoutPage() {
         setError('');
     }, [step]);
 
-    const handlePayment = async () => {
+    const validateShippingStep = (): boolean => {
         if (!shippingAddress.trim() || !recipientName.trim() || !recipientPhone.trim()) {
             setError('배송 정보를 모두 입력해주세요.');
+            return false;
+        }
+        if (!isValidKoreanMobile(recipientPhone)) {
+            setError('연락처는 01012345678 또는 010-1234-5678 형식으로 입력해주세요.');
+            return false;
+        }
+        setError('');
+        return true;
+    };
+
+    const handlePayment = async () => {
+        if (!validateShippingStep()) {
             return;
         }
         if (!widgetsRef.current) {
@@ -176,7 +235,7 @@ export default function CheckoutPage() {
                 orderId: orderId,
                 orderName: items.length > 1 ? `${items[0].productName} 외 ${items.length - 1}건` : items[0].productName,
                 customerName: recipientName,
-                customerMobilePhone: recipientPhone.replace(/-/g, ''),
+                customerMobilePhone: digitsOnlyPhone(recipientPhone),
                 successUrl: `${window.location.origin}/payment/success`,
                 failUrl: `${window.location.origin}/payment/fail`,
             });
@@ -231,7 +290,8 @@ export default function CheckoutPage() {
                     <div className="w-8 h-px bg-stone-200" />
                     <button
                         onClick={() => {
-                            if (shippingAddress && recipientName && recipientPhone) setStep('payment');
+                            setError('');
+                            if (validateShippingStep()) setStep('payment');
                         }}
                         className={`flex items-center space-x-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all ${step === 'payment' ? 'bg-black text-white' : 'bg-stone-100 text-stone-400'}`}
                     >
@@ -266,7 +326,7 @@ export default function CheckoutPage() {
                                             type="tel"
                                             value={recipientPhone}
                                             onChange={(e) => setRecipientPhone(e.target.value)}
-                                            placeholder="010-0000-0000"
+                                            placeholder="01012345678 또는 010-0000-0000"
                                             className="w-full px-5 py-3.5 bg-stone-50 border border-stone-100 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-black/10 transition-all"
                                         />
                                     </div>
@@ -306,8 +366,7 @@ export default function CheckoutPage() {
                                 </div>
                                 <button
                                     onClick={() => {
-                                        if (shippingAddress && recipientName && recipientPhone) setStep('payment');
-                                        else setError('배송 정보를 모두 입력해주세요.');
+                                        if (validateShippingStep()) setStep('payment');
                                     }}
                                     className="w-full mt-8 bg-black text-white py-4 rounded-2xl text-sm font-bold hover:bg-stone-800 transition-all"
                                 >

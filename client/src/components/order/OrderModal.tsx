@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { getTossPayments } from '../../lib/tossPayments';
+import { digitsOnlyPhone, isValidKoreanMobile } from '../../lib/koreanPhone';
 import { v4 as uuidv4 } from 'uuid';
 import type { UserResponse } from '../../api/services/user';
 import type { Product } from '../../types/product';
@@ -113,6 +114,16 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
             return;
         }
 
+        if (!recipientName.trim() || !recipientPhone.trim()) {
+            setError('수령인과 연락처를 입력해주세요.');
+            return;
+        }
+
+        if (!isValidKoreanMobile(recipientPhone)) {
+            setError('연락처는 01012345678 또는 010-1234-5678 형식으로 입력해주세요.');
+            return;
+        }
+
         if (!widgetsRef.current) {
             setError('결제 위젯이 아직 준비되지 않았습니다.');
             return;
@@ -146,7 +157,7 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
                 orderId: orderId,
                 orderName: product.name,
                 customerName: recipientName,
-                customerMobilePhone: recipientPhone.replace(/-/g, ''),
+                customerMobilePhone: digitsOnlyPhone(recipientPhone),
                 successUrl: `${window.location.origin}/payment/success`,
                 failUrl: `${window.location.origin}/payment/fail`,
             });
@@ -203,7 +214,7 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
                             value={recipientPhone}
                             onChange={(e) => setRecipientPhone(e.target.value)}
                             className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-black transition-all"
-                            placeholder="010-0000-0000"
+                            placeholder="01012345678 또는 010-0000-0000"
                             required
                         />
                     </div>
