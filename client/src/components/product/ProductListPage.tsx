@@ -61,7 +61,7 @@ export default function ProductListPage() {
     };
 
     const { data: categoriesData } = useQuery({
-        queryKey: ['categories'],
+        queryKey: ['categories', 'all'],
         queryFn: getAllCategories,
         staleTime: Infinity,
         retry: false,

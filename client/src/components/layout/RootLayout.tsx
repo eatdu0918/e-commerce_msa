@@ -24,7 +24,7 @@ export default function RootLayout() {
     const [category, setCategory] = useState(t('common.category_all'));
 
     const { data: categoriesData } = useQuery({
-        queryKey: ['categories'],
+        queryKey: ['categories', 'root'],
         queryFn: getRootCategories,
         staleTime: Infinity,
         retry: false,
