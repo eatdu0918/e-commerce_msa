@@ -482,6 +482,9 @@
         "method_MOBILE_PAY": "Mobile pay"
     },
     "cancelRefund": {
+        "page_title": "Cancellations, returns & refunds",
+        "page_subtitle": "Track your order cancellations and return or refund requests in one place.",
+        "document_title": "Cancellations & returns | Sparta Shop",
         "stats_order_cancel": "Order cancellations",
         "stats_return_refund": "Returns & refunds",
         "tab_order_cancel": "Order cancel",
@@ -656,6 +659,8 @@
         "order_final": "Final amount",
         "order_items": "Line items",
         "order_active_cancel": "Active cancel: {{status}}",
+        "order_cancel_pending_panel": "Cancel/return request #{{id}} is pending approval. You can process it below.",
+        "order_cancel_open_list": "View all cancel/return requests",
         "order_dash_PENDING": "Pending",
         "order_dash_CONFIRMED": "Confirmed",
         "order_dash_PAYMENT_COMPLETED": "Paid",

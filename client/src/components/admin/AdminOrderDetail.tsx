@@ -1,17 +1,18 @@
 import { useParams, Link } from 'react-router-dom';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { adminApi } from '../../api/services/admin';
 import {
   ADMIN_FULFILLMENT_STEPS,
-  adminDisplayStatusLabel,
   adminNextTargetLabel,
   adminStepperStepLabel,
   getNextAdminOrderStatus,
   getAdminFulfillmentStepperDisplay,
   isAdminFulfillmentAdvanceBlocked,
+  orderStatusHeadlineLabel,
 } from '../../lib/adminOrderStatus';
-import { ArrowLeft, Check, Package, Truck, CircleDot } from 'lucide-react';
+import { ArrowLeft, Check, Package, Truck, CircleDot, X } from 'lucide-react';
 
 export default function AdminOrderDetail() {
   const { id } = useParams<{ id: string }>();
@@ -32,6 +33,26 @@ export default function AdminOrderDetail() {
 
   const order = wrap?.data;
 
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+
+  const activeCancelNorm = (order?.activeCancelStatus ?? '').toString().toUpperCase();
+  const actionableCancelId =
+    order?.activeCancelId != null && Number.isFinite(Number(order.activeCancelId))
+      ? Number(order.activeCancelId)
+      : null;
+  const dbStatusUpper = (order?.status ?? '').toString().toUpperCase();
+  const statusBeforeCancel = (order?.statusBeforeCancelRequest ?? '')
+    .toString()
+    .toUpperCase();
+  const cancelAdminBlockedByShipping =
+    dbStatusUpper === 'SHIPPING' ||
+    (dbStatusUpper === 'CANCEL_REQUESTED' && statusBeforeCancel === 'SHIPPING');
+  const showCancelActions =
+    activeCancelNorm === 'REQUESTED' &&
+    actionableCancelId !== null &&
+    !cancelAdminBlockedByShipping;
+
   const updateMutation = useMutation({
     mutationFn: (next: string) => adminApi.updateOrderStatus(orderId, next),
     onSuccess: () => {
@@ -43,6 +64,53 @@ export default function AdminOrderDetail() {
       alert(t('admin.order_status_update_fail'));
     },
   });
+
+  const approveCancelMutation = useMutation({
+    mutationFn: (cancelId: number) => adminApi.approveCancel(cancelId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-order-detail', orderId] });
+      queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-cancels'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-payments'] });
+      alert(t('admin.approve_ok'));
+    },
+    onError: () => {
+      alert(t('admin.approve_fail'));
+    },
+  });
+
+  const rejectCancelMutation = useMutation({
+    mutationFn: ({ cancelId, reason }: { cancelId: number; reason: string }) =>
+      adminApi.rejectCancel(cancelId, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-order-detail', orderId] });
+      queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-cancels'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-payments'] });
+      alert(t('admin.reject_ok'));
+      setRejectOpen(false);
+      setRejectReason('');
+    },
+    onError: () => {
+      alert(t('admin.reject_fail'));
+    },
+  });
+
+  const handleApproveCancel = () => {
+    if (actionableCancelId == null) return;
+    if (window.confirm(t('admin.confirm_approve'))) {
+      approveCancelMutation.mutate(actionableCancelId);
+    }
+  };
+
+  const handleRejectCancel = () => {
+    if (actionableCancelId == null) return;
+    if (!rejectReason.trim()) {
+      alert(t('admin.reject_reason_required'));
+      return;
+    }
+    rejectCancelMutation.mutate({ cancelId: actionableCancelId, reason: rejectReason.trim() });
+  };
 
   if (!Number.isFinite(orderId) || orderId <= 0) {
     return (
@@ -72,6 +140,7 @@ export default function AdminOrderDetail() {
   const dbStatus = (order.status || '').toUpperCase();
   const displayKey = (order.progressStatus || order.status || '').toUpperCase();
   const payStatus = order.payment?.status ?? null;
+  const paymentNorm = (payStatus ?? '').trim().toUpperCase();
   const blockedByCancelOrRefund = isAdminFulfillmentAdvanceBlocked({
     dbStatus: order.status,
     paymentStatus: payStatus,
@@ -133,15 +202,49 @@ export default function AdminOrderDetail() {
               {t('admin.status')}
             </p>
             <p className="text-lg font-semibold text-stone-900">
-              {adminDisplayStatusLabel(t, displayKey)}
+              {orderStatusHeadlineLabel(t, displayKey, payStatus)}
             </p>
-            {order.activeCancelStatus && (
+            {order.activeCancelStatus && paymentNorm !== 'REFUNDED' && (
               <p className="text-xs text-amber-800 bg-amber-50 px-2 py-1 rounded-md inline-block">
                 {t('admin.order_active_cancel', { status: order.activeCancelStatus })}
               </p>
             )}
           </div>
         </div>
+
+        {showCancelActions && actionableCancelId !== null && (
+          <div className="px-6 py-4 bg-amber-50/80 border-b border-amber-100">
+            <p className="text-sm text-amber-950 font-medium">
+              {t('admin.order_cancel_pending_panel', { id: actionableCancelId })}
+            </p>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={handleApproveCancel}
+                disabled={approveCancelMutation.isPending || rejectCancelMutation.isPending}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 disabled:opacity-50"
+              >
+                <Check className="w-4 h-4" />
+                {t('admin.approve_title')}
+              </button>
+              <button
+                type="button"
+                onClick={() => setRejectOpen(true)}
+                disabled={approveCancelMutation.isPending || rejectCancelMutation.isPending}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-red-200 bg-white text-red-700 text-sm font-medium hover:bg-red-50 disabled:opacity-50"
+              >
+                <X className="w-4 h-4" />
+                {t('admin.reject_title')}
+              </button>
+              <Link
+                to="/admin/cancels"
+                className="text-sm text-amber-900 underline underline-offset-2 ml-1"
+              >
+                {t('admin.order_cancel_open_list')}
+              </Link>
+            </div>
+          </div>
+        )}
 
         <div className="p-6 border-b border-stone-100 bg-stone-50/40">
           <p className="text-sm font-medium text-stone-700 mb-4">
@@ -320,6 +423,52 @@ export default function AdminOrderDetail() {
           </ul>
         </div>
       </div>
+
+      {rejectOpen && actionableCancelId !== null && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md shadow-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">{t('admin.reject_modal_title')}</h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setRejectOpen(false);
+                  setRejectReason('');
+                }}
+                aria-label={t('admin.cancel_detail_close')}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder={t('admin.reject_placeholder')}
+              className="w-full px-3 py-2 border border-stone-200 rounded-lg h-32 resize-none text-sm"
+            />
+            <div className="flex gap-3 mt-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setRejectOpen(false);
+                  setRejectReason('');
+                }}
+                className="flex-1 px-4 py-2 border border-stone-200 rounded-lg text-sm hover:bg-stone-50"
+              >
+                {t('admin.cancel_btn')}
+              </button>
+              <button
+                type="button"
+                onClick={handleRejectCancel}
+                disabled={rejectCancelMutation.isPending}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 disabled:opacity-50"
+              >
+                {t('admin.reject_btn')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

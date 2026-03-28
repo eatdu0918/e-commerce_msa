@@ -8,9 +8,12 @@ import type { CancelReason, CreateCancelRequest, CancelRequestType } from '../..
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { isCancelledOrderWithRefundComplete, orderStatusHeadlineLabel } from '../../lib/adminOrderStatus';
 
-/** cancel-service 신청 가능: 출고 전 취소 + 배송 중/완료 후 반품·환불 */
-const CANCELLABLE_STATUSES = ['PENDING', 'CONFIRMED', 'PREPARING', 'SHIPPING', 'DELIVERED'];
+/** 출고 전 주문 취소 신청 가능 상태 */
+const ORDER_CANCEL_STATUSES = ['PENDING', 'CONFIRMED', 'PREPARING'];
+/** 반품·환불(배송 완료 후) */
+const RETURN_REFUND_STATUSES = ['DELIVERED'];
 
 const FALLBACK_IMAGES = {
     watch: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&q=80&w=400&h=400',
@@ -77,19 +80,6 @@ export default function OrderDetailView() {
         [t]
     );
 
-    const statusBadgeLabel = (status: string) => {
-        const map: Record<string, string> = {
-            PENDING: t('orderStatus.PENDING'),
-            CONFIRMED: t('orderStatus.CONFIRMED_BADGE'),
-            PREPARING: t('orderStatus.PREPARING'),
-            SHIPPING: t('orderStatus.SHIPPING'),
-            DELIVERED: t('orderStatus.DELIVERED'),
-            CANCELLED: t('orderStatus.CANCELLED'),
-            CANCEL_REQUESTED: t('orderStatus.CANCEL_REQUESTED_DETAIL'),
-        };
-        return map[status];
-    };
-
     const { data: order, isLoading } = useQuery<OrderDetailResponse>({
         queryKey: ['order', orderId],
         queryFn: () => getOrderDetail(orderId),
@@ -108,9 +98,8 @@ export default function OrderDetailView() {
 
     const handleCancelSubmit = () => {
         if (!order) return;
-        const postShipment =
-            order.status === 'SHIPPING' || order.status === 'DELIVERED';
-        const requestType: CancelRequestType = postShipment ? 'RETURN_REFUND' : 'ORDER_CANCEL';
+        const postDelivered = order.status === 'DELIVERED';
+        const requestType: CancelRequestType = postDelivered ? 'RETURN_REFUND' : 'ORDER_CANCEL';
         const request: CreateCancelRequest = {
             orderId: order.id,
             orderNumber: order.orderNumber,
@@ -171,14 +160,22 @@ export default function OrderDetailView() {
     const blockingCancelStatuses = ['REQUESTED', 'APPROVED', 'COMPLETED'];
     const hasActiveCancelPipeline =
         !!order.activeCancelStatus && blockingCancelStatuses.includes(order.activeCancelStatus);
-    const canCancel =
-        CANCELLABLE_STATUSES.includes(order.status) &&
+    const canRequestOrderCancel =
+        ORDER_CANCEL_STATUSES.includes(order.status) &&
         order.status !== 'CANCEL_REQUESTED' &&
         !hasActiveCancelPipeline;
-    const isPostShipmentReturn = order.status === 'SHIPPING' || order.status === 'DELIVERED';
+    const canRequestReturnRefund =
+        RETURN_REFUND_STATUSES.includes(order.status) &&
+        order.status !== 'CANCEL_REQUESTED' &&
+        !hasActiveCancelPipeline;
+    const canCancel = canRequestOrderCancel || canRequestReturnRefund;
+    const isPostShipmentReturn = order.status === 'DELIVERED';
     const orderIsCancelled = order.status === 'CANCELLED' || progressStatus === 'CANCELLED';
     const orderItems = order.items || [];
     const headerStatusKey = (progressStatus || order.status || '').toUpperCase();
+    const headlineStatusLabel =
+        orderStatusHeadlineLabel(t, headerStatusKey, order.payment?.status) ||
+        order.statusDescription;
 
     return (
         <div className="max-w-5xl mx-auto px-4 py-12">
@@ -204,11 +201,13 @@ export default function OrderDetailView() {
                     <div className="h-8 w-px bg-stone-100 mx-1"></div>
                     <span className={`px-5 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest ${
                         headerStatusKey === 'DELIVERED' ? 'bg-emerald-50 text-emerald-600' :
+                        isCancelledOrderWithRefundComplete(headerStatusKey, order.payment?.status)
+                            ? 'bg-emerald-50 text-emerald-600' :
                         headerStatusKey === 'CANCEL_REQUESTED' ? 'bg-amber-50 text-amber-800' :
                         headerStatusKey === 'CANCELLED' ? 'bg-rose-50 text-rose-600' :
                         'bg-blue-50 text-blue-600'
                     }`}>
-                        {statusBadgeLabel(headerStatusKey) || order.statusDescription}
+                        {headlineStatusLabel}
                     </span>
                 </div>
             </header>

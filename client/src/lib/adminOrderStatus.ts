@@ -105,6 +105,31 @@ export function adminDisplayStatusLabel(
   return map[key] ?? statusKey;
 }
 
+/**
+ * 주문 DB/진행 상태가 취소여도 PG 환불까지 끝나면 화면 헤드라인은 「환불 완료」 우선.
+ */
+export function orderStatusHeadlineLabel(
+  t: (key: string) => string,
+  displayStatusKey: string,
+  paymentStatus?: string | null
+): string {
+  const s = (displayStatusKey || '').toUpperCase();
+  const pay = (paymentStatus ?? '').trim().toUpperCase();
+  if (s === 'CANCELLED' && pay === 'REFUNDED') {
+    return t('paymentHistory.status_REFUNDED');
+  }
+  return adminDisplayStatusLabel(t, displayStatusKey);
+}
+
+export function isCancelledOrderWithRefundComplete(
+  displayStatusKey: string,
+  paymentStatus?: string | null
+): boolean {
+  const s = (displayStatusKey || '').toUpperCase();
+  const pay = (paymentStatus ?? '').trim().toUpperCase();
+  return s === 'CANCELLED' && pay === 'REFUNDED';
+}
+
 /** 다음 단계로 바꿀 때 안내 문구 */
 export function adminNextTargetLabel(t: (key: string) => string, nextCode: string): string {
   if (nextCode === 'CONFIRMED') return t('orderStatus.CONFIRMED_BADGE');

@@ -1,14 +1,24 @@
 import api from '../axios';
 
+/** refund-service RefundResponse 와 필드명 일치 (금액은 amount) */
 export interface RefundResponse {
     id: number;
     cancelId: number;
     orderId: number;
     userId: number;
-    refundAmount: number;
+    paymentId?: number | null;
+    refundNumber?: string | null;
+    /** 서버 BigDecimal → JSON 숫자 또는 문자열 */
+    amount?: number | string | null;
     status: string;
-    statusDescription: string;
-    refundMethod: string;
+    statusDescription?: string;
+    refundReason?: string;
+    refundReasonDescription?: string;
+    refundDetail?: string | null;
+    refundMethod?: string | null;
+    completedAt?: string | null;
+    failedAt?: string | null;
+    failureReason?: string | null;
     createdAt: string;
     updatedAt: string;
 }

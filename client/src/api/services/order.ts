@@ -31,6 +31,8 @@ export interface OrderResponse {
     userId: number;
     orderNumber: string;
     status: string;
+    /** 취소 요청 직전 주문 상태(상세·관리자 등) */
+    statusBeforeCancelRequest?: string | null;
     /** 서버가 계산한 진행 표시용 상태(목록·상세 공통). PENDING+결제완료 → CONFIRMED */
     progressStatus?: string | null;
     /** 목록 API에서 결제 서비스와 통합 조회 시에만 설정 */

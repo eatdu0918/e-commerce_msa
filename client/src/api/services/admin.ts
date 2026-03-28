@@ -25,6 +25,8 @@ export interface Order {
   paymentStatus?: string | null;
   /** 진행 중 취소(REQUESTED/APPROVED/COMPLETED) */
   activeCancelStatus?: string | null;
+  /** 진행 중 취소 건 ID(관리자 승인·거절) */
+  activeCancelId?: number | null;
   recipientName: string;
   createdAt: string;
   updatedAt: string;
@@ -50,6 +52,9 @@ export interface OrderDetail {
   payment?: AdminOrderPaymentInfo | null;
   progressStatus?: string | null;
   activeCancelStatus?: string | null;
+  activeCancelId?: number | null;
+  /** 취소 요청 직전 주문 상태(예: SHIPPING 차단 판별) */
+  statusBeforeCancelRequest?: string | null;
 }
 
 export interface AdminOrderPaymentInfo {

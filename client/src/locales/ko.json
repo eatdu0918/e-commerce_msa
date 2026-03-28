@@ -480,6 +480,9 @@
         "method_MOBILE_PAY": "모바일결제"
     },
     "cancelRefund": {
+        "page_title": "취소·반품·환불 내역",
+        "page_subtitle": "주문 취소와 반품·환불 신청의 진행 상태를 한곳에서 확인하세요.",
+        "document_title": "취소·반품·환불 내역 | Sparta Shop",
         "stats_order_cancel": "주문 취소",
         "stats_return_refund": "반품·환불",
         "tab_order_cancel": "주문 취소",
@@ -654,6 +657,8 @@
         "order_final": "결제 금액",
         "order_items": "주문 상품",
         "order_active_cancel": "진행 중 취소: {{status}}",
+        "order_cancel_pending_panel": "취소·반품 요청 #{{id}}이(가) 승인 대기 중입니다. 아래에서 바로 처리할 수 있습니다.",
+        "order_cancel_open_list": "취소·반품 목록 전체 보기",
         "order_dash_PENDING": "주문 대기",
         "order_dash_CONFIRMED": "주문 확정",
         "order_dash_PAYMENT_COMPLETED": "결제 완료",

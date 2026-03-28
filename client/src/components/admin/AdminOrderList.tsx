@@ -3,7 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { adminApi } from '../../api/services/admin';
 import {
-  adminDisplayStatusLabel,
+  isCancelledOrderWithRefundComplete,
+  orderStatusHeadlineLabel,
   adminNextTargetLabel,
   getNextAdminOrderStatus,
 } from '../../lib/adminOrderStatus';
@@ -130,18 +131,20 @@ export default function AdminOrderList() {
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           displayStatus === 'DELIVERED'
                             ? 'bg-emerald-100 text-emerald-800'
-                            : displayStatus === 'CANCELLED'
-                              ? 'bg-red-100 text-red-800'
-                              : displayStatus === 'CANCEL_REQUESTED'
-                                ? 'bg-amber-100 text-amber-900'
-                                : displayStatus === 'CONFIRMED' ||
-                                    displayStatus === 'PREPARING' ||
-                                    displayStatus === 'SHIPPING'
-                                  ? 'bg-green-100 text-green-800'
-                                  : 'bg-blue-100 text-blue-800'
+                            : isCancelledOrderWithRefundComplete(displayStatus, order.paymentStatus)
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : displayStatus === 'CANCELLED'
+                                ? 'bg-red-100 text-red-800'
+                                : displayStatus === 'CANCEL_REQUESTED'
+                                  ? 'bg-amber-100 text-amber-900'
+                                  : displayStatus === 'CONFIRMED' ||
+                                      displayStatus === 'PREPARING' ||
+                                      displayStatus === 'SHIPPING'
+                                    ? 'bg-green-100 text-green-800'
+                                    : 'bg-blue-100 text-blue-800'
                         }`}
                       >
-                        {adminDisplayStatusLabel(t, displayStatus)}
+                        {orderStatusHeadlineLabel(t, displayStatus, order.paymentStatus)}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">

@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { RotateCcw, XCircle, CheckCircle, Clock, AlertCircle, Package } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { Helmet } from 'react-helmet-async';
 import { getMyCancels, CANCEL_REASON_LABELS } from '../../api/services/cancel';
 import type { CancelResponse, CancelReason } from '../../api/services/cancel';
 import { getMyRefunds } from '../../api/services/refund';
@@ -12,6 +13,17 @@ type TabType = 'order_cancel' | 'return_refund';
 type MergedReturnRow =
     | { kind: 'return_cancel'; cancel: CancelResponse }
     | { kind: 'refund'; refund: RefundResponse };
+
+function formatRefundAmount(amount: RefundResponse['amount']): string {
+    if (amount == null || amount === '') {
+        return '';
+    }
+    const n = typeof amount === 'string' ? Number(amount) : amount;
+    if (!Number.isFinite(n)) {
+        return '';
+    }
+    return n.toLocaleString();
+}
 
 export default function CancelRefundView() {
     const { t } = useTranslation();
@@ -89,6 +101,14 @@ export default function CancelRefundView() {
 
     return (
         <div className="max-w-5xl mx-auto px-6 py-12 space-y-8">
+            <Helmet>
+                <title>{t('cancelRefund.document_title')}</title>
+                <meta name="description" content={t('cancelRefund.page_subtitle')} />
+            </Helmet>
+            <div>
+                <h1 className="text-2xl font-bold tracking-tight">{t('cancelRefund.page_title')}</h1>
+                <p className="text-stone-500 text-sm mt-1">{t('cancelRefund.page_subtitle')}</p>
+            </div>
             <div className="grid grid-cols-2 gap-4">
                 <div className="bg-orange-50 p-5 rounded-2xl border border-orange-100 text-center">
                     <p className="text-xs font-bold text-orange-400 uppercase mb-1">{t('cancelRefund.stats_order_cancel')}</p>
@@ -223,8 +243,12 @@ export default function CancelRefundView() {
                         }
 
                         const refund = row.refund;
-                        const statusInfo = REFUND_STATUS_MAP[refund.status as keyof typeof REFUND_STATUS_MAP] || {
-                            label: refund.status,
+                        const refundStatusKey =
+                            typeof refund.status === 'string'
+                                ? refund.status
+                                : (refund.status as { name?: string })?.name ?? '';
+                        const statusInfo = REFUND_STATUS_MAP[refundStatusKey as keyof typeof REFUND_STATUS_MAP] || {
+                            label: refundStatusKey || String(refund.status),
                             color: 'text-stone-500 bg-stone-50',
                             icon: Clock,
                         };
@@ -251,9 +275,13 @@ export default function CancelRefundView() {
                                         {t('cancelRefund.refund_method')}{' '}
                                         {refund.refundMethod || t('cancelRefund.refund_method_default')}
                                     </p>
-                                    <p className="font-bold">
-                                        {refund.refundAmount?.toLocaleString()}
-                                        {t('common.currency_won')}
+                                    <p className="font-bold tabular-nums">
+                                        {(() => {
+                                            const formatted = formatRefundAmount(refund.amount);
+                                            return formatted
+                                                ? `${formatted}${t('common.currency_won')}`
+                                                : '—';
+                                        })()}
                                     </p>
                                 </div>
                             </div>

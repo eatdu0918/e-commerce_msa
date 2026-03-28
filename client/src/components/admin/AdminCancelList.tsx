@@ -4,6 +4,16 @@ import { useTranslation } from 'react-i18next';
 import { adminApi, type Cancel } from '../../api/services/admin';
 import { ChevronLeft, ChevronRight, Check, X, Eye } from 'lucide-react';
 
+function normalizeCancelStatus(raw: unknown): string {
+  if (raw == null) return '';
+  if (typeof raw === 'string') return raw.toUpperCase();
+  if (typeof raw === 'object' && 'name' in (raw as object)) {
+    const name = (raw as { name?: unknown }).name;
+    return typeof name === 'string' ? name.toUpperCase() : '';
+  }
+  return String(raw).toUpperCase();
+}
+
 const AdminCancelList = () => {
   const { t, i18n } = useTranslation();
   const [page, setPage] = useState(0);
@@ -155,7 +165,9 @@ const AdminCancelList = () => {
                 </td>
               </tr>
             )}
-            {cancels.map((cancel: Cancel) => (
+            {cancels.map((cancel: Cancel) => {
+              const st = normalizeCancelStatus(cancel.status);
+              return (
               <tr key={cancel.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   #{cancel.id}
@@ -179,16 +191,16 @@ const AdminCancelList = () => {
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
                     className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      cancel.status === 'APPROVED'
+                      st === 'APPROVED'
                         ? 'bg-green-100 text-green-800'
-                        : cancel.status === 'REJECTED'
+                        : st === 'REJECTED'
                         ? 'bg-red-100 text-red-800'
-                        : cancel.status === 'COMPLETED'
+                        : st === 'COMPLETED'
                         ? 'bg-blue-100 text-blue-800'
                         : 'bg-yellow-100 text-yellow-800'
                     }`}
                   >
-                    {cancel.status}
+                    {st || cancel.status}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -204,7 +216,7 @@ const AdminCancelList = () => {
                     >
                       <Eye className="w-4 h-4" />
                     </button>
-                    {cancel.status === 'REQUESTED' && (
+                    {st === 'REQUESTED' && (
                       <>
                         <button
                           type="button"
@@ -227,7 +239,8 @@ const AdminCancelList = () => {
                   </div>
                 </td>
               </tr>
-            ))}
+            );
+            })}
           </tbody>
         </table>
       </div>
