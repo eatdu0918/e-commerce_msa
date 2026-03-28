@@ -1,9 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ShoppingBag, ChevronRight, Package, Truck, CheckCircle2, AlertCircle, RefreshCw, Layers } from 'lucide-react';
+import { ShoppingBag, ChevronRight, Package, Truck, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { getMyOrders } from '../../api/services/order';
-import type { OrderResponse } from '../../api/services/order';
+import type { OrderItemResponse, OrderResponse } from '../../api/services/order';
 import { useTranslation } from 'react-i18next';
 import { formatDateTime, getEstimatedArrivalDate } from '../../utils/date';
 import { useEffect } from 'react';
@@ -45,6 +45,9 @@ const getFallbackImage = (name: string = '') => {
     if (lowerName.includes('laptop') || lowerName.includes('노트북') || lowerName.includes('컴퓨터') || lowerName.includes('mouse') || lowerName.includes('마우스')) return FALLBACK_IMAGES.laptop;
     return FALLBACK_IMAGES.default;
 };
+
+const getItemPreviewUrl = (item: OrderItemResponse) =>
+    item.imageUrl && item.imageUrl !== '' ? item.imageUrl : getFallbackImage(item.productName);
 
 export default function OrderListView() {
     const { t } = useTranslation();
@@ -107,11 +110,8 @@ export default function OrderListView() {
                         const firstItem = items.length > 0 ? items[0] : null;
                         const itemName = firstItem?.productName || t('orderList.order_ref', { no: order.orderNumber });
                         const etcCount = items.length > 1 ? items.length - 1 : 0;
-                        
-                        // Use the purchased image from the first item if available
-                        const imgUrl = (firstItem?.imageUrl && firstItem.imageUrl !== '') 
-                            ? firstItem.imageUrl 
-                            : getFallbackImage(itemName);
+
+                        const imgUrl = firstItem ? getItemPreviewUrl(firstItem) : getFallbackImage(itemName);
 
                         return (
                             <div
@@ -178,11 +178,29 @@ export default function OrderListView() {
                                 <div className="mt-8 pt-8 border-t border-stone-50 flex flex-col sm:flex-row items-center justify-between gap-4">
                                     <div className="flex items-center gap-4">
                                         <div className="flex items-center -space-x-5">
-                                            {[...Array(Math.min(3, items.length || 1))].map((_, i) => (
-                                                <div key={i} className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-stone-200 bg-stone-100 text-[10px] font-black text-stone-400 ring-4 ring-white">
-                                                    <Layers size={18} className="shrink-0" aria-hidden />
-                                                </div>
-                                            ))}
+                                            {items.length > 0
+                                                ? items.slice(0, Math.min(3, items.length)).map((item, i) => (
+                                                      <div
+                                                          key={item.id}
+                                                          className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full border border-stone-200 bg-stone-100 ring-4 ring-white"
+                                                          style={{ zIndex: i + 1 }}
+                                                      >
+                                                          <img
+                                                              src={getItemPreviewUrl(item)}
+                                                              alt={item.productName || ''}
+                                                              className="h-full w-full object-cover"
+                                                              onError={(e) => {
+                                                                  const target = e.target as HTMLImageElement;
+                                                                  target.src = getFallbackImage(item.productName);
+                                                              }}
+                                                          />
+                                                      </div>
+                                                  ))
+                                                : (
+                                                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-stone-200 bg-stone-100 ring-4 ring-white">
+                                                          <ShoppingBag size={18} className="shrink-0 text-stone-400" aria-hidden />
+                                                      </div>
+                                                  )}
                                         </div>
                                         <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest bg-stone-50 px-4 py-2 rounded-2xl border border-stone-100">
                                             {t('orderList.item_count', { count: items.length || 0 })}
