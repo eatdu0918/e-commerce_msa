@@ -55,6 +55,32 @@ export const ADMIN_FULFILLMENT_STEPS = [
   'DELIVERED',
 ] as const;
 
+/**
+ * 사용자 주문 상세(OrderDetailView getOrderStepperDisplay)와 동일 규칙.
+ * CONFIRMED(배지: 주문 확인)일 때까지는 '결제 완료' 칸까지 완료 체크로 보이게 함.
+ */
+export function getAdminFulfillmentStepperDisplay(statusKey: string): {
+  completedThrough: number;
+  pulseAt: number | null;
+} {
+  const last = ADMIN_FULFILLMENT_STEPS.length - 1;
+  const u = (statusKey || '').toUpperCase();
+  switch (u) {
+    case 'PENDING':
+      return { completedThrough: 0, pulseAt: 0 };
+    case 'CONFIRMED':
+      return { completedThrough: 1, pulseAt: Math.min(2, last) };
+    case 'PREPARING':
+      return { completedThrough: 2, pulseAt: Math.min(2, last) };
+    case 'SHIPPING':
+      return { completedThrough: 2, pulseAt: Math.min(3, last) };
+    case 'DELIVERED':
+      return { completedThrough: last, pulseAt: null };
+    default:
+      return { completedThrough: 0, pulseAt: 0 };
+  }
+}
+
 /** 스테퍼 라벨 (사용자 주문 상세와 동일하게 CONFIRMED 단계 문구 사용) */
 export function adminStepperStepLabel(t: (key: string) => string, step: string): string {
   if (step === 'CONFIRMED') return t('orderStatus.CONFIRMED_LIST');

@@ -8,6 +8,7 @@ import {
   adminNextTargetLabel,
   adminStepperStepLabel,
   getNextAdminOrderStatus,
+  getAdminFulfillmentStepperDisplay,
   isAdminFulfillmentAdvanceBlocked,
 } from '../../lib/adminOrderStatus';
 import { ArrowLeft, Check, Package, Truck, CircleDot } from 'lucide-react';
@@ -87,10 +88,7 @@ export default function AdminOrderDetail() {
   const cancelledLike =
     dbStatus === 'CANCELLED' || dbStatus === 'CANCEL_REQUESTED' || blockedByCancelOrRefund;
 
-  const stepIndex = ADMIN_FULFILLMENT_STEPS.indexOf(
-    displayKey as (typeof ADMIN_FULFILLMENT_STEPS)[number]
-  );
-  const activeIdx = stepIndex >= 0 ? stepIndex : 0;
+  const { completedThrough, pulseAt } = getAdminFulfillmentStepperDisplay(displayKey);
   const lastStepIdx = ADMIN_FULFILLMENT_STEPS.length - 1;
 
   const handleAdvance = () => {
@@ -156,10 +154,12 @@ export default function AdminOrderDetail() {
           ) : (
             <div className="flex flex-wrap gap-2 justify-between items-start">
               {ADMIN_FULFILLMENT_STEPS.map((step, idx) => {
-                const done =
-                  idx < activeIdx ||
-                  (activeIdx === lastStepIdx && idx === lastStepIdx);
-                const current = idx === activeIdx && !done;
+                const done = idx <= completedThrough;
+                const current =
+                  pulseAt !== null && idx === pulseAt && idx > completedThrough;
+                const labelEmphasized =
+                  (pulseAt !== null && idx === pulseAt) ||
+                  (pulseAt === null && idx === lastStepIdx);
                 const label = adminStepperStepLabel(t, step);
                 return (
                   <div
@@ -179,7 +179,7 @@ export default function AdminOrderDetail() {
                     </div>
                     <span
                       className={`text-[11px] text-center leading-tight px-1 ${
-                        idx === activeIdx ? 'font-semibold text-stone-900' : 'text-stone-500'
+                        labelEmphasized ? 'font-semibold text-stone-900' : 'text-stone-500'
                       }`}
                     >
                       {label}
