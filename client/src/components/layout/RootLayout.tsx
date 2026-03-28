@@ -9,9 +9,7 @@ import SignupModal from '../auth/SignupModal';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getMyProfile } from '../../api/services/user';
 import { getCart } from '../../api/services/cart';
-import { getRootCategories } from '../../api/services/category';
 import { useTranslation } from 'react-i18next';
-import { catalogCategoryName } from '../../lib/catalogLocale';
 import { AUTH_STORAGE_KEYS, clearAuthStorage, getStoredAccessToken } from '../../lib/authStorage';
 
 export default function RootLayout() {
@@ -22,20 +20,6 @@ export default function RootLayout() {
     const [isLoginOpen, setIsLoginOpen] = useState(false);
     const [isSignupOpen, setIsSignupOpen] = useState(false);
     const [isCartOpen, setIsCartOpen] = useState(false);
-    const [activeCategoryKey, setActiveCategoryKey] = useState('all');
-
-    const { data: categoriesData } = useQuery({
-        queryKey: ['categories', 'root', i18n.language],
-        queryFn: getRootCategories,
-        staleTime: Infinity,
-        retry: false,
-    });
-    const categoryNavItems =
-        categoriesData?.map((c) => ({
-            key: c.name,
-            label: catalogCategoryName(c, i18n.language),
-        })) ?? [];
-
     // Check auth
     const { data: user } = useQuery({
         queryKey: ['user'],
@@ -55,21 +39,9 @@ export default function RootLayout() {
         enabled: !!user,
     });
 
-    const handleCategoryChange = (key: string) => {
-        setActiveCategoryKey(key);
-        if (key === 'all') {
-            navigate('/');
-        } else {
-            navigate(`/?category=${encodeURIComponent(key)}`);
-        }
-    };
-
     return (
         <div className="antialiased min-h-screen flex flex-col">
             <Header
-                activeCategoryKey={activeCategoryKey}
-                onSelectCategory={handleCategoryChange}
-                categoryNavItems={categoryNavItems}
                 user={user}
                 onLoginClick={() => setIsLoginOpen(true)}
                 onLogoutClick={() => {

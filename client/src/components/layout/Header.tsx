@@ -1,20 +1,12 @@
-import { Search, ShoppingBag, Menu, X, User as UserIcon, Bell, ChevronRight } from 'lucide-react';
+import { Search, ShoppingBag, X, User as UserIcon, Bell, ChevronRight } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import type { UserResponse } from '../../api/services/user';
 import LanguageSwitcher from '../LanguageSwitcher';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import SearchBar from '../common/SearchBar';
 
-export interface CategoryNavItem {
-    key: string;
-    label: string;
-}
-
 interface HeaderProps {
-    activeCategoryKey: string;
-    onSelectCategory: (categoryKey: string) => void;
-    categoryNavItems: CategoryNavItem[];
     user?: UserResponse;
     onLoginClick: () => void;
     onLogoutClick: () => void;
@@ -22,20 +14,15 @@ interface HeaderProps {
     cartCount?: number;
 }
 
-export default function Header({ activeCategoryKey, onSelectCategory, categoryNavItems, user, onLoginClick, onLogoutClick, onCartClick, cartCount = 0 }: HeaderProps) {
+export default function Header({ user, onLoginClick, onLogoutClick, onCartClick, cartCount = 0 }: HeaderProps) {
     const { t } = useTranslation();
     const navigate = useNavigate();
-    const location = useLocation();
 
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
     const [userDropdownOpen, setUserDropdownOpen] = useState(false);
     const [notificationOpen, setNotificationOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const notificationRef = useRef<HTMLDivElement>(null);
-
-    // Derive active view from location
-    const isActive = (path: string) => location.pathname === path;
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -53,7 +40,6 @@ export default function Header({ activeCategoryKey, onSelectCategory, categoryNa
     const handleNavigate = (path: string) => {
         navigate(path);
         setUserDropdownOpen(false);
-        setMobileMenuOpen(false);
         setMobileSearchOpen(false);
     };
 
@@ -62,36 +48,10 @@ export default function Header({ activeCategoryKey, onSelectCategory, categoryNa
             <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
                 <div
                     className="text-xl font-bold tracking-tighter cursor-pointer"
-                    onClick={() => {
-                        onSelectCategory('all');
-                        handleNavigate('/');
-                    }}
+                    onClick={() => handleNavigate('/')}
                 >
                     URBAN THREADS
                 </div>
-
-                <div className="hidden md:flex space-x-8 text-sm font-medium text-stone-600">
-                    <button
-                        onClick={() => handleNavigate('/shop')}
-                        className={`hover:text-black transition-colors ${isActive('/shop') ? 'text-black font-bold' : ''}`}
-                    >
-                        {t('common.shop_all')}
-                    </button>
-                    {categoryNavItems.map((item) => (
-                        <button
-                            key={item.key}
-                            onClick={() => {
-                                onSelectCategory(item.key);
-                                handleNavigate('/');
-                            }}
-                            className={`hover:text-black transition-colors ${activeCategoryKey === item.key ? 'text-black' : ''
-                                }`}
-                        >
-                            {item.label}
-                        </button>
-                    ))}
-                </div>
-
 
                 <div className="flex items-center space-x-1 md:space-x-4">
                     <LanguageSwitcher />
@@ -228,42 +188,8 @@ export default function Header({ activeCategoryKey, onSelectCategory, categoryNa
                             )}
                         </button>
                     </div>
-
-                    <button
-                        className="md:hidden p-2 hover:bg-stone-100 rounded-full transition-colors"
-                        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                    >
-                        {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-                    </button>
                 </div>
             </div>
-
-            {/* Mobile Menu */}
-            {mobileMenuOpen && (
-                <div className="md:hidden bg-white border-t border-stone-200 py-4 px-6">
-                    <div className="flex flex-col space-y-4 text-sm font-medium text-stone-600 text-left">
-                        <button
-                            onClick={() => handleNavigate('/shop')}
-                            className={`hover:text-black transition-colors ${isActive('/shop') ? 'text-black font-bold' : ''}`}
-                        >
-                            {t('common.shop_all')}
-                        </button>
-                        {categoryNavItems.map((item) => (
-                            <button
-                                key={item.key}
-                                onClick={() => {
-                                    onSelectCategory(item.key);
-                                    handleNavigate('/');
-                                }}
-                                className={`text-left hover:text-black transition-colors ${activeCategoryKey === item.key ? 'text-black' : ''
-                                    }`}
-                            >
-                                {item.label}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            )}
 
             {/* Mobile Search Overlay */}
             {mobileSearchOpen && (
