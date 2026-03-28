@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { removeOrderedProductsFromCart } from '../../api/services/cart';
 import { createOrder } from '../../api/services/order';
 import { createPayment } from '../../api/services/payment';
 import type { CreateOrderRequest, OrderItemRequest } from '../../api/services/order';
@@ -71,6 +72,13 @@ export default function PaymentSuccessPage() {
                 amount: order.finalAmount,
                 paymentDetails: mockPaymentDetails,
             });
+
+            const orderedProductIds = orderData.items.map((item) => item.productId);
+            try {
+                await removeOrderedProductsFromCart(orderedProductIds);
+            } catch (cartErr) {
+                console.error('주문 완료 후 장바구니 정리 실패:', cartErr);
+            }
 
             // 주문 정보 삭제
             localStorage.removeItem('pendingOrderData');
