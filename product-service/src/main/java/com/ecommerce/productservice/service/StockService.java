@@ -6,6 +6,7 @@ import com.ecommerce.productservice.entity.Product;
 import com.ecommerce.productservice.exception.ProductDomainException;
 import com.ecommerce.productservice.exception.ProductDomainExceptionCode;
 import com.ecommerce.productservice.repository.ProductRepository;
+import com.ecommerce.productservice.util.CatalogLocaleHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -21,9 +22,9 @@ public class StockService {
     private final ProductRepository productRepository;
 
     @Transactional(readOnly = true)
-    public StockResponse getStock(Long productId) {
+    public StockResponse getStock(Long productId, String acceptLanguage) {
         Product product = getActiveProduct(productId);
-        return StockResponse.from(product, "현재 재고 조회");
+        return StockResponse.from(product, "현재 재고 조회", CatalogLocaleHelper.preferKorean(acceptLanguage));
     }
 
     @Transactional

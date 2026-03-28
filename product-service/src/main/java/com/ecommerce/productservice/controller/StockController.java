@@ -18,9 +18,11 @@ public class StockController {
     private final StockService stockService;
 
     @GetMapping("/{productId}")
-    public ApiResponse<StockResponse> getStock(@PathVariable Long productId) {
+    public ApiResponse<StockResponse> getStock(
+            @PathVariable Long productId,
+            @RequestHeader(value = "Accept-Language", required = false) String acceptLanguage) {
         log.info("GET /api/stocks/{} - 재고 조회", productId);
-        StockResponse response = stockService.getStock(productId);
+        StockResponse response = stockService.getStock(productId, acceptLanguage);
         return ApiResponse.success(response);
     }
 

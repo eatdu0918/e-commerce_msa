@@ -24,9 +24,11 @@ public class CartController {
 
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public ApiResponse<CartResponse> getCart(@AuthenticationPrincipal CustomUserDetails userDetails) {
+    public ApiResponse<CartResponse> getCart(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestHeader(value = "Accept-Language", required = false) String acceptLanguage) {
         log.info("GET /api/cart - 장바구니 조회: userId={}", userDetails.getUserId());
-        CartResponse response = cartService.getCart(userDetails.getUserId());
+        CartResponse response = cartService.getCart(userDetails.getUserId(), acceptLanguage);
         return ApiResponse.success(response);
     }
 
@@ -34,9 +36,10 @@ public class CartController {
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<CartItemResponse> addToCart(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @Valid @RequestBody AddCartItemRequest request) {
+            @Valid @RequestBody AddCartItemRequest request,
+            @RequestHeader(value = "Accept-Language", required = false) String acceptLanguage) {
         log.info("POST /api/cart - 장바구니 추가: userId={}", userDetails.getUserId());
-        CartItemResponse response = cartService.addToCart(userDetails.getUserId(), request);
+        CartItemResponse response = cartService.addToCart(userDetails.getUserId(), request, acceptLanguage);
         return ApiResponse.success(response);
     }
 
@@ -45,9 +48,11 @@ public class CartController {
     public ApiResponse<CartItemResponse> updateCartItem(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long productId,
-            @Valid @RequestBody UpdateCartItemRequest request) {
+            @Valid @RequestBody UpdateCartItemRequest request,
+            @RequestHeader(value = "Accept-Language", required = false) String acceptLanguage) {
         log.info("PUT /api/cart/{} - 장바구니 수량 수정: userId={}", productId, userDetails.getUserId());
-        CartItemResponse response = cartService.updateCartItem(userDetails.getUserId(), productId, request);
+        CartItemResponse response = cartService.updateCartItem(userDetails.getUserId(), productId, request,
+                acceptLanguage);
         return ApiResponse.success(response);
     }
 

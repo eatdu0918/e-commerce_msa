@@ -50,7 +50,9 @@ public class ProductService {
                 request.getPrice(),
                 request.getStockQuantity(),
                 category,
-                request.getImageUrl());
+                request.getImageUrl(),
+                request.getNameKo(),
+                request.getDescriptionKo());
 
         Product savedProduct = productRepository.save(product);
         log.info("상품 등록 완료: productId={}, name={}", savedProduct.getId(), savedProduct.getName());
@@ -113,7 +115,9 @@ public class ProductService {
                 request.getPrice(),
                 request.getStockQuantity(),
                 category,
-                request.getImageUrl());
+                request.getImageUrl(),
+                request.getNameKo(),
+                request.getDescriptionKo());
 
         log.info("상품 수정 완료: productId={}", productId);
         return ProductResponse.from(product);

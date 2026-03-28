@@ -7,6 +7,7 @@ import com.ecommerce.productservice.dto.response.CartResponse;
 import com.ecommerce.productservice.entity.Product;
 import com.ecommerce.productservice.exception.ProductDomainException;
 import com.ecommerce.productservice.exception.ProductDomainExceptionCode;
+import com.ecommerce.productservice.util.CatalogLocaleHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -29,7 +30,8 @@ public class CartService {
     private static final String CART_KEY_PREFIX = "cart:";
     private static final Duration CART_TTL = Duration.ofDays(30);
 
-    public CartResponse getCart(Long userId) {
+    public CartResponse getCart(Long userId, String acceptLanguage) {
+        boolean preferKo = CatalogLocaleHelper.preferKorean(acceptLanguage);
         String key = CART_KEY_PREFIX + userId;
         Map<Object, Object> entries = redisTemplate.opsForHash().entries(key);
 
@@ -40,7 +42,7 @@ public class CartService {
 
             try {
                 Product product = productService.getActiveProduct(productId);
-                items.add(buildCartItemResponse(product, quantity));
+                items.add(buildCartItemResponse(product, quantity, preferKo));
             } catch (Exception e) {
                 log.warn("장바구니 상품 조회 실패 (삭제된 상품 제거): productId={}", productId);
                 redisTemplate.opsForHash().delete(key, entry.getKey().toString());
@@ -50,7 +52,8 @@ public class CartService {
         return CartResponse.from(items);
     }
 
-    public CartItemResponse addToCart(Long userId, AddCartItemRequest request) {
+    public CartItemResponse addToCart(Long userId, AddCartItemRequest request, String acceptLanguage) {
+        boolean preferKo = CatalogLocaleHelper.preferKorean(acceptLanguage);
         log.info("장바구니 추가 시도: userId={}, productId={}", userId, request.getProductId());
 
         Product product = productService.getActiveProduct(request.getProductId());
@@ -70,10 +73,12 @@ public class CartService {
 
         redisTemplate.opsForHash().put(key, productIdStr, String.valueOf(newQuantity));
         redisTemplate.expire(key, CART_TTL);
-        return buildCartItemResponse(product, newQuantity);
+        return buildCartItemResponse(product, newQuantity, preferKo);
     }
 
-    public CartItemResponse updateCartItem(Long userId, Long productId, UpdateCartItemRequest request) {
+    public CartItemResponse updateCartItem(Long userId, Long productId, UpdateCartItemRequest request,
+            String acceptLanguage) {
+        boolean preferKo = CatalogLocaleHelper.preferKorean(acceptLanguage);
         log.info("장바구니 수량 수정: userId={}, productId={}", userId, productId);
 
         String key = CART_KEY_PREFIX + userId;
@@ -88,7 +93,7 @@ public class CartService {
         redisTemplate.expire(key, CART_TTL);
 
         log.info("장바구니 수량 수정 완료: productId={}, newQuantity={}", productId, request.getQuantity());
-        return buildCartItemResponse(product, request.getQuantity());
+        return buildCartItemResponse(product, request.getQuantity(), preferKo);
     }
 
     public void removeFromCart(Long userId, Long productId) {
@@ -116,13 +121,13 @@ public class CartService {
         return size != null ? size.intValue() : 0;
     }
 
-    private CartItemResponse buildCartItemResponse(Product product, int quantity) {
+    private CartItemResponse buildCartItemResponse(Product product, int quantity, boolean preferKorean) {
         BigDecimal price = product.getPrice();
         return CartItemResponse.builder()
                 .cartItemId(product.getId())
                 .productId(product.getId())
-                .productName(product.getName())
-                .productDescription(product.getDescription())
+                .productName(CatalogLocaleHelper.productName(product, preferKorean))
+                .productDescription(CatalogLocaleHelper.productDescription(product, preferKorean))
                 .imageUrl(product.getImageUrl())
                 .price(price)
                 .quantity(quantity)

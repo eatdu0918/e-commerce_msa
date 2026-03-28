@@ -19,7 +19,12 @@ public class CreateProductRequest {
     @Size(max = 255, message = "상품명은 255자 이하여야 합니다.")
     String name;
 
+    @Size(max = 255, message = "한글 상품명은 255자 이하여야 합니다.")
+    String nameKo;
+
     String description;
+
+    String descriptionKo;
 
     String imageUrl;
 

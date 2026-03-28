@@ -41,8 +41,14 @@ public class Product extends BaseEntity {
     @Column(nullable = false, length = 255)
     String name;
 
+    @Column(name = "name_ko", length = 255)
+    String nameKo;
+
     @Column(columnDefinition = "TEXT")
     String description;
+
+    @Column(name = "description_ko", columnDefinition = "TEXT")
+    String descriptionKo;
 
     @Column(name = "image_url")
     String imageUrl;
@@ -63,9 +69,16 @@ public class Product extends BaseEntity {
 
     public static Product create(String name, String description, BigDecimal price, Integer stockQuantity,
             Category category, String imageUrl) {
+        return create(name, description, price, stockQuantity, category, imageUrl, null, null);
+    }
+
+    public static Product create(String name, String description, BigDecimal price, Integer stockQuantity,
+            Category category, String imageUrl, String nameKo, String descriptionKo) {
         return Product.builder()
                 .name(name)
                 .description(description)
+                .nameKo(nameKo)
+                .descriptionKo(descriptionKo)
                 .price(price)
                 .stockQuantity(stockQuantity)
                 .category(category)
@@ -75,8 +88,15 @@ public class Product extends BaseEntity {
 
     public void update(String name, String description, BigDecimal price, Integer stockQuantity, Category category,
             String imageUrl) {
+        update(name, description, price, stockQuantity, category, imageUrl, null, null);
+    }
+
+    public void update(String name, String description, BigDecimal price, Integer stockQuantity, Category category,
+            String imageUrl, String nameKo, String descriptionKo) {
         this.name = name;
         this.description = description;
+        this.nameKo = nameKo;
+        this.descriptionKo = descriptionKo;
         this.price = price;
         this.stockQuantity = stockQuantity;
         this.category = category;

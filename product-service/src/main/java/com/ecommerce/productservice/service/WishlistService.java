@@ -5,6 +5,7 @@ import com.ecommerce.productservice.dto.response.WishlistItemResponse;
 import com.ecommerce.productservice.entity.Product;
 import com.ecommerce.productservice.exception.ProductDomainException;
 import com.ecommerce.productservice.exception.ProductDomainExceptionCode;
+import com.ecommerce.productservice.util.CatalogLocaleHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -26,7 +27,8 @@ public class WishlistService {
     private static final String WISHLIST_KEY_PREFIX = "wishlist:";
     private static final Duration WISHLIST_TTL = Duration.ofDays(30);
 
-    public List<WishlistItemResponse> getWishlist(Long userId) {
+    public List<WishlistItemResponse> getWishlist(Long userId, String acceptLanguage) {
+        boolean preferKo = CatalogLocaleHelper.preferKorean(acceptLanguage);
         String key = WISHLIST_KEY_PREFIX + userId;
         Set<String> members = redisTemplate.opsForSet().members(key);
 
@@ -36,7 +38,7 @@ public class WishlistService {
                 Long productId = Long.parseLong(productIdStr);
                 try {
                     Product product = productService.getActiveProduct(productId);
-                    items.add(buildWishlistItemResponse(product));
+                    items.add(buildWishlistItemResponse(product, preferKo));
                 } catch (Exception e) {
                     log.warn("찜 상품 조회 실패 (삭제된 상품 제거): productId={}", productId);
                     redisTemplate.opsForSet().remove(key, productIdStr);
@@ -47,7 +49,8 @@ public class WishlistService {
         return items;
     }
 
-    public WishlistItemResponse addToWishlist(Long userId, AddWishlistRequest request) {
+    public WishlistItemResponse addToWishlist(Long userId, AddWishlistRequest request, String acceptLanguage) {
+        boolean preferKo = CatalogLocaleHelper.preferKorean(acceptLanguage);
         log.info("찜 추가 시도: userId={}, productId={}", userId, request.getProductId());
 
         String key = WISHLIST_KEY_PREFIX + userId;
@@ -62,7 +65,7 @@ public class WishlistService {
         redisTemplate.expire(key, WISHLIST_TTL);
 
         log.info("찜 추가 완료: productId={}", request.getProductId());
-        return buildWishlistItemResponse(product);
+        return buildWishlistItemResponse(product, preferKo);
     }
 
     public void removeFromWishlist(Long userId, Long productId) {
@@ -95,12 +98,12 @@ public class WishlistService {
         log.info("찜 목록 비우기 완료: userId={}", userId);
     }
 
-    private WishlistItemResponse buildWishlistItemResponse(Product product) {
+    private WishlistItemResponse buildWishlistItemResponse(Product product, boolean preferKorean) {
         return WishlistItemResponse.builder()
                 .wishlistItemId(product.getId())
                 .productId(product.getId())
-                .productName(product.getName())
-                .productDescription(product.getDescription())
+                .productName(CatalogLocaleHelper.productName(product, preferKorean))
+                .productDescription(CatalogLocaleHelper.productDescription(product, preferKorean))
                 .imageUrl(product.getImageUrl())
                 .price(product.getPrice())
                 .stockQuantity(product.getStockQuantity())

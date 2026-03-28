@@ -64,9 +64,8 @@ class ProductServiceTest {
         @DisplayName("상품 등록 성공")
         void createProduct_success() {
             // given
-            // CreateProductRequest(name, description, imageUrl, price, stockQuantity, categoryId)
             CreateProductRequest request = new CreateProductRequest(
-                    PRODUCT_NAME, "상품 설명", "http://image.url", new BigDecimal("10000"), 100, null
+                    PRODUCT_NAME, null, "상품 설명", null, "http://image.url", new BigDecimal("10000"), 100, null
             );
 
             when(productRepository.existsByName(PRODUCT_NAME)).thenReturn(false);
@@ -90,7 +89,7 @@ class ProductServiceTest {
         void createProduct_withCategory_success() {
             // given
             CreateProductRequest request = new CreateProductRequest(
-                    PRODUCT_NAME, "상품 설명", "http://image.url", new BigDecimal("10000"), 100, CATEGORY_ID
+                    PRODUCT_NAME, null, "상품 설명", null, "http://image.url", new BigDecimal("10000"), 100, CATEGORY_ID
             );
 
             when(productRepository.existsByName(PRODUCT_NAME)).thenReturn(false);
@@ -114,7 +113,7 @@ class ProductServiceTest {
         void createProduct_duplicateName_throwsException() {
             // given
             CreateProductRequest request = new CreateProductRequest(
-                    PRODUCT_NAME, "상품 설명", null, new BigDecimal("10000"), 100, null
+                    PRODUCT_NAME, null, "상품 설명", null, null, new BigDecimal("10000"), 100, null
             );
 
             when(productRepository.existsByName(PRODUCT_NAME)).thenReturn(true);
@@ -132,7 +131,7 @@ class ProductServiceTest {
         void createProduct_categoryNotFound_throwsException() {
             // given
             CreateProductRequest request = new CreateProductRequest(
-                    PRODUCT_NAME, "상품 설명", null, new BigDecimal("10000"), 100, 999L
+                    PRODUCT_NAME, null, "상품 설명", null, null, new BigDecimal("10000"), 100, 999L
             );
 
             when(productRepository.existsByName(PRODUCT_NAME)).thenReturn(false);
@@ -264,9 +263,8 @@ class ProductServiceTest {
         @DisplayName("상품 수정 성공")
         void updateProduct_success() {
             // given
-            // UpdateProductRequest(name, description, imageUrl, price, stockQuantity, categoryId)
             UpdateProductRequest request = new UpdateProductRequest(
-                    "수정된 상품명", "수정된 설명", "http://new-image.url", new BigDecimal("20000"), 200, null
+                    "수정된 상품명", null, "수정된 설명", null, "http://new-image.url", new BigDecimal("20000"), 200, null
             );
 
             when(productRepository.findByIdAndIsActiveTrue(PRODUCT_ID)).thenReturn(Optional.of(testProduct));
@@ -286,7 +284,7 @@ class ProductServiceTest {
         void updateProduct_notFound_throwsException() {
             // given
             UpdateProductRequest request = new UpdateProductRequest(
-                    "수정된 상품명", "수정된 설명", null, new BigDecimal("20000"), 200, null
+                    "수정된 상품명", null, "수정된 설명", null, null, new BigDecimal("20000"), 200, null
             );
 
             when(productRepository.findByIdAndIsActiveTrue(999L)).thenReturn(Optional.empty());
@@ -302,7 +300,7 @@ class ProductServiceTest {
         void updateProduct_duplicateName_throwsException() {
             // given
             UpdateProductRequest request = new UpdateProductRequest(
-                    "다른 상품명", "수정된 설명", null, new BigDecimal("20000"), 200, null
+                    "다른 상품명", null, "수정된 설명", null, null, new BigDecimal("20000"), 200, null
             );
 
             when(productRepository.findByIdAndIsActiveTrue(PRODUCT_ID)).thenReturn(Optional.of(testProduct));

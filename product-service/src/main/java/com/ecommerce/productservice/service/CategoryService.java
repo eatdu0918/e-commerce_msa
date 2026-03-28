@@ -42,8 +42,9 @@ public class CategoryService {
                 request.getName(),
                 request.getDescription(),
                 parent,
-                request.getDisplayOrder()
-        );
+                request.getDisplayOrder(),
+                request.getNameKo(),
+                request.getDescriptionKo());
 
         Category savedCategory = categoryRepository.save(category);
         log.info("카테고리 등록 완료: categoryId={}", savedCategory.getId());
@@ -105,8 +106,9 @@ public class CategoryService {
                 request.getName(),
                 request.getDescription(),
                 parent,
-                request.getDisplayOrder()
-        );
+                request.getDisplayOrder(),
+                request.getNameKo(),
+                request.getDescriptionKo());
 
         log.info("카테고리 수정 완료: categoryId={}", categoryId);
         return CategoryResponse.from(category);

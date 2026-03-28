@@ -18,8 +18,14 @@ public class UpdateCategoryRequest {
     @Size(max = 100, message = "카테고리명은 100자 이하여야 합니다.")
     String name;
 
+    @Size(max = 100, message = "한글 카테고리명은 100자 이하여야 합니다.")
+    String nameKo;
+
     @Size(max = 500, message = "설명은 500자 이하여야 합니다.")
     String description;
+
+    @Size(max = 500, message = "한글 설명은 500자 이하여야 합니다.")
+    String descriptionKo;
 
     Long parentId;
 

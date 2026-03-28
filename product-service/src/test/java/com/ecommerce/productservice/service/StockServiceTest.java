@@ -51,7 +51,7 @@ class StockServiceTest {
             when(productRepository.findByIdAndIsActiveTrue(PRODUCT_ID)).thenReturn(Optional.of(testProduct));
 
             // when
-            StockResponse response = stockService.getStock(PRODUCT_ID);
+            StockResponse response = stockService.getStock(PRODUCT_ID, null);
 
             // then
             assertThat(response).isNotNull();
@@ -66,7 +66,7 @@ class StockServiceTest {
             when(productRepository.findByIdAndIsActiveTrue(999L)).thenReturn(Optional.empty());
 
             // when & then
-            assertThatThrownBy(() -> stockService.getStock(999L))
+            assertThatThrownBy(() -> stockService.getStock(999L, null))
                     .isInstanceOf(ProductDomainException.class)
                     .hasMessageContaining("상품을 찾을 수 없습니다");
         }

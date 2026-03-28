@@ -25,9 +25,10 @@ public class WishlistController {
     @GetMapping
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<List<WishlistItemResponse>> getWishlist(
-            @AuthenticationPrincipal CustomUserDetails userDetails) {
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestHeader(value = "Accept-Language", required = false) String acceptLanguage) {
         log.info("GET /api/wishlist - 찜 목록 조회: userId={}", userDetails.getUserId());
-        List<WishlistItemResponse> response = wishlistService.getWishlist(userDetails.getUserId());
+        List<WishlistItemResponse> response = wishlistService.getWishlist(userDetails.getUserId(), acceptLanguage);
         return ApiResponse.success(response);
     }
 
@@ -35,9 +36,11 @@ public class WishlistController {
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<WishlistItemResponse> addToWishlist(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @Valid @RequestBody AddWishlistRequest request) {
+            @Valid @RequestBody AddWishlistRequest request,
+            @RequestHeader(value = "Accept-Language", required = false) String acceptLanguage) {
         log.info("POST /api/wishlist - 찜 추가: userId={}", userDetails.getUserId());
-        WishlistItemResponse response = wishlistService.addToWishlist(userDetails.getUserId(), request);
+        WishlistItemResponse response = wishlistService.addToWishlist(userDetails.getUserId(), request,
+                acceptLanguage);
         return ApiResponse.success(response);
     }
 

@@ -16,12 +16,15 @@ public class ProductResponse {
 
     Long id;
     String name;
+    String nameKo;
     String description;
+    String descriptionKo;
     String imageUrl;
     BigDecimal price;
     Integer stockQuantity;
     Long categoryId;
     String categoryName;
+    String categoryNameKo;
     Boolean isActive;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
@@ -30,12 +33,15 @@ public class ProductResponse {
         return ProductResponse.builder()
                 .id(product.getId())
                 .name(product.getName())
+                .nameKo(product.getNameKo())
                 .description(product.getDescription())
+                .descriptionKo(product.getDescriptionKo())
                 .imageUrl(product.getImageUrl())
                 .price(product.getPrice())
                 .stockQuantity(product.getStockQuantity())
                 .categoryId(product.getCategory() != null ? product.getCategory().getId() : null)
                 .categoryName(product.getCategory() != null ? product.getCategory().getName() : null)
+                .categoryNameKo(product.getCategory() != null ? product.getCategory().getNameKo() : null)
                 .isActive(product.getIsActive())
                 .createdAt(product.getCreatedAt())
                 .updatedAt(product.getUpdatedAt())

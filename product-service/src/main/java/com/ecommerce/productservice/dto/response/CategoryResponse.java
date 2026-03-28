@@ -17,9 +17,12 @@ public class CategoryResponse {
 
     Long id;
     String name;
+    String nameKo;
     String description;
+    String descriptionKo;
     Long parentId;
     String parentName;
+    String parentNameKo;
     Integer displayOrder;
     Boolean isActive;
     List<CategoryResponse> children;
@@ -44,9 +47,12 @@ public class CategoryResponse {
         return CategoryResponse.builder()
                 .id(category.getId())
                 .name(category.getName())
+                .nameKo(category.getNameKo())
                 .description(category.getDescription())
+                .descriptionKo(category.getDescriptionKo())
                 .parentId(category.getParent() != null ? category.getParent().getId() : null)
                 .parentName(category.getParent() != null ? category.getParent().getName() : null)
+                .parentNameKo(category.getParent() != null ? category.getParent().getNameKo() : null)
                 .displayOrder(category.getDisplayOrder())
                 .isActive(category.getIsActive())
                 .children(category.getChildren().stream()
