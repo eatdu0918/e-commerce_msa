@@ -10,7 +10,8 @@ public enum PaymentMethod {
     DEBIT_CARD("체크카드"),
     BANK_TRANSFER("계좌이체"),
     VIRTUAL_ACCOUNT("가상계좌"),
-    MOBILE_PAY("모바일결제");
+    MOBILE_PAY("모바일결제"),
+    TOSSPAYMENTS("토스페이먼츠");
 
     private final String description;
 }

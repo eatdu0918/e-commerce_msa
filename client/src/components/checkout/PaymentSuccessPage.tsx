@@ -47,7 +47,9 @@ export default function PaymentSuccessPage() {
             // 결제 기록 생성
             await createPayment({
                 orderId: order.id,
+                orderNumber: order.orderNumber,
                 paymentMethod: orderData.paymentMethod,
+                amount: order.finalAmount,
             });
 
             // 주문 정보 삭제

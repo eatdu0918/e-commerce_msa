@@ -15,7 +15,9 @@ export interface PaymentResponse {
 
 export interface CreatePaymentRequest {
     orderId: number;
+    orderNumber: string;
     paymentMethod: string;
+    amount: number;
 }
 
 export interface PageResponse<T> {
