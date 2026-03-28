@@ -1,11 +1,13 @@
 package com.ecommerce.productservice.kafka;
 
-import com.ecommerce.productservice.entity.Product;
 import com.ecommerce.productservice.entity.ProcessedEvent;
 import com.ecommerce.productservice.event.*;
 import com.ecommerce.productservice.outbox.OutboxEventPublisher;
-import com.ecommerce.productservice.repository.ProductRepository;
 import com.ecommerce.productservice.repository.ProcessedEventRepository;
+import com.ecommerce.productservice.dto.request.StockRequest;
+import com.ecommerce.productservice.dto.response.StockResponse;
+import com.ecommerce.productservice.service.StockService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -14,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -22,81 +23,77 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ProductEventConsumer {
 
-    private final ProductRepository productRepository;
     private final OutboxEventPublisher outboxEventPublisher;
     private final ProcessedEventRepository processedEventRepository;
+    private final StockService stockService;
+    private final ObjectMapper objectMapper;
 
     @KafkaListener(topics = "order-created", groupId = "product-service")
     @Transactional
-    public void handleOrderCreated(OrderCreatedEvent event) {
-        log.info("Received order-created event: orderId={}, items={}",
-                event.getOrderId(), event.getItems().size());
-
-        if (isDuplicate(event.getEventId(), "order-created")) {
-            return;
-        }
-
-        List<StockDecreasedEvent.StockItemEvent> decreasedItems = new ArrayList<>();
-        List<Product> productsToRestore = new ArrayList<>();
+    public void handleOrderCreated(String message) {
+        log.info("Received order-created raw message: {}", message);
 
         try {
-            for (OrderCreatedEvent.OrderItemEvent item : event.getItems()) {
-                Optional<Product> productOpt = productRepository.findByIdAndIsActiveTrue(item.getProductId());
+            OrderCreatedEvent event = objectMapper.readValue(message, OrderCreatedEvent.class);
+            log.info("Parsed order-created event: orderId={}, items={}",
+                    event.getOrderId(), event.getItems().size());
 
-                if (productOpt.isEmpty()) {
-                    rollbackStock(productsToRestore, decreasedItems);
-                    sendStockDecreaseFailed(event, item.getProductId(), "상품을 찾을 수 없습니다.");
-                    return;
-                }
-
-                Product product = productOpt.get();
-
-                if (product.getStockQuantity() < item.getQuantity()) {
-                    rollbackStock(productsToRestore, decreasedItems);
-                    sendStockDecreaseFailed(event, item.getProductId(),
-                            String.format("재고 부족 (현재: %d, 요청: %d)",
-                                    product.getStockQuantity(), item.getQuantity()));
-                    return;
-                }
-
-                product.decreaseStock(item.getQuantity());
-                productsToRestore.add(product);
-                decreasedItems.add(StockDecreasedEvent.StockItemEvent.builder()
-                        .productId(product.getId())
-                        .quantity(item.getQuantity())
-                        .remainingStock(product.getStockQuantity())
-                        .build());
+            if (isDuplicate(event.getEventId(), "order-created")) {
+                return;
             }
 
-            StockDecreasedEvent successEvent = StockDecreasedEvent.builder()
-                    .eventId(UUID.randomUUID().toString())
-                    .orderId(event.getOrderId())
-                    .orderNumber(event.getOrderNumber())
-                    .userId(event.getUserId())
-                    .totalAmount(event.getTotalAmount())
-                    .userCouponId(event.getUserCouponId())
-                    .items(decreasedItems)
-                    .build();
+            List<StockDecreasedEvent.StockItemEvent> decreasedItems = new ArrayList<>();
+            List<Long> productsToRestore = new ArrayList<>();
 
-            outboxEventPublisher.publishStockDecreasedEvent(successEvent);
-            log.info("Stock decreased successfully for order: orderId={}", event.getOrderId());
+            try {
+                for (OrderCreatedEvent.OrderItemEvent item : event.getItems()) {
+                    // 재고 차감 시도 (내부에서 검증 및 캐시 무효화 수행)
+                    StockResponse response = stockService.decreaseStock(StockRequest.of(item.getProductId(), item.getQuantity()));
+                    
+                    productsToRestore.add(item.getProductId());
+                    decreasedItems.add(StockDecreasedEvent.StockItemEvent.builder()
+                            .productId(item.getProductId())
+                            .quantity(item.getQuantity())
+                            .remainingStock(response.getStockQuantity())
+                            .build());
+                }
 
-            markProcessed(event.getEventId(), "order-created");
+                StockDecreasedEvent successEvent = StockDecreasedEvent.builder()
+                        .eventId(UUID.randomUUID().toString())
+                        .orderId(event.getOrderId())
+                        .orderNumber(event.getOrderNumber())
+                        .userId(event.getUserId())
+                        .totalAmount(event.getTotalAmount())
+                        .userCouponId(event.getUserCouponId())
+                        .items(decreasedItems)
+                        .build();
 
+                outboxEventPublisher.publishStockDecreasedEvent(successEvent);
+                log.info("Stock decreased successfully for order: orderId={}", event.getOrderId());
+
+                markProcessed(event.getEventId(), "order-created");
+
+            } catch (Exception e) {
+                log.error("Error processing inventory for order: orderId={}", event.getOrderId(), e);
+                rollbackStockManually(productsToRestore, decreasedItems);
+                sendStockDecreaseFailed(event, null, "재고 처리 중 오류 발생: " + e.getMessage());
+            }
         } catch (Exception e) {
-            log.error("Error processing order-created event: orderId={}", event.getOrderId(), e);
-            rollbackStock(productsToRestore, decreasedItems);
-            sendStockDecreaseFailed(event, null, "재고 처리 중 오류 발생: " + e.getMessage());
+            log.error("Failed to parse order-created message: {}", message, e);
         }
     }
 
-    private void rollbackStock(List<Product> products, List<StockDecreasedEvent.StockItemEvent> decreasedItems) {
+    private void rollbackStockManually(List<Long> productIds, List<StockDecreasedEvent.StockItemEvent> decreasedItems) {
         for (int i = 0; i < decreasedItems.size(); i++) {
             StockDecreasedEvent.StockItemEvent item = decreasedItems.get(i);
-            Product product = products.get(i);
-            product.increaseStock(item.getQuantity());
-            log.info("Rolled back stock for product: productId={}, quantity={}",
-                    item.getProductId(), item.getQuantity());
+            Long productId = productIds.get(i);
+            try {
+                stockService.increaseStock(StockRequest.of(productId, item.getQuantity()));
+                log.info("Rolled back stock for product: productId={}, quantity={}",
+                        productId, item.getQuantity());
+            } catch (Exception e) {
+                log.error("Failed to rollback stock for product: productId={}", productId, e);
+            }
         }
     }
 
@@ -114,25 +111,29 @@ public class ProductEventConsumer {
 
     @KafkaListener(topics = "order-cancelled", groupId = "product-service")
     @Transactional
-    public void handleOrderCancelled(OrderCancelledEvent event) {
-        log.info("Received order-cancelled event: orderId={}", event.getOrderId());
+    public void handleOrderCancelled(String message) {
+        log.info("Received order-cancelled raw message: {}", message);
 
-        if (isDuplicate(event.getEventId(), "order-cancelled")) {
-            return;
+        try {
+            OrderCancelledEvent event = objectMapper.readValue(message, OrderCancelledEvent.class);
+            log.info("Parsed order-cancelled event: orderId={}", event.getOrderId());
+
+            if (isDuplicate(event.getEventId(), "order-cancelled")) {
+                return;
+            }
+
+            for (OrderCancelledEvent.OrderItemEvent item : event.getItems()) {
+                stockService.restoreStock(StockRequest.of(item.getProductId(), item.getQuantity()));
+                log.info("Stock restored for product: productId={}, quantity={}",
+                        item.getProductId(), item.getQuantity());
+            }
+
+            log.info("Stock restoration completed for order: orderId={}", event.getOrderId());
+
+            markProcessed(event.getEventId(), "order-cancelled");
+        } catch (Exception e) {
+            log.error("Failed to parse order-cancelled message: {}", message, e);
         }
-
-        for (OrderCancelledEvent.OrderItemEvent item : event.getItems()) {
-            productRepository.findByIdAndIsActiveTrue(item.getProductId())
-                    .ifPresent(product -> {
-                        product.increaseStock(item.getQuantity());
-                        log.info("Stock restored for product: productId={}, quantity={}",
-                                item.getProductId(), item.getQuantity());
-                    });
-        }
-
-        log.info("Stock restoration completed for order: orderId={}", event.getOrderId());
-
-        markProcessed(event.getEventId(), "order-cancelled");
     }
 
     private boolean isDuplicate(String eventId, String eventType) {

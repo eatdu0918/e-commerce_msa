@@ -50,7 +50,7 @@ spring:
           CancelApprovedEvent:com.ecommerce.orderservice.event.CancelApprovedEvent
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
       properties:
         spring.json.type.mapping: >-
           OrderCreatedEvent:com.ecommerce.orderservice.event.OrderCreatedEvent,

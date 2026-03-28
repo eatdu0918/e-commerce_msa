@@ -8,6 +8,8 @@ import com.ecommerce.productservice.exception.ProductDomainExceptionCode;
 import com.ecommerce.productservice.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +27,10 @@ public class StockService {
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "product", key = "#request.productId"),
+            @CacheEvict(value = "products", allEntries = true)
+    })
     public StockResponse decreaseStock(StockRequest request) {
         log.info("재고 차감 시도: productId={}, quantity={}", request.getProductId(), request.getQuantity());
 
@@ -41,6 +47,10 @@ public class StockService {
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "product", key = "#request.productId"),
+            @CacheEvict(value = "products", allEntries = true)
+    })
     public StockResponse increaseStock(StockRequest request) {
         log.info("재고 증가 시도: productId={}, quantity={}", request.getProductId(), request.getQuantity());
 
@@ -53,6 +63,10 @@ public class StockService {
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "product", key = "#request.productId"),
+            @CacheEvict(value = "products", allEntries = true)
+    })
     public StockResponse restoreStock(StockRequest request) {
         log.info("재고 복구 시도: productId={}, quantity={}", request.getProductId(), request.getQuantity());
 
