@@ -7,6 +7,7 @@ import com.ecommerce.paymentservice.entity.Payment;
 import com.ecommerce.paymentservice.enums.PaymentMethod;
 import com.ecommerce.paymentservice.enums.PaymentStatus;
 import com.ecommerce.paymentservice.exception.PaymentDomainException;
+import com.ecommerce.paymentservice.outbox.OutboxEventPublisher;
 import com.ecommerce.paymentservice.repository.PaymentRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -36,6 +37,9 @@ class PaymentServiceTest {
 
     @Mock
     PaymentRepository paymentRepository;
+
+    @Mock
+    OutboxEventPublisher outboxEventPublisher;
 
     @InjectMocks
     PaymentService paymentService;
@@ -83,6 +87,7 @@ class PaymentServiceTest {
             assertThat(response.getStatus()).isEqualTo(PaymentStatus.COMPLETED);
             assertThat(response.getPaymentMethod()).isEqualTo(PaymentMethod.CREDIT_CARD);
             verify(paymentRepository).save(any(Payment.class));
+            verify(outboxEventPublisher).publishPaymentCompletedEvent(any());
         }
 
         @Test
@@ -101,6 +106,7 @@ class PaymentServiceTest {
             assertThat(response.getId()).isEqualTo(PAYMENT_ID);
             assertThat(response.getStatus()).isEqualTo(PaymentStatus.COMPLETED);
             verify(paymentRepository, never()).save(any(Payment.class));
+            verify(outboxEventPublisher, never()).publishPaymentCompletedEvent(any());
         }
     }
 

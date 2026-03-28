@@ -5,8 +5,10 @@ import com.ecommerce.paymentservice.dto.response.PageResponse;
 import com.ecommerce.paymentservice.dto.response.PaymentResponse;
 import com.ecommerce.paymentservice.entity.Payment;
 import com.ecommerce.paymentservice.enums.PaymentStatus;
+import com.ecommerce.paymentservice.event.PaymentCompletedEvent;
 import com.ecommerce.paymentservice.exception.PaymentDomainException;
 import com.ecommerce.paymentservice.exception.PaymentDomainExceptionCode;
+import com.ecommerce.paymentservice.outbox.OutboxEventPublisher;
 import com.ecommerce.paymentservice.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,12 +18,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
 
     private final PaymentRepository paymentRepository;
+    private final OutboxEventPublisher outboxEventPublisher;
 
     @Transactional
     public PaymentResponse createPayment(Long userId, CreatePaymentRequest request) {
@@ -51,6 +56,7 @@ public class PaymentService {
             Payment saved = paymentRepository.save(payment);
             log.info("결제 생성 완료: paymentId={}, paymentNumber={}",
                     saved.getId(), saved.getPaymentNumber());
+            publishPaymentCompletedOutbox(saved);
             return PaymentResponse.from(saved);
         } catch (DataIntegrityViolationException e) {
             log.warn("결제 유니크 충돌(동시 요청 가능): orderId={}, message={}",
@@ -59,6 +65,20 @@ public class PaymentService {
                     .map(PaymentResponse::from)
                     .orElseThrow(() -> e);
         }
+    }
+
+    private void publishPaymentCompletedOutbox(Payment payment) {
+        PaymentCompletedEvent event = PaymentCompletedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .paymentId(payment.getId())
+                .paymentNumber(payment.getPaymentNumber())
+                .orderId(payment.getOrderId())
+                .orderNumber(payment.getOrderNumber())
+                .userId(payment.getUserId())
+                .amount(payment.getAmount())
+                .paymentMethod(payment.getPaymentMethod().name())
+                .build();
+        outboxEventPublisher.publishPaymentCompletedEvent(event);
     }
 
     @Transactional(readOnly = true)
