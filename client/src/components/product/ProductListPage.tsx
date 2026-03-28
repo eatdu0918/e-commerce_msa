@@ -2,6 +2,7 @@ import { useState, useEffect, type FormEvent } from 'react';
 import ProductCard from './ProductCard';
 import { useQuery } from '@tanstack/react-query';
 import { fetchProducts } from '../../api/services/product';
+import { getAllCategories } from '../../api/services/category';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
@@ -59,16 +60,19 @@ export default function ProductListPage() {
         }
     };
 
-    // Map frontend category to backend ID
+    const { data: categoriesData } = useQuery({
+        queryKey: ['categories'],
+        queryFn: getAllCategories,
+        staleTime: Infinity,
+        retry: false,
+    });
+
     const getCategoryId = (filter: string) => {
         if (filter === 'all') return undefined;
-        switch (filter) {
-            case 'Electronics': return 1;
-            case 'Clothing': return 2;
-            case 'Accessories': return 3;
-            default: return undefined;
-        }
+        return categoriesData?.find(c => c.name === filter)?.id;
     };
+
+    const filterOptions = ['all', ...(categoriesData?.map(c => c.name) ?? [])];
 
     const { data: productsPage, isLoading, isError, refetch } = useQuery({
         queryKey: ['products', page, currentFilter, currentSort, keyword],
@@ -122,7 +126,7 @@ export default function ProductListPage() {
 
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 mb-12 border-b border-stone-200 pb-8">
                     <div className="flex space-x-2 overflow-x-auto no-scrollbar pb-2 md:pb-0 w-full md:w-auto">
-                        {['all', 'Electronics', 'Clothing', 'Accessories'].map((cat) => (
+                        {filterOptions.map((cat) => (
                             <Button
                                 key={cat}
                                 onClick={() => handleFilterChange(cat)}
@@ -130,7 +134,7 @@ export default function ProductListPage() {
                                 size="sm"
                                 className={`rounded-full ${currentFilter === cat ? '' : 'bg-stone-100 text-stone-600 hover:bg-stone-200'}`}
                             >
-                                {cat === 'all' ? t('common.category_all') : cat === 'Electronics' ? t('common.category_electronics') : cat === 'Clothing' ? t('common.category_clothing') : t('common.category_accessories')}
+                                {cat === 'all' ? t('common.category_all') : cat}
                             </Button>
                         ))}
                     </div>

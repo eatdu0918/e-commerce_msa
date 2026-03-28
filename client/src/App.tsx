@@ -36,6 +36,7 @@ const CouponView = lazy(() => import('./components/profile/CouponView'));
 const CancelRefundView = lazy(() => import('./components/profile/CancelRefundView'));
 const PaymentHistoryView = lazy(() => import('./components/profile/PaymentHistoryView'));
 const MyReviewsView = lazy(() => import('./components/profile/MyReviewsView'));
+const ChangePasswordView = lazy(() => import('./components/profile/ChangePasswordView'));
 
 import ScrollToTop from './components/common/ScrollToTop';
 
@@ -77,6 +78,7 @@ function App() {
             <Route path="/me/cancel-refund" element={<CancelRefundView />} />
             <Route path="/me/payments" element={<PaymentHistoryView />} />
             <Route path="/me/reviews" element={<MyReviewsView />} />
+            <Route path="/me/password" element={<ChangePasswordView />} />
           </Route>
 
         </Route>

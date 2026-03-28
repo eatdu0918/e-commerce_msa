@@ -9,6 +9,7 @@ import SignupModal from '../auth/SignupModal';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getMyProfile } from '../../api/services/user';
 import { getCart } from '../../api/services/cart';
+import { getRootCategories } from '../../api/services/category';
 import { useTranslation } from 'react-i18next';
 
 export default function RootLayout() {
@@ -22,8 +23,13 @@ export default function RootLayout() {
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [category, setCategory] = useState(t('common.category_all'));
 
-    // Define categories (could be fetched from API in future)
-    const categories = ['NEW ARRIVALS', 'HOME GOODS'];
+    const { data: categoriesData } = useQuery({
+        queryKey: ['categories'],
+        queryFn: getRootCategories,
+        staleTime: Infinity,
+        retry: false,
+    });
+    const categories = categoriesData?.map(c => c.name) ?? [];
 
     // Check auth
     const { data: user } = useQuery({

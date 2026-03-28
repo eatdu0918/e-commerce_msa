@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { User, Package, Heart, CreditCard, RotateCcw, Ticket, ChevronRight, MessageSquare } from 'lucide-react';
+import { User, Package, Heart, CreditCard, RotateCcw, Ticket, ChevronRight, MessageSquare, Lock } from 'lucide-react';
 import type { UserResponse } from '../../api/services/user';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
@@ -84,9 +84,15 @@ export default function MyPageView() {
                         <span className="font-medium">{t('common.edit_profile')}</span>
                         <ChevronRight size={16} className="text-stone-300 group-hover:translate-x-1 transition-transform" />
                     </button>
-                    <button className="w-full px-6 py-5 text-left text-sm text-stone-300 cursor-not-allowed flex justify-between items-center">
-                        <span className="font-medium">Notifications</span>
-                        <span className="text-[10px] font-bold uppercase tracking-tighter bg-stone-50 px-2 py-0.5 rounded text-stone-300">Coming soon</span>
+                    <button
+                        onClick={() => navigate('/me/password')}
+                        className="w-full px-6 py-5 text-left text-sm hover:bg-stone-50 transition-colors flex justify-between items-center group"
+                    >
+                        <span className="font-medium flex items-center gap-2">
+                            <Lock size={15} className="text-stone-400" />
+                            비밀번호 변경
+                        </span>
+                        <ChevronRight size={16} className="text-stone-300 group-hover:translate-x-1 transition-transform" />
                     </button>
                 </div>
             </div>
