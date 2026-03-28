@@ -7,7 +7,7 @@ import com.ecommerce.orderservice.dto.response.PageResponse;
 import com.ecommerce.orderservice.entity.Order;
 import com.ecommerce.orderservice.enums.OrderStatus;
 import com.ecommerce.orderservice.exception.OrderDomainException;
-import com.ecommerce.orderservice.kafka.OrderEventProducer;
+import com.ecommerce.orderservice.outbox.OutboxEventPublisher;
 import com.ecommerce.orderservice.repository.OrderRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,7 +38,7 @@ class OrderServiceTest {
     OrderRepository orderRepository;
 
     @Mock
-    OrderEventProducer orderEventProducer;
+    OutboxEventPublisher outboxEventPublisher;
 
     @InjectMocks
     OrderService orderService;
@@ -73,7 +73,7 @@ class OrderServiceTest {
         assertThat(response.getTotalAmount()).isEqualByComparingTo(new BigDecimal("20000"));
         assertThat(response.getStatus()).isEqualTo(OrderStatus.PENDING);
         verify(orderRepository).save(any(Order.class));
-        verify(orderEventProducer).sendOrderCreatedEvent(any());
+        verify(outboxEventPublisher).publishOrderCreatedEvent(any());
     }
 
     @Test
@@ -150,7 +150,7 @@ class OrderServiceTest {
 
         // then
         assertThat(response.getStatus()).isEqualTo(OrderStatus.CANCELLED);
-        verify(orderEventProducer).sendOrderCancelledEvent(any());
+        verify(outboxEventPublisher).publishOrderCancelledEvent(any());
     }
 
     @Test

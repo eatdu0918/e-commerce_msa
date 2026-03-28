@@ -1,6 +1,7 @@
 package com.ecommerce.orderservice.kafka;
 
 import com.ecommerce.orderservice.entity.ProcessedEvent;
+import com.ecommerce.orderservice.enums.OrderStatus;
 import com.ecommerce.orderservice.event.*;
 import com.ecommerce.orderservice.repository.OrderRepository;
 import com.ecommerce.orderservice.repository.ProcessedEventRepository;
@@ -123,6 +124,29 @@ public class OrderEventConsumer {
      * 결제 실패 시 보상 트랜잭션: 주문 취소 + order-cancelled 이벤트 발행
      * → product-service: 재고 복원, discount-service: 쿠폰 복원
      */
+    /**
+     * PG/REST 등으로 결제가 먼저 완료된 뒤 Saga(coupon-used)보다 빨리 반영될 때
+     * 주문 상태를 주문 상세 UI와 일치시키기 위한 보정 처리.
+     */
+    @KafkaListener(topics = "payment-completed", groupId = "order-service")
+    @Transactional
+    public void handlePaymentCompleted(PaymentCompletedEvent event) {
+        if (isDuplicate(event.getEventId(), "payment-completed"))
+            return;
+
+        log.info("Received payment-completed event: orderId={}, paymentId={}",
+                event.getOrderId(), event.getPaymentId());
+
+        orderRepository.findById(event.getOrderId()).ifPresent(order -> {
+            if (order.getStatus() == OrderStatus.PENDING) {
+                order.confirm();
+                log.info("주문 확정 (결제 완료 이벤트): orderId={}", order.getId());
+            }
+        });
+
+        markProcessed(event.getEventId(), "payment-completed");
+    }
+
     @KafkaListener(topics = "payment-failed", groupId = "order-service")
     @Transactional
     public void handlePaymentFailed(PaymentFailedEvent event) {

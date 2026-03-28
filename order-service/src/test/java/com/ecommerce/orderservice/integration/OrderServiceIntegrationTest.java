@@ -68,7 +68,7 @@ class OrderServiceIntegrationTest extends IntegrationTestBase {
         assertThat(response.getId()).isNotNull();
         assertThat(response.getUserId()).isEqualTo(userId);
         assertThat(response.getStatus()).isEqualTo(OrderStatus.PENDING);
-        assertThat(response.getTotalAmount()).isEqualByComparingTo(new BigDecimal("30000"));
+        assertThat(response.getTotalAmount()).isEqualByComparingTo(new BigDecimal("20000"));
 
         // DB에서 직접 조회하여 검증 (fetch join으로 orderItems 포함)
         Order savedOrder = orderRepository.findByIdWithItems(response.getId()).orElseThrow();

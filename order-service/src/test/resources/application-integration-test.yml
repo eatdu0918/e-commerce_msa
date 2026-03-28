@@ -43,6 +43,7 @@ spring:
           CouponUsedEvent:com.ecommerce.orderservice.event.CouponUsedEvent,
           CouponUseFailedEvent:com.ecommerce.orderservice.event.CouponUseFailedEvent,
           PaymentFailedEvent:com.ecommerce.orderservice.event.PaymentFailedEvent,
+          PaymentCompletedEvent:com.ecommerce.orderservice.event.PaymentCompletedEvent,
           CancelApprovedEvent:com.ecommerce.orderservice.event.CancelApprovedEvent
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
@@ -56,6 +57,7 @@ spring:
           CouponUsedEvent:com.ecommerce.orderservice.event.CouponUsedEvent,
           CouponUseFailedEvent:com.ecommerce.orderservice.event.CouponUseFailedEvent,
           PaymentFailedEvent:com.ecommerce.orderservice.event.PaymentFailedEvent,
+          PaymentCompletedEvent:com.ecommerce.orderservice.event.PaymentCompletedEvent,
           CancelApprovedEvent:com.ecommerce.orderservice.event.CancelApprovedEvent
 
 jwt:

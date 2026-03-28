@@ -7,6 +7,7 @@ import com.ecommerce.orderservice.entity.Order;
 import com.ecommerce.orderservice.entity.ProcessedEvent;
 import com.ecommerce.orderservice.enums.OrderStatus;
 import com.ecommerce.orderservice.event.CouponUsedEvent;
+import com.ecommerce.orderservice.event.PaymentCompletedEvent;
 import com.ecommerce.orderservice.event.PaymentFailedEvent;
 import com.ecommerce.orderservice.event.StockDecreaseFailedEvent;
 import com.ecommerce.orderservice.repository.OrderRepository;
@@ -105,6 +106,35 @@ class KafkaConsumerIntegrationTest extends IntegrationTestBase {
         await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> {
             Order updatedOrder = orderRepository.findById(orderId).orElseThrow();
             assertThat(updatedOrder.getStatus()).isEqualTo(OrderStatus.CANCELLED);
+        });
+    }
+
+    @Test
+    @DisplayName("payment-completed 이벤트 수신 시 PENDING 주문이 CONFIRMED로 변경")
+    void handlePaymentCompleted_confirmsPendingOrder() throws Exception {
+        OrderResponse order = createTestOrder(5L);
+        Long orderId = order.getId();
+
+        PaymentCompletedEvent event = PaymentCompletedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .paymentId(99L)
+                .paymentNumber("PAY-TEST")
+                .orderId(orderId)
+                .orderNumber(order.getOrderNumber())
+                .userId(5L)
+                .amount(new BigDecimal("30000"))
+                .paymentMethod("CREDIT_CARD")
+                .build();
+
+        kafkaTemplate.send("payment-completed", event.getOrderNumber(), event).get();
+
+        await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> {
+            Order updatedOrder = orderRepository.findById(orderId).orElseThrow();
+            assertThat(updatedOrder.getStatus()).isEqualTo(OrderStatus.CONFIRMED);
+        });
+
+        await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
+            assertThat(processedEventRepository.existsByEventId(event.getEventId())).isTrue();
         });
     }
 

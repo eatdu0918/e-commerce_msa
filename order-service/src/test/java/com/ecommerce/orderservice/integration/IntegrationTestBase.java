@@ -23,6 +23,7 @@ import org.springframework.test.context.ActiveProfiles;
                 "coupon-used",
                 "coupon-use-failed",
                 "payment-failed",
+                "payment-completed",
                 "cancel-approved"
         },
         brokerProperties = {
