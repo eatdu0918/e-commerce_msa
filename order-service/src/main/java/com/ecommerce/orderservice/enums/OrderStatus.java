@@ -21,6 +21,14 @@ public enum OrderStatus {
         return this == PENDING || this == CONFIRMED || this == PREPARING;
     }
 
+    /**
+     * cancel-service 취소·반품 신청(cancel-requested) 시 주문을 취소 요청 중으로 둘 수 있는 상태.
+     * ({@link #canCancel()}는 출고 전 즉시 취소 API 등에만 사용)
+     */
+    public boolean canMarkCancelRequested() {
+        return this != CANCELLED && this != CANCEL_REQUESTED;
+    }
+
     public boolean canUpdateStatus() {
         return this != CANCELLED && this != DELIVERED && this != CANCEL_REQUESTED;
     }

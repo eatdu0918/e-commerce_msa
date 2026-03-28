@@ -117,7 +117,7 @@ public class Order extends BaseEntity {
         if (this.status == OrderStatus.CANCELLED || this.status == OrderStatus.CANCEL_REQUESTED) {
             return;
         }
-        if (!this.status.canCancel()) {
+        if (!this.status.canMarkCancelRequested()) {
             return;
         }
         this.statusBeforeCancelRequest = this.status;
