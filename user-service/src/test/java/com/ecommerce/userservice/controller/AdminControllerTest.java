@@ -4,7 +4,9 @@ import com.ecommerce.userservice.dto.response.PageResponse;
 import com.ecommerce.userservice.dto.response.UserResponse;
 import com.ecommerce.userservice.exception.UserDomainException;
 import com.ecommerce.userservice.exception.UserDomainExceptionCode;
+import com.ecommerce.userservice.security.jwt.JwtTokenProvider;
 import com.ecommerce.userservice.service.AdminService;
+import com.ecommerce.userservice.service.TokenService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -35,6 +37,12 @@ class AdminControllerTest {
 
     @MockBean
     AdminService adminService;
+
+    @MockBean
+    JwtTokenProvider jwtTokenProvider;
+
+    @MockBean
+    TokenService tokenService;
 
     @Nested
     @DisplayName("GET /api/admin/users - 전체 회원 조회")

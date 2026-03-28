@@ -394,7 +394,6 @@ class UserServiceTest {
 
             when(userRepository.findById(USER_ID)).thenReturn(Optional.of(testUser));
             when(passwordEncoder.matches(PASSWORD, ENCODED_PASSWORD)).thenReturn(true);
-            when(passwordEncoder.matches(eq(PASSWORD), eq(ENCODED_PASSWORD))).thenReturn(true);
 
             // when & then
             assertThatThrownBy(() -> userService.changePassword(USER_ID, request))

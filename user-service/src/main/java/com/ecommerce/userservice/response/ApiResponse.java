@@ -21,7 +21,10 @@ public class ApiResponse<T> {
     LocalDateTime timestamp;
 
     public static <T> ApiResponse<T> ok() {
-        return ApiResponse.<T>builder().build();
+        return ApiResponse.<T>builder()
+                .success(true)
+                .timestamp(LocalDateTime.now())
+                .build();
     }
 
     public static <T> ApiResponse<T> success(T data) {

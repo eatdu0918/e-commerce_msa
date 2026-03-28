@@ -7,6 +7,8 @@ import com.ecommerce.userservice.dto.response.UserResponse;
 import com.ecommerce.userservice.enums.Gender;
 import com.ecommerce.userservice.exception.UserDomainException;
 import com.ecommerce.userservice.exception.UserDomainExceptionCode;
+import com.ecommerce.userservice.security.jwt.JwtTokenProvider;
+import com.ecommerce.userservice.service.TokenService;
 import com.ecommerce.userservice.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -37,6 +39,12 @@ class UserControllerTest {
 
     @MockBean
     UserService userService;
+
+    @MockBean
+    JwtTokenProvider jwtTokenProvider;
+
+    @MockBean
+    TokenService tokenService;
 
     @Autowired
     ObjectMapper objectMapper;
