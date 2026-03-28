@@ -59,7 +59,7 @@ public class Payment extends BaseEntity {
     @Column(nullable = false, precision = 12, scale = 2)
     BigDecimal amount;
 
-    @Column(name = "payment_details", length = 100)
+    @Column(name = "payment_details", length = 1000)
     String paymentDetails;
 
     @Column(name = "paid_at")

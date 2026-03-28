@@ -1,0 +1,1 @@
+ALTER TABLE payments MODIFY COLUMN payment_details VARCHAR(1000) NULL;

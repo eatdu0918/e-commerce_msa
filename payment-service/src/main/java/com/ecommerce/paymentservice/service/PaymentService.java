@@ -34,6 +34,7 @@ public class PaymentService {
                 request.getAmount(),
                 request.getPaymentDetails()
         );
+        payment.complete(); // 결제 완료 상태로 설정
 
         Payment savedPayment = paymentRepository.save(payment);
         log.info("결제 생성 완료: paymentId={}, paymentNumber={}",
