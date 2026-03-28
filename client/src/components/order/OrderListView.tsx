@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ShoppingBag, ChevronRight, Package, Truck, CheckCircle2, AlertCircle, RefreshCw } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { getMyOrders } from '../../api/services/order';
+import { getMyOrders, getUiProgressStatus } from '../../api/services/order';
 import type { OrderItemResponse, OrderResponse } from '../../api/services/order';
 import { useTranslation } from 'react-i18next';
 import { formatDateTime, getEstimatedArrivalDate } from '../../utils/date';
@@ -60,6 +60,8 @@ export default function OrderListView() {
     const { data: ordersPage, isLoading } = useQuery({
         queryKey: ['orders'],
         queryFn: () => getMyOrders(0, 20),
+        staleTime: 0,
+        refetchOnMount: 'always',
     });
 
     const orders = ordersPage?.content || [];
@@ -104,7 +106,8 @@ export default function OrderListView() {
                 
                 <div className="grid gap-8">
                     {orders.map((order: OrderResponse) => {
-                        const theme = STATUS_THEME[order.status] || STATUS_THEME.PENDING;
+                        const displayStatus = getUiProgressStatus(order);
+                        const theme = STATUS_THEME[displayStatus] || STATUS_THEME.PENDING;
                         const StatusIcon = theme.icon;
                         const items = order.items || [];
                         const firstItem = items.length > 0 ? items[0] : null;

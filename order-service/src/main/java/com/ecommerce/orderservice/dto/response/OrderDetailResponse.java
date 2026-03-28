@@ -1,6 +1,7 @@
 package com.ecommerce.orderservice.dto.response;
 
 import com.ecommerce.orderservice.client.dto.PaymentInfo;
+import com.ecommerce.orderservice.dto.OrderProgressStatusResolver;
 import com.ecommerce.orderservice.enums.OrderStatus;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -35,7 +36,12 @@ public class OrderDetailResponse {
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
 
+    /** {@link OrderResponse#getProgressStatus()} 와 동일 규칙 */
+    OrderStatus progressStatus;
+
     public static OrderDetailResponse from(OrderResponse order, List<OrderItemDetailResponse> items, PaymentInfo payment) {
+        String pay = payment != null ? payment.getStatus() : null;
+        OrderStatus progress = OrderProgressStatusResolver.resolveForDisplay(order.getStatus(), pay);
         return OrderDetailResponse.builder()
                 .id(order.getId())
                 .userId(order.getUserId())
@@ -53,6 +59,7 @@ public class OrderDetailResponse {
                 .payment(payment)
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())
+                .progressStatus(progress)
                 .build();
     }
 }

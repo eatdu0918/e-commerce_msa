@@ -326,6 +326,7 @@ class AdminOrderControllerTest {
                 .items(List.of(item))
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
+                .progressStatus(status)
                 .build();
     }
 
@@ -345,6 +346,7 @@ class AdminOrderControllerTest {
                 .items(List.of())
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
+                .progressStatus(status)
                 .build();
     }
 }

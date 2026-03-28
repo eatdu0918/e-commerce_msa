@@ -4,10 +4,12 @@ import com.ecommerce.orderservice.client.PaymentServiceClient;
 import com.ecommerce.orderservice.client.ProductServiceClient;
 import com.ecommerce.orderservice.client.dto.PaymentInfo;
 import com.ecommerce.orderservice.client.dto.ProductInfo;
+import com.ecommerce.orderservice.dto.OrderProgressStatusResolver;
 import com.ecommerce.orderservice.dto.response.*;
 import com.ecommerce.orderservice.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -21,6 +23,22 @@ public class OrderAggregationService {
     private final OrderService orderService;
     private final ProductServiceClient productServiceClient;
     private final PaymentServiceClient paymentServiceClient;
+
+    public PageResponse<OrderResponse> getMyOrders(Long userId, Pageable pageable) {
+        PageResponse<OrderResponse> page = orderService.getMyOrders(userId, pageable);
+        List<OrderResponse> enriched = page.getContent().stream()
+                .map(this::withPaymentStatus)
+                .toList();
+        return PageResponse.<OrderResponse>builder()
+                .content(enriched)
+                .pageNumber(page.getPageNumber())
+                .pageSize(page.getPageSize())
+                .totalElements(page.getTotalElements())
+                .totalPages(page.getTotalPages())
+                .first(page.isFirst())
+                .last(page.isLast())
+                .build();
+    }
 
     public OrderDetailResponse getOrderDetail(Long orderId, Long userId) {
         log.info("주문 상세 통합 조회: orderId={}, userId={}", orderId, userId);
@@ -73,5 +91,14 @@ public class OrderAggregationService {
             log.warn("결제 정보 조회 실패: orderId={}, error={}", orderId, e.getMessage());
             return null;
         }
+    }
+
+    private OrderResponse withPaymentStatus(OrderResponse order) {
+        PaymentInfo info = fetchPaymentInfo(order.getId());
+        String paymentStatus = info != null ? info.getStatus() : null;
+        return order.toBuilder()
+                .paymentStatus(paymentStatus)
+                .progressStatus(OrderProgressStatusResolver.resolveForDisplay(order.getStatus(), paymentStatus))
+                .build();
     }
 }

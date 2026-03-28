@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
-@Builder
+@Builder(toBuilder = true)
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class OrderResponse {
@@ -33,6 +33,11 @@ public class OrderResponse {
     List<OrderItemResponse> items;
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
+    /** 결제 서비스 조회 결과 (목록 통합 조회 시에만 채움). 없거나 미조회 시 null */
+    String paymentStatus;
+
+    /** 목록·상세·진행 바 라벨에 공통 사용 (결제 완료 반영 등). */
+    OrderStatus progressStatus;
 
     public static OrderResponse from(Order order) {
         List<OrderItemResponse> items = order.getOrderItems().stream()
@@ -55,6 +60,7 @@ public class OrderResponse {
                 .items(items)
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())
+                .progressStatus(order.getStatus())
                 .build();
     }
 
@@ -74,6 +80,7 @@ public class OrderResponse {
                 .recipientPhone(order.getRecipientPhone())
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())
+                .progressStatus(order.getStatus())
                 .build();
     }
 }

@@ -200,7 +200,7 @@ class OrderControllerTest {
                     .last(true)
                     .build();
 
-            when(orderService.getMyOrders(anyLong(), any(Pageable.class))).thenReturn(pageResponse);
+            when(orderAggregationService.getMyOrders(anyLong(), any(Pageable.class))).thenReturn(pageResponse);
 
             // when & then
             mockMvc.perform(get("/api/orders"))
@@ -224,7 +224,7 @@ class OrderControllerTest {
                     .last(true)
                     .build();
 
-            when(orderService.getMyOrders(anyLong(), any(Pageable.class))).thenReturn(pageResponse);
+            when(orderAggregationService.getMyOrders(anyLong(), any(Pageable.class))).thenReturn(pageResponse);
 
             // when & then
             mockMvc.perform(get("/api/orders"))
@@ -395,6 +395,7 @@ class OrderControllerTest {
                 .items(List.of(item))
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
+                .progressStatus(status)
                 .build();
     }
 
@@ -414,6 +415,7 @@ class OrderControllerTest {
                 .items(List.of())
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
+                .progressStatus(status)
                 .build();
     }
 }

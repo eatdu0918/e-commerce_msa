@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { formatDateTime, getEstimatedArrivalDate } from '../../utils/date';
 import { CreditCard, MapPin, Package, ArrowLeft, CheckCircle2, Truck, Receipt, Calendar, Info, ChevronRight, AlertCircle } from 'lucide-react';
-import { getOrderDetail } from '../../api/services/order';
+import { getOrderDetail, getUiProgressStatus } from '../../api/services/order';
 import type { OrderDetailResponse } from '../../api/services/order';
 import { createCancel, CANCEL_REASON_LABELS } from '../../api/services/cancel';
 import type { CancelReason, CreateCancelRequest } from '../../api/services/cancel';
@@ -19,6 +19,29 @@ const FALLBACK_IMAGES = {
     camera: 'https://images.unsplash.com/photo-1585333127302-e29f1163398c?auto=format&fit=crop&q=80&w=400&h=400',
     laptop: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&q=80&w=400&h=400',
     default: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&q=80&w=400&h=400'
+};
+
+/** 마일스톤(완료 구간)과 '진행 중' 배지 위치를 분리 — 결제 완료 단계에서는 해당 칸이 '진행 중'이 되지 않음 */
+const getOrderStepperDisplay = (
+    statusKey: string,
+    stepCount: number
+): { completedThrough: number; pulseAt: number | null } => {
+    const last = stepCount - 1;
+    const u = (statusKey || '').toUpperCase();
+    switch (u) {
+        case 'PENDING':
+            return { completedThrough: 0, pulseAt: 0 };
+        case 'CONFIRMED':
+            return { completedThrough: 1, pulseAt: Math.min(2, last) };
+        case 'PREPARING':
+            return { completedThrough: 2, pulseAt: Math.min(2, last) };
+        case 'SHIPPING':
+            return { completedThrough: 2, pulseAt: Math.min(3, last) };
+        case 'DELIVERED':
+            return { completedThrough: last, pulseAt: null };
+        default:
+            return { completedThrough: 0, pulseAt: 0 };
+    }
 };
 
 const getFallbackImage = (name: string = '') => {
@@ -128,9 +151,13 @@ export default function OrderDetailView() {
         );
     }
 
-    const currentStatusIndex = Math.max(0, STATUS_STEPS.findIndex(step => step.key === (order.status || '').toUpperCase()));
-    const canCancel = CANCELLABLE_STATUSES.includes(order.status);
     const isCancelled = order.status === 'CANCELLED' || order.status === 'CANCEL_REQUESTED';
+    const progressStatus = getUiProgressStatus(order);
+    const { completedThrough: stepperCompletedThrough, pulseAt: stepperPulseAt } = getOrderStepperDisplay(
+        progressStatus,
+        STATUS_STEPS.length
+    );
+    const canCancel = CANCELLABLE_STATUSES.includes(order.status);
     const orderItems = order.items || [];
 
     return (
@@ -160,7 +187,7 @@ export default function OrderDetailView() {
                         isCancelled ? 'bg-rose-50 text-rose-600' :
                         'bg-blue-50 text-blue-600'
                     }`}>
-                        {statusBadgeLabel(order.status) || order.statusDescription}
+                        {statusBadgeLabel((progressStatus || '').toUpperCase()) || order.statusDescription}
                     </span>
                 </div>
             </header>
@@ -173,20 +200,22 @@ export default function OrderDetailView() {
                         <div className="hidden sm:block absolute top-[1.35rem] left-[2.5rem] right-[2.5rem] h-0.5 bg-stone-100 -z-0">
                             <div 
                                 className="h-full bg-black transition-all duration-1000 ease-out" 
-                                style={{ width: `${(currentStatusIndex / (STATUS_STEPS.length - 1)) * 100}%` }}
+                                style={{
+                                    width: `${(stepperCompletedThrough / Math.max(1, STATUS_STEPS.length - 1)) * 100}%`,
+                                }}
                             />
                         </div>
 
                         {STATUS_STEPS.map((step, index) => {
-                            const isCompleted = index <= currentStatusIndex;
-                            const isCurrent = index === currentStatusIndex;
+                            const isCompleted = index <= stepperCompletedThrough;
+                            const isPulsing = stepperPulseAt !== null && index === stepperPulseAt;
                             const Icon = step.icon;
 
                             return (
                                 <div key={step.key} className="flex sm:flex-col items-center gap-4 sm:gap-3 flex-1 relative z-10 w-full sm:w-auto">
                                     <div className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-500 ${
                                         isCompleted ? 'bg-black text-white shadow-lg shadow-black/20' : 'bg-stone-50 text-stone-300'
-                                    } ${isCurrent ? 'ring-4 ring-black/5 scale-110' : ''}`}>
+                                    } ${isPulsing ? 'ring-4 ring-black/5 scale-110' : ''}`}>
                                         <Icon size={index === 4 && isCompleted ? 20 : 18} />
                                     </div>
                                     <div className="flex flex-col sm:items-center">
@@ -195,7 +224,7 @@ export default function OrderDetailView() {
                                         }`}>
                                             {step.label}
                                         </span>
-                                        {isCurrent && (
+                                        {isPulsing && (
                                             <span className="text-[9px] font-bold text-blue-500 animate-pulse hidden sm:block">{t('orderDetail.current_step')}</span>
                                         )}
                                     </div>

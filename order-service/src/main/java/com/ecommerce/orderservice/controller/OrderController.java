@@ -42,7 +42,7 @@ public class OrderController {
     public ResponseEntity<ApiResponse<PageResponse<OrderResponse>>> getMyOrders(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        PageResponse<OrderResponse> response = orderService.getMyOrders(userDetails.getUserId(), pageable);
+        PageResponse<OrderResponse> response = orderAggregationService.getMyOrders(userDetails.getUserId(), pageable);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

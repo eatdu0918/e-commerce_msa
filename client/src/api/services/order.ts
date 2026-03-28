@@ -31,6 +31,10 @@ export interface OrderResponse {
     userId: number;
     orderNumber: string;
     status: string;
+    /** 서버가 계산한 진행 표시용 상태(목록·상세 공통). PENDING+결제완료 → CONFIRMED */
+    progressStatus?: string | null;
+    /** 목록 API에서 결제 서비스와 통합 조회 시에만 설정 */
+    paymentStatus?: string | null;
     statusDescription: string;
     totalAmount: number;
     discountAmount: number;
@@ -68,6 +72,20 @@ export interface PageResponse<T> {
     totalElements: number;
     totalPages: number;
     last: boolean;
+}
+
+/** API `progressStatus`를 우선하고, 없을 때만 결제 정보로 보조(구버전·캐시 대비). */
+export function getUiProgressStatus(order: {
+    status: string;
+    progressStatus?: string | null;
+    paymentStatus?: string | null;
+    payment?: { status?: string };
+}): string {
+    if (order.progressStatus) return order.progressStatus;
+    const cancelled = order.status === 'CANCELLED' || order.status === 'CANCEL_REQUESTED';
+    const paid = (order.payment?.status || order.paymentStatus || '').toUpperCase() === 'COMPLETED';
+    if (!cancelled && order.status === 'PENDING' && paid) return 'CONFIRMED';
+    return order.status;
 }
 
 export const createOrder = async (data: CreateOrderRequest): Promise<OrderResponse> => {
