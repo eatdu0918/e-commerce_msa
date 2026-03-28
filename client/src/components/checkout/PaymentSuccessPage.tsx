@@ -45,12 +45,27 @@ export default function PaymentSuccessPage() {
             const order = await createOrder(orderRequest);
 
             // 결제 기록 생성
+            // 실제 서비스에서는 여기서 백엔드의 '결제 승인 API'를 호출해야 하며, 
+            // 백엔드에서 Toss API를 통해 받은 상세 응답(issuerCode, installmentPlanMonths 등)을 
+            // paymentDetails에 JSON으로 저장해야 합니다.
+            // 여기서는 UI 시연을 위해 모의 상세 데이터를 저장합니다.
+            const mockPaymentDetails = JSON.stringify({
+                method: orderData.paymentMethod,
+                card: {
+                    issuerCode: 'HYUNDAI', // 현대카드
+                    installmentPlanMonths: 0, // 일시불
+                    number: '44445555****8888',
+                    cardType: '신용',
+                    ownerType: '개인'
+                }
+            });
+
             await createPayment({
                 orderId: order.id,
                 orderNumber: order.orderNumber,
                 paymentMethod: orderData.paymentMethod,
                 amount: order.finalAmount,
-                paymentDetails: '카드 결제 (토스페이먼츠)', // 실제 연동 시에는 승인 API 응답에서 카테고리/카드사 추출
+                paymentDetails: mockPaymentDetails,
             });
 
             // 주문 정보 삭제
