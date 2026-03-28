@@ -518,6 +518,7 @@
         "nav_cancels": "취소",
         "nav_refunds": "환불",
         "loading": "로딩 중...",
+        "error_load": "데이터를 불러오지 못했습니다.",
         "prev": "이전",
         "next": "다음",
         "total_people": "전체 {{count}}명",

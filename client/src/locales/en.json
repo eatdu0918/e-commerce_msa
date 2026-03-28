@@ -520,6 +520,7 @@
         "nav_cancels": "Cancellations",
         "nav_refunds": "Refunds",
         "loading": "Loading...",
+        "error_load": "Failed to load data.",
         "prev": "Previous",
         "next": "Next",
         "total_people": "{{count}} users",

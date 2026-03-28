@@ -10,7 +10,7 @@ const AdminRefundList = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const queryClient = useQueryClient();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['admin-refunds', page, statusFilter],
     queryFn: () => adminApi.getRefunds(page, 10, statusFilter || undefined),
   });
@@ -36,6 +36,14 @@ const AdminRefundList = () => {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-gray-500">{t('admin.loading')}</div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-red-500">{t('admin.error_load')}</div>
       </div>
     );
   }
@@ -115,7 +123,7 @@ const AdminRefundList = () => {
                   #{refund.orderId}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {refund.amount.toLocaleString()}{t('common.currency_won')}
+                  {refund.amount?.toLocaleString() ?? '-'}{t('common.currency_won')}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
