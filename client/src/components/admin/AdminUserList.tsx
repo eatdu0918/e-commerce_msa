@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { adminApi, User } from '../../api/services/admin';
+import { adminApi, type User } from '../../api/services/admin';
 import { ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 
 const AdminUserList = () => {
@@ -123,8 +123,8 @@ const AdminUserList = () => {
                     onChange={(e) => handleRoleChange(user.id, e.target.value)}
                     className="text-sm border border-gray-300 rounded px-2 py-1"
                   >
-                    <option value="ROLE_USER">USER</option>
-                    <option value="ROLE_ADMIN">ADMIN</option>
+                    <option value="USER">USER</option>
+                    <option value="ADMIN">ADMIN</option>
                   </select>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">

@@ -63,7 +63,11 @@ public class AdminService {
 
         UserRole newRole;
         try {
-            newRole = UserRole.valueOf(roleName.toUpperCase());
+            String normalized = roleName.trim().toUpperCase();
+            if (normalized.startsWith("ROLE_")) {
+                normalized = normalized.substring("ROLE_".length());
+            }
+            newRole = UserRole.valueOf(normalized);
         } catch (IllegalArgumentException e) {
             throw new UserDomainException(UserDomainExceptionCode.InvalidTokenException);
         }
