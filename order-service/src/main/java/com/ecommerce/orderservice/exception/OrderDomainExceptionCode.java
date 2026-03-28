@@ -18,6 +18,9 @@ public enum OrderDomainExceptionCode {
     OrderAlreadyCancelledException(HttpStatus.BAD_REQUEST, "이미 취소된 주문입니다."),
     OrderAlreadyCompletedException(HttpStatus.BAD_REQUEST, "이미 완료된 주문입니다."),
     InvalidOrderStatusException(HttpStatus.BAD_REQUEST, "유효하지 않은 주문 상태입니다."),
+    OrderStatusTransitionNotAllowedException(HttpStatus.BAD_REQUEST, "허용되지 않는 주문 상태 전환입니다. 단계 순서를 확인해 주세요."),
+    OrderFulfillmentBlockedByCancelOrRefundException(HttpStatus.BAD_REQUEST,
+            "취소 또는 환불 처리 중인 주문은 배송 단계를 변경할 수 없습니다."),
     EmptyOrderItemsException(HttpStatus.BAD_REQUEST, "주문 상품이 비어있습니다."),
 
     // OrderItem 관련 예외

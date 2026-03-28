@@ -1,5 +1,9 @@
 package com.ecommerce.orderservice.service;
 
+import com.ecommerce.orderservice.client.CancelServiceClient;
+import com.ecommerce.orderservice.client.PaymentServiceClient;
+import com.ecommerce.orderservice.client.dto.OrderCancelSummaryResponse;
+import com.ecommerce.orderservice.client.dto.PaymentInfo;
 import com.ecommerce.orderservice.dto.request.CreateOrderRequest;
 import com.ecommerce.orderservice.dto.request.OrderItemRequest;
 import com.ecommerce.orderservice.dto.response.OrderResponse;
@@ -9,6 +13,8 @@ import com.ecommerce.orderservice.enums.OrderStatus;
 import com.ecommerce.orderservice.exception.OrderDomainException;
 import com.ecommerce.orderservice.outbox.OutboxEventPublisher;
 import com.ecommerce.orderservice.repository.OrderRepository;
+import com.ecommerce.orderservice.response.ApiResponse;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,6 +35,8 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -40,8 +48,20 @@ class OrderServiceTest {
     @Mock
     OutboxEventPublisher outboxEventPublisher;
 
+    @Mock
+    PaymentServiceClient paymentServiceClient;
+
+    @Mock
+    CancelServiceClient cancelServiceClient;
+
     @InjectMocks
     OrderService orderService;
+
+    @BeforeEach
+    void setUp() {
+        lenient().when(paymentServiceClient.getPaymentByOrderId(anyLong())).thenReturn(ApiResponse.success(null));
+        lenient().when(cancelServiceClient.getActiveCancelForOrderAdmin(anyLong())).thenReturn(ApiResponse.success(null));
+    }
 
     @Test
     @DisplayName("주문 생성 성공")
@@ -245,6 +265,66 @@ class OrderServiceTest {
         assertThatThrownBy(() -> orderService.updateOrderStatus(orderId, OrderStatus.PREPARING))
                 .isInstanceOf(OrderDomainException.class)
                 .hasMessageContaining("상태를 변경할 수 없는");
+    }
+
+    @Test
+    @DisplayName("주문 상태 변경 실패 - 단계 건너뛰기")
+    void updateOrderStatus_skipStep_throwsException() {
+        Long orderId = 1L;
+        Order order = createTestOrder(orderId, 1L, OrderStatus.CONFIRMED);
+
+        when(orderRepository.findByIdWithItems(orderId)).thenReturn(Optional.of(order));
+
+        assertThatThrownBy(() -> orderService.updateOrderStatus(orderId, OrderStatus.DELIVERED))
+                .isInstanceOf(OrderDomainException.class)
+                .hasMessageContaining("허용되지 않는");
+    }
+
+    @Test
+    @DisplayName("주문 상태 변경 성공 - 동일 상태(멱등)")
+    void updateOrderStatus_sameStatus_noop() {
+        Long orderId = 1L;
+        Order order = createTestOrder(orderId, 1L, OrderStatus.PREPARING);
+
+        when(orderRepository.findByIdWithItems(orderId)).thenReturn(Optional.of(order));
+
+        OrderResponse response = orderService.updateOrderStatus(orderId, OrderStatus.PREPARING);
+
+        assertThat(response.getStatus()).isEqualTo(OrderStatus.PREPARING);
+        verifyNoInteractions(paymentServiceClient);
+        verifyNoInteractions(cancelServiceClient);
+    }
+
+    @Test
+    @DisplayName("주문 상태 변경 실패 - 결제 환불·취소됨")
+    void updateOrderStatus_refundedPayment_throwsException() {
+        Long orderId = 1L;
+        Order order = createTestOrder(orderId, 1L, OrderStatus.CONFIRMED);
+
+        when(orderRepository.findByIdWithItems(orderId)).thenReturn(Optional.of(order));
+        PaymentInfo payment = new PaymentInfo(
+                1L, orderId, "PN", "REFUNDED", new BigDecimal("10000"), "CARD", null, null);
+        when(paymentServiceClient.getPaymentByOrderId(orderId)).thenReturn(ApiResponse.success(payment));
+
+        assertThatThrownBy(() -> orderService.updateOrderStatus(orderId, OrderStatus.PREPARING))
+                .isInstanceOf(OrderDomainException.class)
+                .hasMessageContaining("취소 또는 환불");
+    }
+
+    @Test
+    @DisplayName("주문 상태 변경 실패 - 진행 중 취소")
+    void updateOrderStatus_activeCancel_throwsException() {
+        Long orderId = 1L;
+        Order order = createTestOrder(orderId, 1L, OrderStatus.CONFIRMED);
+
+        when(orderRepository.findByIdWithItems(orderId)).thenReturn(Optional.of(order));
+        OrderCancelSummaryResponse summary = new OrderCancelSummaryResponse();
+        ReflectionTestUtils.setField(summary, "status", "REQUESTED");
+        when(cancelServiceClient.getActiveCancelForOrderAdmin(orderId)).thenReturn(ApiResponse.success(summary));
+
+        assertThatThrownBy(() -> orderService.updateOrderStatus(orderId, OrderStatus.PREPARING))
+                .isInstanceOf(OrderDomainException.class)
+                .hasMessageContaining("취소 또는 환불");
     }
 
     private Order createTestOrder(Long id, Long userId, OrderStatus status) {

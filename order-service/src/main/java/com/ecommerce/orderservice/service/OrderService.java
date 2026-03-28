@@ -1,5 +1,10 @@
 package com.ecommerce.orderservice.service;
 
+import com.ecommerce.orderservice.client.CancelServiceClient;
+import com.ecommerce.orderservice.client.PaymentServiceClient;
+import com.ecommerce.orderservice.client.dto.OrderCancelSummaryResponse;
+import com.ecommerce.orderservice.client.dto.PaymentInfo;
+import com.ecommerce.orderservice.dto.OrderProgressStatusResolver;
 import com.ecommerce.orderservice.dto.request.CreateOrderRequest;
 import com.ecommerce.orderservice.dto.request.OrderItemRequest;
 import com.ecommerce.orderservice.dto.response.OrderResponse;
@@ -13,6 +18,7 @@ import com.ecommerce.orderservice.exception.OrderDomainException;
 import com.ecommerce.orderservice.exception.OrderDomainExceptionCode;
 import com.ecommerce.orderservice.outbox.OutboxEventPublisher;
 import com.ecommerce.orderservice.repository.OrderRepository;
+import com.ecommerce.orderservice.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -31,6 +37,8 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final OutboxEventPublisher outboxEventPublisher;
+    private final PaymentServiceClient paymentServiceClient;
+    private final CancelServiceClient cancelServiceClient;
 
     @Transactional
     public OrderResponse createOrder(Long userId, CreateOrderRequest request) {
@@ -180,9 +188,67 @@ public class OrderService {
             throw new OrderDomainException(OrderDomainExceptionCode.OrderCannotBeUpdatedException);
         }
 
+        if (order.getStatus() != newStatus) {
+            assertAdminFulfillmentNotBlockedByCancelOrRefund(orderId);
+        }
+
+        validateAdminFulfillmentTransition(order.getStatus(), newStatus);
+
         order.updateStatus(newStatus);
         log.info("주문 상태 변경 완료: orderId={}, status={}", orderId, newStatus);
 
         return OrderResponse.from(order);
+    }
+
+    /**
+     * 관리자 배송·준비 단계: 한 단계씩만 전환 (PENDING→CONFIRMED→PREPARING→SHIPPING→DELIVERED).
+     */
+    private void validateAdminFulfillmentTransition(OrderStatus current, OrderStatus next) {
+        if (current == next) {
+            return;
+        }
+        OrderStatus allowedNext = switch (current) {
+            case PENDING -> OrderStatus.CONFIRMED;
+            case CONFIRMED -> OrderStatus.PREPARING;
+            case PREPARING -> OrderStatus.SHIPPING;
+            case SHIPPING -> OrderStatus.DELIVERED;
+            default -> null;
+        };
+        if (allowedNext != next) {
+            throw new OrderDomainException(OrderDomainExceptionCode.OrderStatusTransitionNotAllowedException);
+        }
+    }
+
+    private void assertAdminFulfillmentNotBlockedByCancelOrRefund(Long orderId) {
+        String paymentStatus = fetchPaymentStatusForAdminGuard(orderId);
+        String activeCancel = fetchActiveCancelStatusForAdminGuard(orderId);
+        if (OrderProgressStatusResolver.blocksAdminFulfillmentAdvance(paymentStatus, activeCancel)) {
+            throw new OrderDomainException(OrderDomainExceptionCode.OrderFulfillmentBlockedByCancelOrRefundException);
+        }
+    }
+
+    private String fetchPaymentStatusForAdminGuard(Long orderId) {
+        try {
+            ApiResponse<PaymentInfo> response = paymentServiceClient.getPaymentByOrderId(orderId);
+            if (response != null && response.isSuccess() && response.getData() != null) {
+                return response.getData().getStatus();
+            }
+        } catch (Exception e) {
+            log.warn("관리자 배송 단계 검증용 결제 조회 실패: orderId={}, error={}", orderId, e.getMessage());
+        }
+        return null;
+    }
+
+    private String fetchActiveCancelStatusForAdminGuard(Long orderId) {
+        try {
+            ApiResponse<OrderCancelSummaryResponse> response =
+                    cancelServiceClient.getActiveCancelForOrderAdmin(orderId);
+            if (response != null && response.isSuccess() && response.getData() != null) {
+                return response.getData().getStatus();
+            }
+        } catch (Exception e) {
+            log.warn("관리자 배송 단계 검증용 취소 요약 조회 실패: orderId={}, error={}", orderId, e.getMessage());
+        }
+        return null;
     }
 }

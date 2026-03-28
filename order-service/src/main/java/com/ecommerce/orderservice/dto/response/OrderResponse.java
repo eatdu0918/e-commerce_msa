@@ -39,6 +39,11 @@ public class OrderResponse {
     /** 목록·상세·진행 바 라벨에 공통 사용 (결제 완료 반영 등). */
     OrderStatus progressStatus;
 
+    /**
+     * cancel-service 진행 중 취소 요약 상태(REQUESTED/APPROVED/COMPLETED). 집계 조회 시에만 채움.
+     */
+    String activeCancelStatus;
+
     public static OrderResponse from(Order order) {
         List<OrderItemResponse> items = order.getOrderItems().stream()
                 .map(OrderItemResponse::from)

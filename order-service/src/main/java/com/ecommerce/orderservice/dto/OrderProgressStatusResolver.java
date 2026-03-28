@@ -54,4 +54,15 @@ public final class OrderProgressStatusResolver {
         String s = paymentStatus.trim().toUpperCase();
         return "CANCELLED".equals(s) || "REFUNDED".equals(s);
     }
+
+    /**
+     * 관리자 배송·준비 단계 진행 불가: 진행 중 취소(요청/승인/완료) 또는 결제 취소·환불 완료.
+     * cancel-service의 active 요약은 REJECTED를 반환하지 않음.
+     */
+    public static boolean blocksAdminFulfillmentAdvance(String paymentStatus, String activeCancelStatus) {
+        if (activeCancelStatus != null && !activeCancelStatus.isBlank()) {
+            return true;
+        }
+        return isPaymentCancelledOrRefunded(paymentStatus);
+    }
 }

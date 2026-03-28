@@ -102,6 +102,7 @@ public class OrderAggregationService {
         String activeCancel = fetchActiveCancelStatusAdmin(order.getId());
         return order.toBuilder()
                 .paymentStatus(paymentStatus)
+                .activeCancelStatus(activeCancel)
                 .progressStatus(OrderProgressStatusResolver.resolveForDisplayWithActiveCancel(
                         order.getStatus(), paymentStatus, activeCancel))
                 .build();
@@ -172,6 +173,7 @@ public class OrderAggregationService {
         String activeCancel = fetchActiveCancelStatus(order.getId());
         return order.toBuilder()
                 .paymentStatus(paymentStatus)
+                .activeCancelStatus(activeCancel)
                 .progressStatus(OrderProgressStatusResolver.resolveForDisplayWithActiveCancel(
                         order.getStatus(), paymentStatus, activeCancel))
                 .build();
