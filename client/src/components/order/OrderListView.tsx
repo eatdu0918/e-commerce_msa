@@ -159,7 +159,7 @@ export default function OrderListView() {
                                         </h4>
                                         <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
                                             <span className="text-2xl font-light text-stone-900">
-                                                ${order.totalAmount.toLocaleString()}
+                                                {order.totalAmount.toLocaleString()}원
                                             </span>
                                             <div className="flex items-center gap-2 bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-xl border border-emerald-100">
                                                 <CheckCircle2 size={14} />

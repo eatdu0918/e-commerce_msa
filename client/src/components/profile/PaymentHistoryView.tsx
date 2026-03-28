@@ -52,10 +52,10 @@ export default function PaymentHistoryView() {
                 <div className="flex items-end justify-between">
                     <p className="text-3xl font-bold">{payments.length}<span className="text-sm text-stone-400 ml-1">건</span></p>
                     <p className="text-sm text-stone-400">
-                        총 ${payments
+                        총 {payments
                             .filter((p: PaymentResponse) => p.status === 'COMPLETED')
                             .reduce((sum: number, p: PaymentResponse) => sum + p.payAmount, 0)
-                            .toLocaleString()}
+                            .toLocaleString()}원
                     </p>
                 </div>
             </div>

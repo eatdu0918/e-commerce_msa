@@ -26,6 +26,40 @@ const STATUS_LABELS: Record<string, string> = {
     CANCEL_REQUESTED: '취소 요청 중',
 };
 
+const CARD_ISSUER_MAP: Record<string, string> = {
+    '31': '비씨카드',
+    '33': '현대카드',
+    '34': '하나카드',
+    '35': '전북은행',
+    '36': '씨티카드',
+    '37': '우리카드',
+    '38': '수협은행',
+    '39': '제주은행',
+    '41': 'KB국민카드',
+    '42': '수협카드',
+    '51': '삼성카드',
+    '61': '신한카드',
+    '71': '롯데카드',
+    '91': '농협카드',
+    '21': '하나은행',
+    '62': '신협',
+    '32': '광주은행',
+    '46': '카카오뱅크',
+    '48': '케이뱅크',
+    '토스뱅크': '토스뱅크',
+    'HYUNDAI': '현대카드',
+    'SHINHAN': '신한카드',
+    'SAMSUNG': '삼성카드',
+    'KOOKMIN': 'KB국민카드',
+    'LOTTE': '롯데카드',
+    'NH': '농협카드',
+    'KB': 'KB국민카드',
+    'BC': '비씨카드',
+    'HANA': '하나카드',
+    'WOORI': '우리카드',
+    'KAKAOBANK': '카카오뱅크',
+};
+
 const CANCELLABLE_STATUSES = ['PENDING', 'CONFIRMED', 'PREPARING'];
 
 const FALLBACK_IMAGES = {
@@ -235,7 +269,7 @@ export default function OrderDetailView() {
                                         <div className="flex justify-between items-center mt-4">
                                             <div className="flex items-center gap-2">
                                                 <span className="px-2.5 py-1 rounded-lg bg-stone-50 border border-stone-100 text-[10px] font-black uppercase tracking-wider text-stone-500">QTY: {item.quantity || 1}</span>
-                                                <span className="text-xs text-stone-300 font-medium tracking-tight">× ${(item.unitPrice || 0).toLocaleString()}</span>
+                                                <span className="text-xs text-stone-300 font-medium tracking-tight">× {(item.unitPrice || 0).toLocaleString()}원</span>
                                             </div>
                                             <span className="font-black text-stone-900">{(item.totalPrice || (item.unitPrice * item.quantity) || 0).toLocaleString()}원</span>
                                         </div>
@@ -264,7 +298,7 @@ export default function OrderDetailView() {
                                 </div>
                                 <div className="flex justify-between text-sm text-white/50">
                                     <span>할인 금액</span>
-                                    <span className="text-rose-400">-${(order.discountAmount || 0).toLocaleString()}</span>
+                                    <span className="text-rose-400">-{(order.discountAmount || 0).toLocaleString()}원</span>
                                 </div>
                                 <div className="flex justify-between text-sm text-white/50">
                                     <span>배송비</span>
@@ -274,7 +308,7 @@ export default function OrderDetailView() {
                                 <div className="flex justify-between items-end">
                                     <span className="text-sm font-bold opacity-80 uppercase tracking-widest">Final Total</span>
                                     <span className="text-4xl font-black italic tracking-tighter">
-                                        ${(order.finalAmount || 0).toLocaleString()}
+                                        {(order.finalAmount || 0).toLocaleString()}원
                                     </span>
                                 </div>
                             </div>
@@ -343,7 +377,25 @@ export default function OrderDetailView() {
                                         </div>
                                         <div>
                                             <p className="text-xs font-black uppercase tracking-tighter text-stone-900">
-                                                {order.payment?.paymentDetails || order.payment?.paymentMethod || '결제 수단 정보 없음'}
+                                                {(() => {
+                                                    const details = order.payment?.paymentDetails;
+                                                    if (!details) return order.payment?.paymentMethod || '결제 수단 정보 없음';
+                                                    
+                                                    try {
+                                                        const parsed = JSON.parse(details);
+                                                        if (parsed.card) {
+                                                            const issuer = CARD_ISSUER_MAP[parsed.card.issuerCode] || parsed.card.issuerCode || '카드';
+                                                            const installment = parsed.card.installmentPlanMonths === 0 ? '일시불' : `${parsed.card.installmentPlanMonths}개월 할부`;
+                                                            return `${issuer} (${installment})`;
+                                                        }
+                                                        if (parsed.easyPay) {
+                                                            return `${parsed.easyPay.provider} (급속 결제)`;
+                                                        }
+                                                        return details;
+                                                    } catch (e) {
+                                                        return details;
+                                                    }
+                                                })()}
                                             </p>
                                             <p className="text-[10px] text-stone-400 font-bold uppercase">{order.payment?.status}</p>
                                         </div>
