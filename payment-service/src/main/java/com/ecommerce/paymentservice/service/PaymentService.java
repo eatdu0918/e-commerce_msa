@@ -10,6 +10,7 @@ import com.ecommerce.paymentservice.exception.PaymentDomainExceptionCode;
 import com.ecommerce.paymentservice.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,16 @@ public class PaymentService {
     public PaymentResponse createPayment(Long userId, CreatePaymentRequest request) {
         log.info("결제 생성 시도: userId={}, orderId={}", userId, request.getOrderId());
 
+        return paymentRepository.findByOrderIdAndUserId(request.getOrderId(), userId)
+                .map(existing -> {
+                    log.info("동일 주문 결제가 이미 존재하여 기존 건 반환: paymentId={}, orderId={}",
+                            existing.getId(), request.getOrderId());
+                    return PaymentResponse.from(existing);
+                })
+                .orElseGet(() -> persistNewPayment(userId, request));
+    }
+
+    private PaymentResponse persistNewPayment(Long userId, CreatePaymentRequest request) {
         Payment payment = Payment.create(
                 request.getOrderId(),
                 request.getOrderNumber(),
@@ -34,13 +45,20 @@ public class PaymentService {
                 request.getAmount(),
                 request.getPaymentDetails()
         );
-        payment.complete(); // 결제 완료 상태로 설정
+        payment.complete();
 
-        Payment savedPayment = paymentRepository.save(payment);
-        log.info("결제 생성 완료: paymentId={}, paymentNumber={}",
-                savedPayment.getId(), savedPayment.getPaymentNumber());
-
-        return PaymentResponse.from(savedPayment);
+        try {
+            Payment saved = paymentRepository.save(payment);
+            log.info("결제 생성 완료: paymentId={}, paymentNumber={}",
+                    saved.getId(), saved.getPaymentNumber());
+            return PaymentResponse.from(saved);
+        } catch (DataIntegrityViolationException e) {
+            log.warn("결제 유니크 충돌(동시 요청 가능): orderId={}, message={}",
+                    request.getOrderId(), e.getMessage());
+            return paymentRepository.findByOrderIdAndUserId(request.getOrderId(), userId)
+                    .map(PaymentResponse::from)
+                    .orElseThrow(() -> e);
+        }
     }
 
     @Transactional(readOnly = true)

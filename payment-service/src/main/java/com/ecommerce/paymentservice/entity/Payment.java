@@ -19,6 +19,8 @@ import java.util.UUID;
         @Index(name = "idx_order_id", columnList = "order_id"),
         @Index(name = "idx_status", columnList = "status"),
         @Index(name = "idx_payment_number", columnList = "payment_number")
+}, uniqueConstraints = {
+        @UniqueConstraint(name = "uk_payments_order_id", columnNames = "order_id")
 })
 @EntityListeners(AuditingEntityListener.class)
 @Getter

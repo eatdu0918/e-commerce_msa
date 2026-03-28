@@ -2,6 +2,7 @@ package com.ecommerce.paymentservice.kafka;
 
 import com.ecommerce.paymentservice.entity.Payment;
 import com.ecommerce.paymentservice.entity.ProcessedEvent;
+import com.ecommerce.paymentservice.enums.PaymentStatus;
 import com.ecommerce.paymentservice.event.CouponUsedEvent;
 import com.ecommerce.paymentservice.event.OrderCancelledEvent;
 import com.ecommerce.paymentservice.event.PaymentCancelledEvent;
@@ -36,6 +37,12 @@ public class PaymentEventConsumer {
         log.info("Received coupon-used event: orderId={}", event.getOrderId());
 
         paymentRepository.findByOrderId(event.getOrderId()).ifPresent(payment -> {
+            if (payment.getStatus() == PaymentStatus.COMPLETED) {
+                log.info("이미 완료된 결제, Outbox/Kafka 재발행 생략: paymentId={}, orderId={}",
+                        payment.getId(), event.getOrderId());
+                markProcessed(event.getEventId(), "coupon-used");
+                return;
+            }
             try {
                 payment.complete();
                 log.info("Payment completed: paymentId={}", payment.getId());

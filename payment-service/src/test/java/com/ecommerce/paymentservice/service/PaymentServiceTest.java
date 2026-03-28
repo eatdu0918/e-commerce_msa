@@ -65,6 +65,7 @@ class PaymentServiceTest {
                     ORDER_ID, ORDER_NUMBER, PaymentMethod.CREDIT_CARD, AMOUNT, "카드 결제"
             );
 
+            when(paymentRepository.findByOrderIdAndUserId(ORDER_ID, USER_ID)).thenReturn(Optional.empty());
             when(paymentRepository.save(any(Payment.class))).thenAnswer(invocation -> {
                 Payment payment = invocation.getArgument(0);
                 ReflectionTestUtils.setField(payment, "id", PAYMENT_ID);
@@ -79,9 +80,27 @@ class PaymentServiceTest {
             assertThat(response.getOrderId()).isEqualTo(ORDER_ID);
             assertThat(response.getUserId()).isEqualTo(USER_ID);
             assertThat(response.getAmount()).isEqualByComparingTo(AMOUNT);
-            assertThat(response.getStatus()).isEqualTo(PaymentStatus.PENDING);
+            assertThat(response.getStatus()).isEqualTo(PaymentStatus.COMPLETED);
             assertThat(response.getPaymentMethod()).isEqualTo(PaymentMethod.CREDIT_CARD);
             verify(paymentRepository).save(any(Payment.class));
+        }
+
+        @Test
+        @DisplayName("동일 주문 결제 재요청 시 기존 건 반환 (멱등)")
+        void createPayment_idempotent_returnsExisting() {
+            Payment completed = createTestPayment(PAYMENT_ID, ORDER_ID, USER_ID, PaymentStatus.COMPLETED);
+            CreatePaymentRequest request = new CreatePaymentRequest(
+                    ORDER_ID, ORDER_NUMBER, PaymentMethod.CREDIT_CARD, AMOUNT, "카드 결제"
+            );
+
+            when(paymentRepository.findByOrderIdAndUserId(ORDER_ID, USER_ID))
+                    .thenReturn(Optional.of(completed));
+
+            PaymentResponse response = paymentService.createPayment(USER_ID, request);
+
+            assertThat(response.getId()).isEqualTo(PAYMENT_ID);
+            assertThat(response.getStatus()).isEqualTo(PaymentStatus.COMPLETED);
+            verify(paymentRepository, never()).save(any(Payment.class));
         }
     }
 
