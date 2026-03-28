@@ -1,6 +1,7 @@
 import { useMemo, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
+import type { LucideIcon } from 'lucide-react';
 import { RotateCcw, XCircle, CheckCircle, Clock, AlertCircle, Package } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { Helmet } from 'react-helmet-async';
@@ -20,9 +21,20 @@ function tabFromSearchParam(value: string | null): TabType {
     return 'return_refund';
 }
 
-type MergedReturnRow =
-    | { kind: 'return_cancel'; cancel: CancelResponse }
-    | { kind: 'refund'; refund: RefundResponse };
+type ReturnRefundBundle = {
+    cancel: CancelResponse;
+    refund: RefundResponse | null;
+};
+
+function normalizeStatus(raw: unknown): string {
+    if (raw == null) return '';
+    if (typeof raw === 'string') return raw.toUpperCase();
+    if (typeof raw === 'object' && raw !== null && 'name' in raw) {
+        const name = (raw as { name?: unknown }).name;
+        return typeof name === 'string' ? name.toUpperCase() : '';
+    }
+    return String(raw).toUpperCase();
+}
 
 function formatRefundAmount(amount: RefundResponse['amount']): string {
     if (amount == null || amount === '') {
@@ -101,25 +113,26 @@ export default function CancelRefundView() {
         [cancels]
     );
 
-    const mergedReturnRefundRows = useMemo(() => {
-        const fromCancels: MergedReturnRow[] = returnRefundCancels.map((cancel) => ({
-            kind: 'return_cancel',
+    /** 반품(RETURN_REFUND) 취소 1건 = 카드 1건. 환불 레코드는 같은 cancelId로 병합 (별도 행 없음). */
+    const returnRefundBundles = useMemo(() => {
+        const returnCancelIds = new Set(returnRefundCancels.map((c) => c.id));
+        const refundByCancelId = new Map<number, RefundResponse>();
+        for (const r of refunds) {
+            if (!returnCancelIds.has(r.cancelId)) continue;
+            const prev = refundByCancelId.get(r.cancelId);
+            if (!prev || String(r.updatedAt || r.createdAt) > String(prev.updatedAt || prev.createdAt)) {
+                refundByCancelId.set(r.cancelId, r);
+            }
+        }
+        const bundles: ReturnRefundBundle[] = returnRefundCancels.map((cancel) => ({
             cancel,
+            refund: refundByCancelId.get(cancel.id) ?? null,
         }));
-        const fromRefunds: MergedReturnRow[] = refunds.map((refund) => ({
-            kind: 'refund',
-            refund,
-        }));
-        const all = [...fromCancels, ...fromRefunds];
-        all.sort((a, b) => {
-            const da = a.kind === 'return_cancel' ? a.cancel.createdAt : a.refund.createdAt;
-            const db = b.kind === 'return_cancel' ? b.cancel.createdAt : b.refund.createdAt;
-            return da < db ? 1 : -1;
-        });
-        return all;
+        bundles.sort((a, b) => (a.cancel.createdAt < b.cancel.createdAt ? 1 : -1));
+        return bundles;
     }, [returnRefundCancels, refunds]);
 
-    const returnRefundCount = returnRefundCancels.length + refunds.length;
+    const returnRefundCount = returnRefundCancels.length;
 
     const cancelReasonLabel = (reason: string) => {
         const key = `cancelReason.${reason}` as const;
@@ -127,6 +140,73 @@ export default function CancelRefundView() {
         if (tr !== key) return tr;
         return CANCEL_REASON_LABELS[reason as CancelReason] || reason;
     };
+
+    const returnBundleStatus = useCallback(
+        (
+            cancel: CancelResponse,
+            refund: RefundResponse | null
+        ): { label: string; color: string; icon: LucideIcon } => {
+            const cs = normalizeStatus(cancel.status);
+            if (cs === 'REJECTED') {
+                return {
+                    label: CANCEL_STATUS_MAP.REJECTED.label,
+                    color: CANCEL_STATUS_MAP.REJECTED.color,
+                    icon: CANCEL_STATUS_MAP.REJECTED.icon,
+                };
+            }
+            if (refund) {
+                const rs = normalizeStatus(refund.status);
+                if (rs === 'FAILED') {
+                    return {
+                        label: REFUND_STATUS_MAP.FAILED.label,
+                        color: REFUND_STATUS_MAP.FAILED.color,
+                        icon: REFUND_STATUS_MAP.FAILED.icon,
+                    };
+                }
+                if (rs === 'COMPLETED') {
+                    return {
+                        label: REFUND_STATUS_MAP.COMPLETED.label,
+                        color: REFUND_STATUS_MAP.COMPLETED.color,
+                        icon: REFUND_STATUS_MAP.COMPLETED.icon,
+                    };
+                }
+                if (rs === 'PENDING') {
+                    return {
+                        label: REFUND_STATUS_MAP.PENDING.label,
+                        color: REFUND_STATUS_MAP.PENDING.color,
+                        icon: REFUND_STATUS_MAP.PENDING.icon,
+                    };
+                }
+            }
+            if (cs === 'REQUESTED') {
+                return {
+                    label: CANCEL_STATUS_MAP.REQUESTED.label,
+                    color: CANCEL_STATUS_MAP.REQUESTED.color,
+                    icon: CANCEL_STATUS_MAP.REQUESTED.icon,
+                };
+            }
+            if (cs === 'APPROVED') {
+                return {
+                    label: CANCEL_STATUS_MAP.APPROVED.label,
+                    color: CANCEL_STATUS_MAP.APPROVED.color,
+                    icon: CANCEL_STATUS_MAP.APPROVED.icon,
+                };
+            }
+            if (cs === 'COMPLETED') {
+                return {
+                    label: CANCEL_STATUS_MAP.COMPLETED.label,
+                    color: CANCEL_STATUS_MAP.COMPLETED.color,
+                    icon: CANCEL_STATUS_MAP.COMPLETED.icon,
+                };
+            }
+            return {
+                label: cancel.statusDescription || cancel.status,
+                color: 'text-stone-500 bg-stone-50',
+                icon: Clock,
+            };
+        },
+        [CANCEL_STATUS_MAP, REFUND_STATUS_MAP]
+    );
 
     return (
         <div className="max-w-5xl mx-auto px-6 py-12 space-y-8">
@@ -225,93 +305,76 @@ export default function CancelRefundView() {
                         })}
                     </div>
                 )
-            ) : mergedReturnRefundRows.length === 0 ? (
+            ) : returnRefundBundles.length === 0 ? (
                 <div className="text-center py-12">
                     <RotateCcw size={32} className="mx-auto mb-4 text-stone-200" />
                     <p className="text-stone-400 text-sm">{t('cancelRefund.empty_return_refund')}</p>
                 </div>
             ) : (
                 <div className="space-y-4">
-                    {mergedReturnRefundRows.map((row) => {
-                        if (row.kind === 'return_cancel') {
-                            const cancel = row.cancel;
-                            const statusInfo = CANCEL_STATUS_MAP[cancel.status as keyof typeof CANCEL_STATUS_MAP] || {
-                                label: cancel.status,
-                                color: 'text-stone-500 bg-stone-50',
-                                icon: Clock,
-                            };
-                            const StatusIcon = statusInfo.icon;
-                            return (
-                                <div key={`c-${cancel.id}`} className="bg-white rounded-2xl border border-stone-100 p-5 hover:border-stone-300 transition-all">
-                                    <div className="flex items-start justify-between mb-3 gap-2">
-                                        <div>
-                                            <span className="inline-block text-[10px] font-black uppercase tracking-wider text-violet-700 bg-violet-50 px-2 py-0.5 rounded-md mb-1">
-                                                {t('cancelRefund.return_request_badge')}
-                                            </span>
-                                            <p className="text-xs font-bold text-stone-400 uppercase tracking-wider">
-                                                {t('cancelRefund.order_ref', { id: cancel.orderId })}
-                                            </p>
-                                            <p className="text-[10px] text-stone-300 mt-0.5">{cancel.createdAt?.split('T')[0]}</p>
-                                        </div>
-                                        <span className={`inline-flex items-center shrink-0 text-xs font-bold px-3 py-1 rounded-full ${statusInfo.color}`}>
-                                            <StatusIcon size={12} className="mr-1" />
-                                            {statusInfo.label}
-                                        </span>
-                                    </div>
-                                    <p className="text-sm">
-                                        <span className="text-stone-400">{t('cancelRefund.reason_prefix')}</span>{' '}
-                                        {cancelReasonLabel(cancel.cancelReason)}
-                                    </p>
-                                    {cancel.rejectedReason && (
-                                        <p className="text-xs text-red-400 mt-2 bg-red-50 p-2 rounded-lg">
-                                            {t('cancelRefund.reject_prefix')} {cancel.rejectedReason}
-                                        </p>
-                                    )}
-                                </div>
-                            );
-                        }
-
-                        const refund = row.refund;
-                        const refundStatusKey =
-                            typeof refund.status === 'string'
-                                ? refund.status
-                                : (refund.status as { name?: string })?.name ?? '';
-                        const statusInfo = REFUND_STATUS_MAP[refundStatusKey as keyof typeof REFUND_STATUS_MAP] || {
-                            label: refundStatusKey || String(refund.status),
-                            color: 'text-stone-500 bg-stone-50',
-                            icon: Clock,
-                        };
+                    {returnRefundBundles.map(({ cancel, refund }) => {
+                        const statusInfo = returnBundleStatus(cancel, refund);
                         const StatusIcon = statusInfo.icon;
+                        const amountStr = refund ? formatRefundAmount(refund.amount) : '';
                         return (
-                            <div key={`r-${refund.id}`} className="bg-white rounded-2xl border border-stone-100 p-5 hover:border-stone-300 transition-all">
-                                <div className="flex items-start justify-between mb-3">
+                            <div
+                                key={`return-${cancel.id}`}
+                                className="bg-white rounded-2xl border border-stone-100 p-5 hover:border-stone-300 transition-all"
+                            >
+                                <div className="flex items-start justify-between mb-3 gap-2">
                                     <div>
-                                        <span className="inline-block text-[10px] font-black uppercase tracking-wider text-sky-700 bg-sky-50 px-2 py-0.5 rounded-md mb-1">
-                                            {t('cancelRefund.refund_pg_badge')}
+                                        <span className="inline-block text-[10px] font-black uppercase tracking-wider text-violet-700 bg-violet-50 px-2 py-0.5 rounded-md mb-1">
+                                            {t('cancelRefund.return_detail_badge')}
                                         </span>
                                         <p className="text-xs font-bold text-stone-400 uppercase tracking-wider">
-                                            {t('cancelRefund.order_ref', { id: refund.orderId })}
+                                            {t('cancelRefund.order_ref', { id: cancel.orderId })}
                                         </p>
-                                        <p className="text-[10px] text-stone-300 mt-0.5">{refund.createdAt?.split('T')[0]}</p>
+                                        <p className="text-[10px] text-stone-300 mt-0.5">{cancel.createdAt?.split('T')[0]}</p>
                                     </div>
-                                    <span className={`inline-flex items-center text-xs font-bold px-3 py-1 rounded-full ${statusInfo.color}`}>
+                                    <span
+                                        className={`inline-flex items-center shrink-0 text-xs font-bold px-3 py-1 rounded-full ${statusInfo.color}`}
+                                    >
                                         <StatusIcon size={12} className="mr-1" />
                                         {statusInfo.label}
                                     </span>
                                 </div>
-                                <div className="flex justify-between items-center">
-                                    <p className="text-sm text-stone-400">
-                                        {t('cancelRefund.refund_method')}{' '}
-                                        {refund.refundMethod || t('cancelRefund.refund_method_default')}
+                                <p className="text-sm">
+                                    <span className="text-stone-400">{t('cancelRefund.reason_prefix')}</span>{' '}
+                                    {cancelReasonLabel(cancel.cancelReason)}
+                                </p>
+                                {cancel.rejectedReason && (
+                                    <p className="text-xs text-red-400 mt-2 bg-red-50 p-2 rounded-lg">
+                                        {t('cancelRefund.reject_prefix')} {cancel.rejectedReason}
                                     </p>
-                                    <p className="font-bold tabular-nums">
-                                        {(() => {
-                                            const formatted = formatRefundAmount(refund.amount);
-                                            return formatted
-                                                ? `${formatted}${t('common.currency_won')}`
-                                                : '—';
-                                        })()}
+                                )}
+
+                                <div className="mt-4 pt-4 border-t border-stone-100 space-y-2">
+                                    <p className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">
+                                        {t('cancelRefund.refund_section_title')}
                                     </p>
+                                    {refund ? (
+                                        <>
+                                            <div className="flex flex-wrap justify-between items-center gap-2">
+                                                <p className="text-sm text-stone-500">
+                                                    {t('cancelRefund.refund_method')}{' '}
+                                                    {refund.refundMethod || t('cancelRefund.refund_method_default')}
+                                                </p>
+                                                <p className="text-sm font-bold tabular-nums text-stone-900">
+                                                    <span className="text-stone-400 font-normal text-xs mr-2">
+                                                        {t('cancelRefund.refund_amount_label')}
+                                                    </span>
+                                                    {amountStr ? `${amountStr}${t('common.currency_won')}` : '—'}
+                                                </p>
+                                            </div>
+                                            {refund.failureReason ? (
+                                                <p className="text-xs text-red-600 bg-red-50 p-2 rounded-lg">
+                                                    {refund.failureReason}
+                                                </p>
+                                            ) : null}
+                                        </>
+                                    ) : (
+                                        <p className="text-xs text-stone-400">{t('cancelRefund.refund_not_ready')}</p>
+                                    )}
                                 </div>
                             </div>
                         );
