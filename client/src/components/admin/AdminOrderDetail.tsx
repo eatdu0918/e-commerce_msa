@@ -91,6 +91,7 @@ export default function AdminOrderDetail() {
     displayKey as (typeof ADMIN_FULFILLMENT_STEPS)[number]
   );
   const activeIdx = stepIndex >= 0 ? stepIndex : 0;
+  const lastStepIdx = ADMIN_FULFILLMENT_STEPS.length - 1;
 
   const handleAdvance = () => {
     if (!nextStatus || !nextLabel) return;
@@ -155,8 +156,10 @@ export default function AdminOrderDetail() {
           ) : (
             <div className="flex flex-wrap gap-2 justify-between items-start">
               {ADMIN_FULFILLMENT_STEPS.map((step, idx) => {
-                const done = idx < activeIdx;
-                const current = idx === activeIdx;
+                const done =
+                  idx < activeIdx ||
+                  (activeIdx === lastStepIdx && idx === lastStepIdx);
+                const current = idx === activeIdx && !done;
                 const label = adminStepperStepLabel(t, step);
                 return (
                   <div
@@ -176,7 +179,7 @@ export default function AdminOrderDetail() {
                     </div>
                     <span
                       className={`text-[11px] text-center leading-tight px-1 ${
-                        current ? 'font-semibold text-stone-900' : 'text-stone-500'
+                        idx === activeIdx ? 'font-semibold text-stone-900' : 'text-stone-500'
                       }`}
                     >
                       {label}
