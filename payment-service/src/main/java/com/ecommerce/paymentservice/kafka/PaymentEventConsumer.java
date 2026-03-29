@@ -100,7 +100,7 @@ public class PaymentEventConsumer {
                     event.getOrderId(), event.getCancelId());
         }
         paymentOp.ifPresent(payment -> {
-            if (applyPaymentSettlementForOrderCancellation(payment)) {
+            if (applyPaymentSettlementForCancelApproved(payment, event.getRequestType())) {
                 log.info("관리자 취소 승인에 따른 결제 상태 반영: paymentId={}, status={}",
                         payment.getId(), payment.getStatus());
                 publishPaymentCancelledOutbox(payment);
@@ -133,6 +133,24 @@ public class PaymentEventConsumer {
         });
 
         markProcessed(event.getEventId(), "order-cancelled");
+    }
+
+    /**
+     * 취소 승인 이벤트: 반품·환불은 {@link PaymentStatus#REFUNDED}, 출고 전 주문 취소는 {@link PaymentStatus#CANCELLED}.
+     * {@code order-cancelled}가 먼저 {@link PaymentStatus#CANCELLED}로 맞춘 경우에도 반품·환불이면 환불 완료로 승격한다.
+     */
+    private boolean applyPaymentSettlementForCancelApproved(Payment payment, String requestTypeFromEvent) {
+        boolean returnRefund = requestTypeFromEvent != null
+                && "RETURN_REFUND".equalsIgnoreCase(requestTypeFromEvent.trim());
+        PaymentStatus status = payment.getStatus();
+        if (returnRefund) {
+            if (status == PaymentStatus.REFUNDED) {
+                return false;
+            }
+            payment.refund();
+            return true;
+        }
+        return applyPaymentSettlementForOrderCancellation(payment);
     }
 
     /**
