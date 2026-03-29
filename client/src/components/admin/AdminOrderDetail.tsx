@@ -11,6 +11,7 @@ import {
   getAdminFulfillmentStepperDisplay,
   isAdminFulfillmentAdvanceBlocked,
   isCancelledOrderWithRefundComplete,
+  isReturnRefundFlowSettledForFulfillmentHint,
   orderStatusHeadlineLabel,
 } from '../../lib/adminOrderStatus';
 import {
@@ -209,6 +210,13 @@ export default function AdminOrderDetail() {
   const cancelledLike =
     dbStatus === 'CANCELLED' || dbStatus === 'CANCEL_REQUESTED' || blockedByCancelOrRefund;
 
+  const effectiveRt = getEffectiveCancelRequestTypeForDisplay(order);
+  const returnRefundFulfillmentHint =
+    isReturnRefundFlowSettledForFulfillmentHint(displayKey, payStatus, effectiveRt);
+  const fulfillmentCancelRefundMessage = returnRefundFulfillmentHint
+    ? t('admin.order_fulfillment_return_refund_complete')
+    : t('admin.order_fulfillment_cancel_refund_block');
+
   const { completedThrough, pulseAt } = getAdminFulfillmentStepperDisplay(displayKey);
   const lastStepIdx = ADMIN_FULFILLMENT_STEPS.length - 1;
 
@@ -266,7 +274,7 @@ export default function AdminOrderDetail() {
                 t,
                 displayKey,
                 payStatus,
-                getEffectiveCancelRequestTypeForDisplay(order),
+                effectiveRt,
                 {
                   skipConfirmAndPreparing: order.skipConfirmAndPreparing,
                   skipShippingAndDelivered: order.skipShippingAndDelivered,
@@ -277,7 +285,7 @@ export default function AdminOrderDetail() {
               !isCancelledOrderWithRefundComplete(
                 displayKey,
                 payStatus,
-                getEffectiveCancelRequestTypeForDisplay(order)
+                effectiveRt
               ) && (
               <p className="text-xs text-amber-800 bg-amber-50 px-2 py-1 rounded-md inline-block">
                 {t('admin.order_active_cancel', { status: order.activeCancelStatus })}
@@ -312,7 +320,7 @@ export default function AdminOrderDetail() {
               </button>
               <Link
                 to={
-                  getEffectiveCancelRequestTypeForDisplay(order) === 'RETURN_REFUND'
+                  effectiveRt === 'RETURN_REFUND'
                     ? '/admin/returns'
                     : '/admin/cancels'
                 }
@@ -329,8 +337,10 @@ export default function AdminOrderDetail() {
             {t('admin.order_fulfillment_steps')}
           </p>
           {cancelledLike ? (
-            <p className="text-sm text-red-700">
-              {t('admin.order_fulfillment_cancel_refund_block')}
+            <p
+              className={`text-sm ${returnRefundFulfillmentHint ? 'text-stone-600' : 'text-red-700'}`}
+            >
+              {fulfillmentCancelRefundMessage}
             </p>
           ) : (
             <div className="flex flex-wrap gap-2 justify-between items-start">
@@ -376,7 +386,7 @@ export default function AdminOrderDetail() {
           <div>
             <p className="text-sm text-stone-600">
               {blockedByCancelOrRefund
-                ? t('admin.order_fulfillment_cancel_refund_block')
+                ? fulfillmentCancelRefundMessage
                 : deliveryClosed
                   ? t('admin.order_fulfillment_done')
                   : t('admin.order_fulfillment_hint')}

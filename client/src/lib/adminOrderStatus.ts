@@ -201,6 +201,24 @@ export function isCancelledOrderWithRefundComplete(
   return pay === 'CANCELLED' && rt === 'RETURN_REFUND';
 }
 
+/** 반품·환불(RETURN_REFUND)이 끝난 뒤 배송 단계 영역 안내 문구 분기용 */
+export function isReturnRefundFlowSettledForFulfillmentHint(
+  displayStatusKey: string,
+  paymentStatus?: string | null,
+  effectiveCancelRequestType?: string | null
+): boolean {
+  if (
+    !isCancelledOrderWithRefundComplete(
+      displayStatusKey,
+      paymentStatus,
+      effectiveCancelRequestType
+    )
+  ) {
+    return false;
+  }
+  return (effectiveCancelRequestType ?? '').trim().toUpperCase() === 'RETURN_REFUND';
+}
+
 /**
  * 추정 도착일·빠른 배송 안내 카드는 배송 완료, 주문 취소 완료, 환불(처리) 완료일 때 숨김.
  */

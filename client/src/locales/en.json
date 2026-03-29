@@ -683,6 +683,7 @@
         "order_fulfillment_steps": "Fulfillment steps",
         "order_fulfillment_blocked": "This order is cancelled or in cancellation flow. Steps cannot be advanced.",
         "order_fulfillment_cancel_refund_block": "This order has a cancel/refund in progress or is already cancelled/refunded. Fulfillment steps cannot be advanced.",
+        "order_fulfillment_return_refund_complete": "The refund has been completed.",
         "order_fulfillment_hint": "Use the button below to move forward one step at a time.",
         "order_fulfillment_done": "No further fulfillment steps for this order.",
         "order_next_step": "Next: {{label}}",

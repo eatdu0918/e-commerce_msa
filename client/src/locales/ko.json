@@ -681,6 +681,7 @@
         "order_fulfillment_steps": "배송·준비 단계",
         "order_fulfillment_blocked": "취소된 주문이거나 취소 처리 중이라 단계를 진행할 수 없습니다.",
         "order_fulfillment_cancel_refund_block": "취소·환불 처리 중이거나 해당 상태인 주문은 배송 단계를 진행할 수 없습니다.",
+        "order_fulfillment_return_refund_complete": "환불이 완료된 상태입니다.",
         "order_fulfillment_hint": "아래 버튼으로 한 단계씩 상태를 올릴 수 있습니다.",
         "order_fulfillment_done": "이 주문은 더 이상 진행할 배송 단계가 없습니다.",
         "order_next_step": "다음: {{label}}",
