@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 @Getter
 @Builder
@@ -30,6 +31,22 @@ public class CancelItemResponse {
                 .quantity(cancelItem.getQuantity())
                 .unitPrice(cancelItem.getUnitPrice())
                 .totalPrice(cancelItem.getTotalPrice())
+                .build();
+    }
+
+    /** 할인 반영 단가로 응답을 맞출 때(표시·스냅샷 일관성). */
+    public static CancelItemResponse fromWithUnitPrice(CancelItem cancelItem, BigDecimal unitPrice) {
+        BigDecimal safeUnit = unitPrice != null ? unitPrice : cancelItem.getUnitPrice();
+        BigDecimal total = safeUnit
+                .multiply(BigDecimal.valueOf(cancelItem.getQuantity()))
+                .setScale(2, RoundingMode.HALF_UP);
+        return CancelItemResponse.builder()
+                .id(cancelItem.getId())
+                .productId(cancelItem.getProductId())
+                .productName(cancelItem.getProductName())
+                .quantity(cancelItem.getQuantity())
+                .unitPrice(safeUnit.setScale(2, RoundingMode.HALF_UP))
+                .totalPrice(total)
                 .build();
     }
 }

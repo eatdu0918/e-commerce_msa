@@ -40,9 +40,18 @@ public class CancelResponse {
     LocalDateTime updatedAt;
 
     public static CancelResponse from(Cancel cancel) {
-        List<CancelItemResponse> items = cancel.getCancelItems() != null
-                ? cancel.getCancelItems().stream().map(CancelItemResponse::from).toList()
-                : null;
+        return from(cancel, null);
+    }
+
+    /**
+     * {@code itemsOverride}가 있으면 그 목록을 쓰고, 없으면 엔티티 품목을 그대로 매핑한다.
+     */
+    public static CancelResponse from(Cancel cancel, List<CancelItemResponse> itemsOverride) {
+        List<CancelItemResponse> items = itemsOverride != null
+                ? itemsOverride
+                : (cancel.getCancelItems() != null
+                        ? cancel.getCancelItems().stream().map(CancelItemResponse::from).toList()
+                        : null);
 
         return CancelResponse.builder()
                 .id(cancel.getId())
