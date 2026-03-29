@@ -323,6 +323,7 @@ public class CancelService {
                 .orderNumber(cancel.getOrderNumber())
                 .userId(cancel.getUserId())
                 .refundAmount(refundAmount)
+                .requestType(cancel.getRequestType())
                 .items(items)
                 .build();
 

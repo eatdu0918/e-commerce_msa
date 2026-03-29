@@ -446,6 +446,32 @@ class CancelServiceTest {
             ArgumentCaptor<CancelApprovedEvent> captor = ArgumentCaptor.forClass(CancelApprovedEvent.class);
             verify(outboxEventPublisher).publishCancelApprovedEvent(captor.capture());
             assertThat(captor.getValue().getRefundAmount()).isEqualByComparingTo(new BigDecimal("1000.00"));
+            assertThat(captor.getValue().getRequestType()).isEqualTo(CancelRequestType.ORDER_CANCEL);
+        }
+
+        @Test
+        @DisplayName("반품·환불 승인 시 CancelApprovedEvent에 RETURN_REFUND requestType 포함")
+        void approveCancel_returnRefund_includesRequestTypeOnEvent() {
+            Cancel returnCancel = Cancel.create(
+                    ORDER_ID, ORDER_NUMBER, USER_ID, CancelReason.CHANGE_OF_MIND, "단순 변심",
+                    CancelRequestType.RETURN_REFUND);
+            ReflectionTestUtils.setField(returnCancel, "id", CANCEL_ID);
+            ReflectionTestUtils.setField(returnCancel, "cancelNumber", CANCEL_NUMBER);
+            ReflectionTestUtils.setField(returnCancel, "status", CancelStatus.REQUESTED);
+            CancelItem item = CancelItem.create(1L, "테스트 상품", 2, new BigDecimal("10000"));
+            ReflectionTestUtils.setField(item, "id", 1L);
+            returnCancel.addCancelItem(item);
+
+            when(cancelRepository.findByIdWithItems(CANCEL_ID)).thenReturn(Optional.of(returnCancel));
+            when(orderServiceClient.getAdminOrder(ORDER_ID)).thenReturn(
+                    ApiResponse.success(adminOrderPayloadForRefund("CANCEL_REQUESTED", "DELIVERED")));
+            doNothing().when(outboxEventPublisher).publishCancelApprovedEvent(any());
+
+            cancelService.approveCancel(CANCEL_ID);
+
+            ArgumentCaptor<CancelApprovedEvent> captor = ArgumentCaptor.forClass(CancelApprovedEvent.class);
+            verify(outboxEventPublisher).publishCancelApprovedEvent(captor.capture());
+            assertThat(captor.getValue().getRequestType()).isEqualTo(CancelRequestType.RETURN_REFUND);
         }
 
         @Test

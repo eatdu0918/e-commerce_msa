@@ -1,5 +1,6 @@
 package com.ecommerce.cancelservice.event;
 
+import com.ecommerce.cancelservice.enums.CancelRequestType;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.*;
@@ -26,6 +27,8 @@ public class CancelApprovedEvent {
      * 할인·쿠폰 반영 실제 결제액 기준 환불액. 없으면 구 소비자는 품목 단가 합으로 계산한다.
      */
     BigDecimal refundAmount;
+    /** 출고 전 취소(ORDER_CANCEL) / 반품·환불(RETURN_REFUND). 결제 서비스 환불·취소 구분용 */
+    CancelRequestType requestType;
     List<CancelItemEvent> items;
 
     @Getter
