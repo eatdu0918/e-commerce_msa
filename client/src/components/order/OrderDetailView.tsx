@@ -167,14 +167,18 @@ export default function OrderDetailView() {
     const blockingCancelStatuses = ['REQUESTED', 'APPROVED', 'COMPLETED'];
     const hasActiveCancelPipeline =
         !!order.activeCancelStatus && blockingCancelStatuses.includes(order.activeCancelStatus);
+    const rejectedOrderCancel = !!order.hasRejectedOrderCancelRequest;
+    const rejectedReturnRefund = !!order.hasRejectedReturnRefundRequest;
     const canRequestOrderCancel =
         ORDER_CANCEL_STATUSES.includes(fulfillmentPhaseKey) &&
         fulfillmentPhaseKey !== 'CANCEL_REQUESTED' &&
-        !hasActiveCancelPipeline;
+        !hasActiveCancelPipeline &&
+        !rejectedOrderCancel;
     const canRequestReturnRefund =
         RETURN_REFUND_STATUSES.includes(fulfillmentPhaseKey) &&
         fulfillmentPhaseKey !== 'CANCEL_REQUESTED' &&
-        !hasActiveCancelPipeline;
+        !hasActiveCancelPipeline &&
+        !rejectedReturnRefund;
     const canCancel = canRequestOrderCancel || canRequestReturnRefund;
     const isPostShipmentReturn = fulfillmentPhaseKey === 'DELIVERED';
     const orderIsCancelled = order.status === 'CANCELLED' || progressStatus === 'CANCELLED';
@@ -573,6 +577,26 @@ export default function OrderDetailView() {
                             </div>
                         )}
 
+                        {rejectedOrderCancel &&
+                            ORDER_CANCEL_STATUSES.includes(fulfillmentPhaseKey) &&
+                            !hasActiveCancelPipeline && (
+                                <p
+                                    className="mt-6 rounded-2xl border border-stone-200/80 bg-stone-50/90 px-4 py-3 text-center text-xs font-medium text-stone-600"
+                                    role="status"
+                                >
+                                    {t('orderDetail.order_cancel_blocked_after_rejection')}
+                                </p>
+                            )}
+                        {rejectedReturnRefund &&
+                            RETURN_REFUND_STATUSES.includes(fulfillmentPhaseKey) &&
+                            !hasActiveCancelPipeline && (
+                                <p
+                                    className="mt-6 rounded-2xl border border-rose-100 bg-rose-50/80 px-4 py-3 text-center text-xs font-medium text-rose-800"
+                                    role="status"
+                                >
+                                    {t('orderDetail.return_blocked_after_rejection')}
+                                </p>
+                            )}
                         {canCancel && (
                             <button
                                 onClick={() => setShowCancelModal(true)}

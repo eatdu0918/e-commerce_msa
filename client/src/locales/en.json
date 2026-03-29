@@ -365,6 +365,8 @@
         "payment_status_order_cancelled": "Order cancelled · payment cancellation in progress",
         "payment_status_cancelled": "Payment cancelled",
         "request_cancel": "Request cancellation",
+        "order_cancel_blocked_after_rejection": "Your pre-shipment cancellation was already rejected and cannot be submitted again. After delivery, you can request a return and refund.",
+        "return_blocked_after_rejection": "Your return and refund request was already rejected and cannot be submitted again.",
         "request_return_refund": "Request return & refund",
         "return_refund_title": "Return & refund",
         "return_refund_subtitle": "Refund proceeds after approval",

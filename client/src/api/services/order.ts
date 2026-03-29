@@ -76,6 +76,10 @@ export interface OrderDetailResponse extends OrderResponse {
     items: OrderItemDetailResponse[];
     /** REQUESTED | APPROVED | COMPLETED 등. 진행 중 취소가 없으면 undefined */
     activeCancelStatus?: string | null;
+    /** 출고 전 주문 취소가 거절된 경우. 반품 요청은 별도로 허용될 수 있음 */
+    hasRejectedOrderCancelRequest?: boolean;
+    /** 반품·환불 요청이 거절된 경우 */
+    hasRejectedReturnRefundRequest?: boolean;
     payment?: {
         paymentId: number;
         paymentMethod: string;
