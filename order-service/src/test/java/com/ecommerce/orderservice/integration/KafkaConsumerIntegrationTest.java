@@ -68,6 +68,10 @@ class KafkaConsumerIntegrationTest extends IntegrationTestBase {
                 .userCouponId(100L)
                 .couponId(10L)
                 .discountAmount(new BigDecimal("5000"))
+                .couponName("봄맞이 할인")
+                .couponCode("SPRING")
+                .couponType("PERCENTAGE")
+                .couponRuleValue(new BigDecimal("10"))
                 .build();
 
         // when - coupon-used 이벤트 발행 (discount-service 역할 시뮬레이션)
@@ -79,6 +83,10 @@ class KafkaConsumerIntegrationTest extends IntegrationTestBase {
             assertThat(updatedOrder.getStatus()).isEqualTo(OrderStatus.CONFIRMED);
             assertThat(updatedOrder.getDiscountAmount()).isEqualByComparingTo(new BigDecimal("5000"));
             assertThat(updatedOrder.getFinalAmount()).isEqualByComparingTo(new BigDecimal("25000")); // 30000 - 5000
+            assertThat(updatedOrder.getAppliedCouponName()).isEqualTo("봄맞이 할인");
+            assertThat(updatedOrder.getAppliedCouponCode()).isEqualTo("SPRING");
+            assertThat(updatedOrder.getAppliedCouponType()).isEqualTo("PERCENTAGE");
+            assertThat(updatedOrder.getAppliedCouponRuleValue()).isEqualByComparingTo(new BigDecimal("10"));
         });
 
         // 멱등성 검증 - ProcessedEvent에 기록됨
@@ -137,6 +145,33 @@ class KafkaConsumerIntegrationTest extends IntegrationTestBase {
 
         await().atMost(5, TimeUnit.SECONDS).untilAsserted(() -> {
             assertThat(processedEventRepository.existsByEventId(event.getEventId())).isTrue();
+        });
+    }
+
+    @Test
+    @DisplayName("payment-completed: 실결제액이 상품합보다 작으면 할인·최종금액 보정(coupon-used 지연 대비)")
+    void handlePaymentCompleted_reconcilesDiscountWhenPaidLessThanTotal() throws Exception {
+        OrderResponse order = createTestOrder(8L);
+        Long orderId = order.getId();
+
+        PaymentCompletedEvent event = PaymentCompletedEvent.builder()
+                .eventId(UUID.randomUUID().toString())
+                .paymentId(101L)
+                .paymentNumber("PAY-DISC")
+                .orderId(orderId)
+                .orderNumber(order.getOrderNumber())
+                .userId(8L)
+                .amount(new BigDecimal("25000"))
+                .paymentMethod("TOSSPAYMENTS")
+                .build();
+
+        kafkaTemplate.send("payment-completed", event.getOrderNumber(), event).get();
+
+        await().atMost(10, TimeUnit.SECONDS).untilAsserted(() -> {
+            Order updated = orderRepository.findById(orderId).orElseThrow();
+            assertThat(updated.getDiscountAmount()).isEqualByComparingTo(new BigDecimal("5000"));
+            assertThat(updated.getFinalAmount()).isEqualByComparingTo(new BigDecimal("25000"));
+            assertThat(updated.getStatus()).isEqualTo(OrderStatus.CONFIRMED);
         });
     }
 

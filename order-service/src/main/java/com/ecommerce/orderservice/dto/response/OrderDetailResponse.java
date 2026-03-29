@@ -29,6 +29,10 @@ public class OrderDetailResponse {
     BigDecimal discountAmount;
     BigDecimal finalAmount;
     Long userCouponId;
+    String appliedCouponName;
+    String appliedCouponCode;
+    String appliedCouponType;
+    BigDecimal appliedCouponRuleValue;
     String shippingAddress;
     String recipientName;
     String recipientPhone;
@@ -80,6 +84,10 @@ public class OrderDetailResponse {
                 .discountAmount(order.getDiscountAmount())
                 .finalAmount(order.getFinalAmount())
                 .userCouponId(order.getUserCouponId())
+                .appliedCouponName(order.getAppliedCouponName())
+                .appliedCouponCode(order.getAppliedCouponCode())
+                .appliedCouponType(order.getAppliedCouponType())
+                .appliedCouponRuleValue(order.getAppliedCouponRuleValue())
                 .shippingAddress(order.getShippingAddress())
                 .recipientName(order.getRecipientName())
                 .recipientPhone(order.getRecipientPhone())

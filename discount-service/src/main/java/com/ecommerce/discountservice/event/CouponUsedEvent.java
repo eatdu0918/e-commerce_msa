@@ -24,4 +24,8 @@ public class CouponUsedEvent {
     Long userCouponId;
     Long couponId;
     BigDecimal discountAmount;
+    String couponName;
+    String couponCode;
+    String couponType;
+    BigDecimal couponRuleValue;
 }

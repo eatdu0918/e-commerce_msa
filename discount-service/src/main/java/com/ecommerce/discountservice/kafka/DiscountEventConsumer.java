@@ -43,6 +43,10 @@ public class DiscountEventConsumer {
                     .userCouponId(null)
                     .couponId(null)
                     .discountAmount(null)
+                    .couponName(null)
+                    .couponCode(null)
+                    .couponType(null)
+                    .couponRuleValue(null)
                     .build();
             outboxEventPublisher.publishCouponUsedEvent(couponUsedEvent);
             markProcessed(event.getEventId(), "stock-decreased");
@@ -61,14 +65,19 @@ public class DiscountEventConsumer {
 
             couponService.useCoupon(event.getUserCouponId(), event.getOrderId());
 
+            var couponEntity = userCoupon.getCoupon();
             CouponUsedEvent couponUsedEvent = CouponUsedEvent.builder()
                     .eventId(UUID.randomUUID().toString())
                     .orderId(event.getOrderId())
                     .orderNumber(event.getOrderNumber())
                     .userId(event.getUserId())
                     .userCouponId(event.getUserCouponId())
-                    .couponId(userCoupon.getCoupon().getId())
+                    .couponId(couponEntity.getId())
                     .discountAmount(discountAmount)
+                    .couponName(couponEntity.getName())
+                    .couponCode(couponEntity.getCode())
+                    .couponType(couponEntity.getCouponType().name())
+                    .couponRuleValue(couponEntity.getDiscountValue())
                     .build();
 
             outboxEventPublisher.publishCouponUsedEvent(couponUsedEvent);

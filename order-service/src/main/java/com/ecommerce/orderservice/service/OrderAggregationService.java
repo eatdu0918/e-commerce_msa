@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,8 +49,9 @@ public class OrderAggregationService {
         log.info("주문 상세 통합 조회: orderId={}, userId={}", orderId, userId);
 
         OrderResponse order = orderService.getOrder(orderId, userId);
-        List<OrderItemDetailResponse> enrichedItems = enrichOrderItems(order.getItems());
         PaymentInfo paymentInfo = fetchPaymentInfo(orderId);
+        order = reconcileOrderFinancialsFromPayment(order, paymentInfo);
+        List<OrderItemDetailResponse> enrichedItems = enrichOrderItems(order.getItems());
         OrderCancelSummaryResponse cancelSummary = fetchActiveCancelSummaryUser(orderId);
 
         return OrderDetailResponse.from(
@@ -65,8 +67,9 @@ public class OrderAggregationService {
         log.info("관리자 주문 상세 통합 조회: orderId={}", orderId);
 
         OrderResponse order = orderService.getOrderById(orderId);
-        List<OrderItemDetailResponse> enrichedItems = enrichOrderItems(order.getItems());
         PaymentInfo paymentInfo = fetchPaymentInfo(orderId);
+        order = reconcileOrderFinancialsFromPayment(order, paymentInfo);
+        List<OrderItemDetailResponse> enrichedItems = enrichOrderItems(order.getItems());
         OrderCancelSummaryResponse cancelSummary = fetchActiveCancelSummaryAdmin(orderId);
 
         return OrderDetailResponse.from(
@@ -113,7 +116,7 @@ public class OrderAggregationService {
         String paymentStatus = info != null ? info.getStatus() : null;
         OrderCancelSummaryResponse cancelSummary = fetchActiveCancelSummaryAdmin(order.getId());
         String activeCancel = statusOf(cancelSummary);
-        return order.toBuilder()
+        OrderResponse built = order.toBuilder()
                 .paymentStatus(paymentStatus)
                 .activeCancelStatus(activeCancel)
                 .activeCancelId(cancelIdOf(cancelSummary))
@@ -125,6 +128,7 @@ public class OrderAggregationService {
                         order.isSkipConfirmAndPreparing(),
                         order.isSkipShippingAndDelivered()))
                 .build();
+        return reconcileOrderFinancialsFromPayment(built, info);
     }
 
     private List<OrderItemDetailResponse> enrichOrderItems(List<OrderItemResponse> items) {
@@ -199,7 +203,7 @@ public class OrderAggregationService {
         String paymentStatus = info != null ? info.getStatus() : null;
         OrderCancelSummaryResponse cancelSummary = fetchActiveCancelSummaryUser(order.getId());
         String activeCancel = statusOf(cancelSummary);
-        return order.toBuilder()
+        OrderResponse built = order.toBuilder()
                 .paymentStatus(paymentStatus)
                 .activeCancelStatus(activeCancel)
                 .activeCancelId(cancelIdOf(cancelSummary))
@@ -210,6 +214,40 @@ public class OrderAggregationService {
                         activeCancel,
                         order.isSkipConfirmAndPreparing(),
                         order.isSkipShippingAndDelivered()))
+                .build();
+        return reconcileOrderFinancialsFromPayment(built, info);
+    }
+
+    /**
+     * DB에 할인이 비어 있는데 결제 완료 금액이 상품 합계보다 작으면, API 응답상 할인·최종금액을 맞춤(과거 데이터·사가 지연).
+     */
+    private OrderResponse reconcileOrderFinancialsFromPayment(OrderResponse order, PaymentInfo payment) {
+        if (payment == null || payment.getAmount() == null) {
+            return order;
+        }
+        String payStatus = payment.getStatus();
+        if (payStatus == null || !"COMPLETED".equalsIgnoreCase(payStatus.trim())) {
+            return order;
+        }
+        BigDecimal total = order.getTotalAmount();
+        BigDecimal paid = payment.getAmount();
+        BigDecimal disc = order.getDiscountAmount() != null ? order.getDiscountAmount() : BigDecimal.ZERO;
+        if (total == null || paid.compareTo(BigDecimal.ZERO) <= 0) {
+            return order;
+        }
+        if (disc.compareTo(BigDecimal.ZERO) > 0) {
+            return order;
+        }
+        if (paid.compareTo(total) >= 0) {
+            return order;
+        }
+        BigDecimal implied = total.subtract(paid);
+        if (implied.compareTo(BigDecimal.ZERO) <= 0) {
+            return order;
+        }
+        return order.toBuilder()
+                .discountAmount(implied)
+                .finalAmount(paid)
                 .build();
     }
 

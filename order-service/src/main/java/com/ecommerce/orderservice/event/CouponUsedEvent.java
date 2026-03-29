@@ -20,4 +20,9 @@ public class CouponUsedEvent {
     Long userCouponId;
     Long couponId;
     BigDecimal discountAmount;
+    /** 표시용 쿠폰 스냅샷(discount-service에서 설정) */
+    String couponName;
+    String couponCode;
+    String couponType;
+    BigDecimal couponRuleValue;
 }

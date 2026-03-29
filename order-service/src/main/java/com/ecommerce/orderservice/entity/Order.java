@@ -63,6 +63,19 @@ public class Order extends BaseEntity {
     @Column(name = "user_coupon_id")
     Long userCouponId;
 
+    /** coupon-used 시 저장되는 표시용 쿠폰 스냅샷 */
+    @Column(name = "applied_coupon_name", length = 100)
+    String appliedCouponName;
+
+    @Column(name = "applied_coupon_code", length = 50)
+    String appliedCouponCode;
+
+    @Column(name = "applied_coupon_type", length = 20)
+    String appliedCouponType;
+
+    @Column(name = "applied_coupon_rule_value", precision = 12, scale = 2)
+    BigDecimal appliedCouponRuleValue;
+
     @Column(name = "shipping_address", length = 500)
     String shippingAddress;
 
@@ -113,8 +126,59 @@ public class Order extends BaseEntity {
     }
 
     public void applyDiscount(BigDecimal discountAmount) {
-        this.discountAmount = discountAmount;
-        this.finalAmount = this.totalAmount.subtract(discountAmount);
+        applyDiscount(discountAmount, null, null, null, null);
+    }
+
+    /**
+     * 할인액 반영 및 적용 쿠폰 메타(주문 상세·관리자 표시용).
+     */
+    public void applyDiscount(
+            BigDecimal discountAmount,
+            String couponName,
+            String couponCode,
+            String couponType,
+            BigDecimal couponRuleValue) {
+        if (discountAmount != null && discountAmount.compareTo(BigDecimal.ZERO) > 0) {
+            this.discountAmount = discountAmount;
+            this.finalAmount = this.totalAmount.subtract(discountAmount);
+        }
+        if (couponName != null && !couponName.isBlank()) {
+            this.appliedCouponName = couponName;
+        }
+        if (couponCode != null && !couponCode.isBlank()) {
+            this.appliedCouponCode = couponCode;
+        }
+        if (couponType != null && !couponType.isBlank()) {
+            this.appliedCouponType = couponType;
+        }
+        if (couponRuleValue != null) {
+            this.appliedCouponRuleValue = couponRuleValue;
+        }
+    }
+
+    /**
+     * 실제 결제 금액이 상품 합계보다 작은데 할인이 아직 0이면, 차액을 할인으로 추론해 반영합니다.
+     * Toss 등으로 이미 할인된 금액이 결제되었으나 coupon-used 사가가 지연·실패한 경우 보정용.
+     */
+    public void reconcileDiscountFromPaidAmountIfUnset(BigDecimal paidAmount) {
+        if (paidAmount == null || paidAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            return;
+        }
+        BigDecimal total = this.totalAmount;
+        if (total == null) {
+            return;
+        }
+        BigDecimal disc = this.discountAmount != null ? this.discountAmount : BigDecimal.ZERO;
+        if (disc.compareTo(BigDecimal.ZERO) > 0) {
+            return;
+        }
+        if (paidAmount.compareTo(total) >= 0) {
+            return;
+        }
+        BigDecimal implied = total.subtract(paidAmount);
+        if (implied.compareTo(BigDecimal.ZERO) > 0) {
+            applyDiscount(implied);
+        }
     }
 
     public void confirm() {

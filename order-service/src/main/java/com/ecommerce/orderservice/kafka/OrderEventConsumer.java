@@ -75,7 +75,12 @@ public class OrderEventConsumer {
 
         orderRepository.findById(event.getOrderId()).ifPresent(order -> {
             if (event.getDiscountAmount() != null && event.getDiscountAmount().compareTo(BigDecimal.ZERO) > 0) {
-                order.applyDiscount(event.getDiscountAmount());
+                order.applyDiscount(
+                        event.getDiscountAmount(),
+                        event.getCouponName(),
+                        event.getCouponCode(),
+                        event.getCouponType(),
+                        event.getCouponRuleValue());
             }
             order.markPaidAndApplyFulfillmentFastForward();
             log.info("주문 확정·배송 단계 반영: orderId={}, status={}, finalAmount={}",
@@ -141,6 +146,7 @@ public class OrderEventConsumer {
 
         orderRepository.findById(event.getOrderId()).ifPresent(order -> {
             OrderStatus before = order.getStatus();
+            order.reconcileDiscountFromPaidAmountIfUnset(event.getAmount());
             order.markPaidAndApplyFulfillmentFastForward();
             if (before != order.getStatus()) {
                 log.info("결제 완료 후 주문 상태 반영: orderId={}, before={}, after={}",
