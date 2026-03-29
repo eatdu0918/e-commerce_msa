@@ -14,6 +14,10 @@ export interface CreateOrderRequest {
     shippingAddress: string;
     recipientName: string;
     recipientPhone: string;
+    /** 결제 후 주문 확인·상품 준비 단계 생략 → 배송 중까지 즉시 */
+    skipConfirmAndPreparing?: boolean;
+    /** 결제 후 배송 중·배송 완료 생략 → 즉시 배송 완료 (위 옵션 true일 때만) */
+    skipShippingAndDelivered?: boolean;
 }
 
 export interface OrderItemResponse {
@@ -40,6 +44,9 @@ export interface OrderResponse {
     /** 진행 중 취소 건 요청 유형: ORDER_CANCEL | RETURN_REFUND */
     /** 목록·상세 집계 시 cancel-service 요약 기준 */
     activeCancelRequestType?: string | null;
+    /** 체크아웃 단계 생략 옵션(표시 보정·폴백용) */
+    skipConfirmAndPreparing?: boolean;
+    skipShippingAndDelivered?: boolean;
     statusDescription: string;
     totalAmount: number;
     discountAmount: number;
@@ -103,6 +110,8 @@ export function getUiProgressStatus(order: {
     progressStatus?: string | null;
     paymentStatus?: string | null;
     payment?: { status?: string };
+    skipConfirmAndPreparing?: boolean;
+    skipShippingAndDelivered?: boolean;
 }): string {
     if (order.progressStatus) return order.progressStatus;
     const pay = (order.payment?.status || order.paymentStatus || '').toUpperCase();
@@ -111,7 +120,11 @@ export function getUiProgressStatus(order: {
     }
     const cancelled = order.status === 'CANCELLED' || order.status === 'CANCEL_REQUESTED';
     const paid = pay === 'COMPLETED';
-    if (!cancelled && order.status === 'PENDING' && paid) return 'CONFIRMED';
+    if (!cancelled && order.status === 'PENDING' && paid) {
+        if (order.skipShippingAndDelivered && order.skipConfirmAndPreparing) return 'DELIVERED';
+        if (order.skipConfirmAndPreparing) return 'SHIPPING';
+        return 'CONFIRMED';
+    }
     return order.status;
 }
 

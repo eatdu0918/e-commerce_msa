@@ -37,6 +37,8 @@ export default function PaymentSuccessPage() {
                 recipientPhone: string;
                 userCouponId?: number;
                 paymentMethod: string;
+                skipConfirmAndPreparing?: boolean;
+                skipShippingAndDelivered?: boolean;
             } = JSON.parse(savedOrderData);
 
             const orderRequest: CreateOrderRequest = {
@@ -45,6 +47,8 @@ export default function PaymentSuccessPage() {
                 recipientName: orderData.recipientName,
                 recipientPhone: orderData.recipientPhone,
                 ...(orderData.userCouponId ? { userCouponId: orderData.userCouponId } : {}),
+                ...(orderData.skipConfirmAndPreparing === true ? { skipConfirmAndPreparing: true } : {}),
+                ...(orderData.skipShippingAndDelivered === true ? { skipShippingAndDelivered: true } : {}),
             };
 
             const order = await createOrder(orderRequest);

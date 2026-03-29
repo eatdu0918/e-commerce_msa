@@ -34,6 +34,9 @@ export default function CheckoutPage() {
     const [roadAddress, setRoadAddress] = useState('');
     const [detailAddress, setDetailAddress] = useState('');
 
+    const [skipConfirmAndPreparing, setSkipConfirmAndPreparing] = useState(false);
+    const [skipShippingAndDelivered, setSkipShippingAndDelivered] = useState(false);
+
     // 토스페이먼츠 위젯 관련
     const widgetsRef = useRef<any>(null);
     const [widgetsReady, setWidgetsReady] = useState(false);
@@ -226,6 +229,8 @@ export default function CheckoutPage() {
                 recipientPhone,
                 ...(selectedCouponId ? { userCouponId: selectedCouponId } : {}),
                 paymentMethod: 'TOSSPAYMENTS',
+                skipConfirmAndPreparing,
+                skipShippingAndDelivered,
             };
 
             localStorage.setItem('pendingOrderData', JSON.stringify(pendingOrderData));
@@ -447,6 +452,54 @@ export default function CheckoutPage() {
                                         {t('checkout.payment_method')}
                                     </h3>
                                     <div id="payment-method-widget" className="w-full" />
+                                </div>
+
+                                <div className="bg-white p-8 rounded-[30px] shadow-sm border border-stone-100">
+                                    <h3 className="text-sm font-bold text-stone-700 mb-4">{t('checkout.fulfillment_skip_title')}</h3>
+                                    <label className="flex items-start gap-3 cursor-pointer group">
+                                        <input
+                                            type="checkbox"
+                                            className="mt-1 rounded border-stone-300 text-black focus:ring-black"
+                                            checked={skipConfirmAndPreparing}
+                                            onChange={(e) => {
+                                                const v = e.target.checked;
+                                                setSkipConfirmAndPreparing(v);
+                                                if (!v) setSkipShippingAndDelivered(false);
+                                            }}
+                                        />
+                                        <span className="text-sm">
+                                            <span className="font-semibold text-stone-800 group-hover:text-black block">
+                                                {t('checkout.fulfillment_skip_confirm_preparing')}
+                                            </span>
+                                            <span className="text-xs text-stone-500 mt-0.5 block">
+                                                {t('checkout.fulfillment_skip_confirm_preparing_hint')}
+                                            </span>
+                                        </span>
+                                    </label>
+                                    <label
+                                        className={`flex items-start gap-3 mt-4 ${skipConfirmAndPreparing ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            className="mt-1 rounded border-stone-300 text-black focus:ring-black disabled:opacity-60"
+                                            disabled={!skipConfirmAndPreparing}
+                                            checked={skipShippingAndDelivered}
+                                            onChange={(e) => setSkipShippingAndDelivered(e.target.checked)}
+                                        />
+                                        <span className="text-sm">
+                                            <span className="font-semibold text-stone-800 block">
+                                                {t('checkout.fulfillment_skip_shipping_delivered')}
+                                            </span>
+                                            <span className="text-xs text-stone-500 mt-0.5 block">
+                                                {t('checkout.fulfillment_skip_shipping_delivered_hint')}
+                                            </span>
+                                            {!skipConfirmAndPreparing && (
+                                                <span className="text-xs text-amber-700 mt-1 block">
+                                                    {t('checkout.fulfillment_skip_shipping_requires_first')}
+                                                </span>
+                                            )}
+                                        </span>
+                                    </label>
                                 </div>
 
                                 {/* 약관 동의 위젯 */}

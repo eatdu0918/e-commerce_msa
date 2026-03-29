@@ -26,6 +26,8 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [widgetsReady, setWidgetsReady] = useState(false);
+    const [skipConfirmAndPreparing, setSkipConfirmAndPreparing] = useState(false);
+    const [skipShippingAndDelivered, setSkipShippingAndDelivered] = useState(false);
 
     // Address state
     const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
@@ -148,6 +150,8 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
                 recipientName,
                 recipientPhone,
                 paymentMethod: 'TOSSPAYMENTS',
+                skipConfirmAndPreparing,
+                skipShippingAndDelivered,
             };
 
             localStorage.setItem('pendingOrderData', JSON.stringify(pendingOrderData));
@@ -264,6 +268,50 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
                     <div>
                         <label className="block text-sm font-bold text-stone-700 mb-2">{t('checkout.payment_method')}</label>
                         <div id="modal-payment-method-widget" className="w-full" />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-bold text-stone-700 mb-2">{t('checkout.fulfillment_skip_title')}</label>
+                        <label className="flex items-start gap-3 cursor-pointer group">
+                            <input
+                                type="checkbox"
+                                className="mt-1 rounded border-stone-300 text-black focus:ring-black"
+                                checked={skipConfirmAndPreparing}
+                                onChange={(e) => {
+                                    const v = e.target.checked;
+                                    setSkipConfirmAndPreparing(v);
+                                    if (!v) setSkipShippingAndDelivered(false);
+                                }}
+                            />
+                            <span className="text-sm">
+                                <span className="font-semibold text-stone-800">{t('checkout.fulfillment_skip_confirm_preparing')}</span>
+                                <span className="text-xs text-stone-500 block mt-0.5">
+                                    {t('checkout.fulfillment_skip_confirm_preparing_hint')}
+                                </span>
+                            </span>
+                        </label>
+                        <label
+                            className={`flex items-start gap-3 mt-3 ${skipConfirmAndPreparing ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}
+                        >
+                            <input
+                                type="checkbox"
+                                className="mt-1 rounded border-stone-300 text-black focus:ring-black disabled:opacity-60"
+                                disabled={!skipConfirmAndPreparing}
+                                checked={skipShippingAndDelivered}
+                                onChange={(e) => setSkipShippingAndDelivered(e.target.checked)}
+                            />
+                            <span className="text-sm">
+                                <span className="font-semibold text-stone-800">{t('checkout.fulfillment_skip_shipping_delivered')}</span>
+                                <span className="text-xs text-stone-500 block mt-0.5">
+                                    {t('checkout.fulfillment_skip_shipping_delivered_hint')}
+                                </span>
+                                {!skipConfirmAndPreparing && (
+                                    <span className="text-xs text-amber-700 block mt-1">
+                                        {t('checkout.fulfillment_skip_shipping_requires_first')}
+                                    </span>
+                                )}
+                            </span>
+                        </label>
                     </div>
 
                     {/* 약관 동의 위젯 */}

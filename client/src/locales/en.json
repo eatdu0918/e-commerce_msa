@@ -298,7 +298,13 @@
         "shipping_free": "Free",
         "final_amount": "Total due",
         "pay_with_amount": "Pay {{amount}}",
-        "order_name_extra": "{{name}} + {{count}} more"
+        "order_name_extra": "{{name}} + {{count}} more",
+        "fulfillment_skip_title": "Fulfillment steps (optional)",
+        "fulfillment_skip_confirm_preparing": "Skip order confirmation & packing steps",
+        "fulfillment_skip_confirm_preparing_hint": "After payment, the order moves straight to shipping.",
+        "fulfillment_skip_shipping_delivered": "Skip in-transit & delivered steps",
+        "fulfillment_skip_shipping_delivered_hint": "After payment, the order is marked as delivered.",
+        "fulfillment_skip_shipping_requires_first": "Enable the option above first."
     },
     "paymentFlow": {
         "success_title_done": "Order complete!",

@@ -296,7 +296,13 @@
         "shipping_free": "무료",
         "final_amount": "최종 결제금액",
         "pay_with_amount": "{{amount}} 결제하기",
-        "order_name_extra": "{{name}} 외 {{count}}건"
+        "order_name_extra": "{{name}} 외 {{count}}건",
+        "fulfillment_skip_title": "배송 진행 단계 (선택)",
+        "fulfillment_skip_confirm_preparing": "주문 확인 · 상품 준비 단계 건너뛰기",
+        "fulfillment_skip_confirm_preparing_hint": "결제 완료 후 곧바로 배송 중 상태로 표시됩니다.",
+        "fulfillment_skip_shipping_delivered": "배송 중 · 배송 완료 단계 건너뛰기",
+        "fulfillment_skip_shipping_delivered_hint": "결제 완료 후 곧바로 배송 완료로 표시됩니다.",
+        "fulfillment_skip_shipping_requires_first": "위 옵션을 먼저 선택해야 사용할 수 있습니다."
     },
     "paymentFlow": {
         "success_title_done": "주문이 완료되었습니다!",

@@ -98,7 +98,8 @@ export default function OrderDetailView() {
 
     const handleCancelSubmit = () => {
         if (!order) return;
-        const postDelivered = order.status === 'DELIVERED';
+        const phase = (getUiProgressStatus(order) || order.status || '').toUpperCase();
+        const postDelivered = phase === 'DELIVERED';
         const requestType: CancelRequestType = postDelivered ? 'RETURN_REFUND' : 'ORDER_CANCEL';
         const request: CreateCancelRequest = {
             orderId: order.id,
@@ -146,10 +147,10 @@ export default function OrderDetailView() {
     }
 
     const progressStatus = getUiProgressStatus(order);
+    /** 취소 가능 여부는 스텝퍼와 동일한 단계(getUiProgressStatus). skip 플로우에서 DB status만 쓰면 배송 중인데도 취소 버튼이 뜨는 경우가 있다. */
+    const fulfillmentPhaseKey = (progressStatus || order.status || '').toUpperCase();
     const effectiveCancelRequestType = getEffectiveCancelRequestTypeForDisplay(order);
-    const isCancelledFlow = ['CANCELLED', 'CANCEL_REQUESTED'].includes(
-        (progressStatus || order.status || '').toUpperCase()
-    );
+    const isCancelledFlow = ['CANCELLED', 'CANCEL_REQUESTED'].includes(fulfillmentPhaseKey);
     const { completedThrough: stepperCompletedThrough, pulseAt: stepperPulseAt } = getOrderStepperDisplay(
         progressStatus,
         STATUS_STEPS.length
@@ -162,18 +163,18 @@ export default function OrderDetailView() {
     const hasActiveCancelPipeline =
         !!order.activeCancelStatus && blockingCancelStatuses.includes(order.activeCancelStatus);
     const canRequestOrderCancel =
-        ORDER_CANCEL_STATUSES.includes(order.status) &&
-        order.status !== 'CANCEL_REQUESTED' &&
+        ORDER_CANCEL_STATUSES.includes(fulfillmentPhaseKey) &&
+        fulfillmentPhaseKey !== 'CANCEL_REQUESTED' &&
         !hasActiveCancelPipeline;
     const canRequestReturnRefund =
-        RETURN_REFUND_STATUSES.includes(order.status) &&
-        order.status !== 'CANCEL_REQUESTED' &&
+        RETURN_REFUND_STATUSES.includes(fulfillmentPhaseKey) &&
+        fulfillmentPhaseKey !== 'CANCEL_REQUESTED' &&
         !hasActiveCancelPipeline;
     const canCancel = canRequestOrderCancel || canRequestReturnRefund;
-    const isPostShipmentReturn = order.status === 'DELIVERED';
+    const isPostShipmentReturn = fulfillmentPhaseKey === 'DELIVERED';
     const orderIsCancelled = order.status === 'CANCELLED' || progressStatus === 'CANCELLED';
     const orderItems = order.items || [];
-    const headerStatusKey = (progressStatus || order.status || '').toUpperCase();
+    const headerStatusKey = fulfillmentPhaseKey;
     const headlineStatusLabel =
         orderStatusHeadlineLabel(
             t,
