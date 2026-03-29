@@ -51,7 +51,7 @@ public class OrderController {
     public ResponseEntity<ApiResponse<OrderResponse>> getOrder(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long orderId) {
-        OrderResponse response = orderService.getOrder(orderId, userDetails.getUserId());
+        OrderResponse response = orderAggregationService.getMyOrderEnriched(orderId, userDetails.getUserId());
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 

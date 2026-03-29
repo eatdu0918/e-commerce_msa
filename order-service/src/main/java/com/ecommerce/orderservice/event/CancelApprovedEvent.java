@@ -18,6 +18,7 @@ public class CancelApprovedEvent {
     Long orderId;
     String orderNumber;
     Long userId;
+    BigDecimal refundAmount;
     List<CancelItemEvent> items;
 
     @Getter

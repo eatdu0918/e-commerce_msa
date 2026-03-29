@@ -11,6 +11,7 @@ import com.ecommerce.cancelservice.entity.CancelItem;
 import com.ecommerce.cancelservice.enums.CancelReason;
 import com.ecommerce.cancelservice.enums.CancelRequestType;
 import com.ecommerce.cancelservice.enums.CancelStatus;
+import com.ecommerce.cancelservice.event.CancelApprovedEvent;
 import com.ecommerce.cancelservice.exception.CancelDomainException;
 import com.ecommerce.cancelservice.outbox.OutboxEventPublisher;
 import com.ecommerce.cancelservice.repository.CancelRepository;
@@ -22,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -133,6 +135,36 @@ class CancelServiceTest {
             CancelResponse response = cancelService.createCancel(USER_ID, request);
 
             assertThat(response.getRequestType()).isEqualTo(CancelRequestType.RETURN_REFUND);
+        }
+
+        @Test
+        @DisplayName("반품·환불: DB status는 PENDING이어도 progressStatus 배송완료면 허용(스킵 결제·집계 선행)")
+        void createCancel_returnRefund_allowedWhenProgressDeliveredOnly() {
+            CancelItemRequest itemRequest = new CancelItemRequest(
+                    1L, "테스트 상품", 2, new BigDecimal("10000")
+            );
+            CreateCancelRequest request = new CreateCancelRequest(
+                    ORDER_ID, ORDER_NUMBER, CancelReason.CHANGE_OF_MIND, "단순 변심",
+                    CancelRequestType.RETURN_REFUND, List.of(itemRequest)
+            );
+
+            OrderPayload payload = userOrderPayload("PENDING");
+            payload.setProgressStatus("DELIVERED");
+
+            when(cancelRepository.existsByOrderIdAndUserIdAndStatusIn(anyLong(), anyLong(), any()))
+                    .thenReturn(false);
+            when(orderServiceClient.getMyOrder(ORDER_ID)).thenReturn(ApiResponse.success(payload));
+            when(cancelRepository.save(any(Cancel.class))).thenAnswer(invocation -> {
+                Cancel cancel = invocation.getArgument(0);
+                ReflectionTestUtils.setField(cancel, "id", CANCEL_ID);
+                return cancel;
+            });
+            doNothing().when(outboxEventPublisher).publishCancelRequestedEvent(any());
+
+            CancelResponse response = cancelService.createCancel(USER_ID, request);
+
+            assertThat(response.getRequestType()).isEqualTo(CancelRequestType.RETURN_REFUND);
+            verify(outboxEventPublisher).publishCancelRequestedEvent(any());
         }
 
         @Test
@@ -346,7 +378,7 @@ class CancelServiceTest {
             // given
             when(cancelRepository.findByIdWithItems(CANCEL_ID)).thenReturn(Optional.of(testCancel));
             when(orderServiceClient.getAdminOrder(ORDER_ID)).thenReturn(
-                    ApiResponse.success(adminOrderPayload("CANCEL_REQUESTED", "CONFIRMED")));
+                    ApiResponse.success(adminOrderPayloadForRefund("CANCEL_REQUESTED", "CONFIRMED")));
             doNothing().when(outboxEventPublisher).publishCancelApprovedEvent(any());
 
             // when
@@ -355,7 +387,9 @@ class CancelServiceTest {
             // then
             assertThat(response).isNotNull();
             assertThat(response.getStatus()).isEqualTo(CancelStatus.APPROVED);
-            verify(outboxEventPublisher).publishCancelApprovedEvent(any());
+            ArgumentCaptor<CancelApprovedEvent> captor = ArgumentCaptor.forClass(CancelApprovedEvent.class);
+            verify(outboxEventPublisher).publishCancelApprovedEvent(captor.capture());
+            assertThat(captor.getValue().getRefundAmount()).isEqualByComparingTo(new BigDecimal("1000.00"));
         }
 
         @Test
@@ -447,6 +481,21 @@ class CancelServiceTest {
         OrderPayload p = new OrderPayload();
         p.setStatus(status);
         p.setStatusBeforeCancelRequest(statusBefore);
+        return p;
+    }
+
+    /**
+     * testCancel 품목: productId=1, quantity=2, 라인 합 20000원 — finalAmount 1000원이면 할인 반영 환불액 1000원.
+     */
+    private static OrderPayload adminOrderPayloadForRefund(String status, String statusBefore) {
+        OrderPayload p = adminOrderPayload(status, statusBefore);
+        p.setTotalAmount(new BigDecimal("20000"));
+        p.setFinalAmount(new BigDecimal("1000"));
+        OrderPayload.OrderItemLinePayload line = new OrderPayload.OrderItemLinePayload();
+        line.setProductId(1L);
+        line.setQuantity(2);
+        line.setTotalPrice(new BigDecimal("20000"));
+        p.setItems(List.of(line));
         return p;
     }
 

@@ -18,6 +18,46 @@ import {
 } from '../../api/services/order';
 import { ArrowLeft, Check, Package, Truck, CircleDot, X } from 'lucide-react';
 
+type OrderLineForAllocate = { totalPrice?: number; quantity?: number };
+
+/**
+ * 주문 최종 결제액을 품목별 totalPrice 비중으로 나눈 표시용 정수 원(합계가 final과 일치).
+ */
+function allocateFinalAmountToLines(
+  items: OrderLineForAllocate[],
+  orderTotalAmount: number,
+  orderFinalAmount: number
+): { lineTotal: number; unitPrice: number }[] | null {
+  if (!items.length || orderTotalAmount <= 0) return null;
+  const target = Math.max(0, Math.round(Number(orderFinalAmount)));
+  const basisTotal = Math.round(Number(orderTotalAmount));
+  if (target >= basisTotal) return null;
+
+  const linePres = items.map((it) =>
+    Math.max(0, Math.round(Number(it.totalPrice ?? 0)))
+  );
+  const sumLines = linePres.reduce((a, b) => a + b, 0);
+  if (sumLines <= 0) return null;
+
+  const exact = linePres.map((t) => (t / sumLines) * target);
+  const rounded = exact.map((x) => Math.floor(x));
+  let gap = target - rounded.reduce((a, b) => a + b, 0);
+  const byFrac = exact
+    .map((x, i) => ({ i, f: x - Math.floor(x) }))
+    .sort((a, b) => b.f - a.f);
+  for (let k = 0; k < byFrac.length && gap > 0; k++) {
+    rounded[byFrac[k].i] += 1;
+    gap -= 1;
+  }
+
+  return items.map((it, i) => {
+    const qty = Math.max(1, Number(it.quantity) || 1);
+    const lineTotal = rounded[i];
+    const unitPrice = Math.round(lineTotal / qty);
+    return { lineTotal, unitPrice };
+  });
+}
+
 export default function AdminOrderDetail() {
   const { id } = useParams<{ id: string }>();
   const orderId = Number(id);
@@ -172,6 +212,12 @@ export default function AdminOrderDetail() {
   const lastStepIdx = ADMIN_FULFILLMENT_STEPS.length - 1;
 
   const adminCouponDetail = buildOrderCouponDetailSummary(t, order);
+  const totalNum = Number(order.totalAmount ?? 0);
+  const finalNum =
+    order.finalAmount != null && !Number.isNaN(Number(order.finalAmount))
+      ? Number(order.finalAmount)
+      : totalNum;
+  const itemPayDisplay = allocateFinalAmountToLines(order.items ?? [], totalNum, finalNum);
 
   const handleAdvance = () => {
     if (!nextStatus || !nextLabel) return;
@@ -432,8 +478,12 @@ export default function AdminOrderDetail() {
         <div className="p-6 border-t border-stone-100">
           <h2 className="text-sm font-semibold text-stone-800 mb-4">{t('admin.order_items')}</h2>
           <ul className="divide-y divide-stone-100">
-            {order.items?.map((item) => {
-              const unit = item.unitPrice ?? item.productPrice ?? 0;
+            {order.items?.map((item, idx) => {
+              const pay = itemPayDisplay?.[idx];
+              const unitRaw = item.unitPrice ?? item.productPrice ?? 0;
+              const lineRaw = Number(item.totalPrice);
+              const unit = pay != null ? pay.unitPrice : Number(unitRaw);
+              const lineTotal = pay != null ? pay.lineTotal : lineRaw;
               return (
                 <li key={item.id} className="py-3 flex gap-4">
                   {item.imageUrl && (
@@ -446,11 +496,11 @@ export default function AdminOrderDetail() {
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-stone-900 truncate">{item.productName}</p>
                     <p className="text-xs text-stone-500">
-                      ₩{Number(unit).toLocaleString()} × {item.quantity}
+                      ₩{unit.toLocaleString(dateLocale)} × {item.quantity}
                     </p>
                   </div>
                   <p className="font-semibold text-stone-800">
-                    ₩{Number(item.totalPrice).toLocaleString()}
+                    ₩{lineTotal.toLocaleString(dateLocale)}
                   </p>
                 </li>
               );

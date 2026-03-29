@@ -272,7 +272,7 @@ class OrderControllerTest {
             // given
             OrderResponse response = createOrderResponse(1L, OrderStatus.CONFIRMED);
 
-            when(orderService.getOrder(anyLong(), anyLong())).thenReturn(response);
+            when(orderAggregationService.getMyOrderEnriched(anyLong(), anyLong())).thenReturn(response);
 
             // when & then
             mockMvc.perform(get("/api/orders/1"))
@@ -286,7 +286,7 @@ class OrderControllerTest {
         @DisplayName("주문 상세 조회 실패 - 존재하지 않음")
         void getOrder_notFound() throws Exception {
             // given
-            when(orderService.getOrder(anyLong(), anyLong()))
+            when(orderAggregationService.getMyOrderEnriched(anyLong(), anyLong()))
                     .thenThrow(new OrderDomainException(OrderDomainExceptionCode.OrderNotFoundException));
 
             // when & then
@@ -298,7 +298,7 @@ class OrderControllerTest {
         @DisplayName("주문 상세 조회 실패 - 다른 사용자의 주문")
         void getOrder_accessDenied() throws Exception {
             // given
-            when(orderService.getOrder(anyLong(), anyLong()))
+            when(orderAggregationService.getMyOrderEnriched(anyLong(), anyLong()))
                     .thenThrow(new OrderDomainException(OrderDomainExceptionCode.AccessDeniedException));
 
             // when & then

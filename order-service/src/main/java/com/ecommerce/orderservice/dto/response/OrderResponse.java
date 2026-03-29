@@ -45,6 +45,12 @@ public class OrderResponse {
     /** 결제 서비스 조회 결과 (목록 통합 조회 시에만 채움). 없거나 미조회 시 null */
     String paymentStatus;
 
+    /**
+     * 결제 서비스가 보관한 실제 승인 금액(PG 기준). 집계 조회·관리자 단건 조회에서만 채움.
+     * 주문 DB의 finalAmount보다 우선해 환불 산출 등에 쓸 수 있다.
+     */
+    BigDecimal paymentAmount;
+
     /** 목록·상세·진행 바 라벨에 공통 사용 (결제 완료 반영 등). */
     OrderStatus progressStatus;
 

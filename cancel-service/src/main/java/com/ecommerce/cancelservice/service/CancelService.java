@@ -26,6 +26,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
@@ -131,11 +132,13 @@ public class CancelService {
 
     private void assertUserCancelAllowed(OrderPayload payload, CancelRequestType type) {
         String st = normalizeStatus(payload.getStatus());
+        String progress = normalizeStatus(payload.getProgressStatus());
         if ("SHIPPING".equals(st)) {
             throw new CancelDomainException(CancelDomainExceptionCode.CancelBlockedWhileShippingException);
         }
         if (type == CancelRequestType.RETURN_REFUND) {
-            if (!"DELIVERED".equals(st)) {
+            /* UI·집계는 결제 완료+스킵 플래그로 DELIVERED일 수 있는데 DB는 아직 PENDING 등일 수 있음 */
+            if (!"DELIVERED".equals(st) && !"DELIVERED".equals(progress)) {
                 throw new CancelDomainException(CancelDomainExceptionCode.ReturnRefundOnlyAfterDeliveredException);
             }
         } else {
@@ -145,12 +148,15 @@ public class CancelService {
         }
     }
 
-    private void assertAdminMayProcessCancel(Long orderId) {
+    private OrderPayload fetchAdminOrderOrThrow(Long orderId) {
         ApiResponse<OrderPayload> res = orderServiceClient.getAdminOrder(orderId);
         if (res == null || !res.isSuccess() || res.getData() == null) {
             throw new CancelDomainException(CancelDomainExceptionCode.OrderInfoUnavailableException);
         }
-        OrderPayload p = res.getData();
+        return res.getData();
+    }
+
+    private void assertAdminMayProcessCancel(OrderPayload p) {
         String st = normalizeStatus(p.getStatus());
         String before = normalizeStatus(p.getStatusBeforeCancelRequest());
         if ("SHIPPING".equals(st)) {
@@ -257,9 +263,12 @@ public class CancelService {
             throw new CancelDomainException(CancelDomainExceptionCode.CancelNotInRequestedStatusException);
         }
 
-        assertAdminMayProcessCancel(cancel.getOrderId());
+        OrderPayload orderSnapshot = fetchAdminOrderOrThrow(cancel.getOrderId());
+        assertAdminMayProcessCancel(orderSnapshot);
 
         cancel.approve();
+
+        BigDecimal refundAmount = RefundAmountCalculator.computeRefundAmount(cancel, orderSnapshot);
 
         List<CancelApprovedEvent.CancelItemEvent> items = cancel.getCancelItems().stream()
                 .map(item -> CancelApprovedEvent.CancelItemEvent.builder()
@@ -277,6 +286,7 @@ public class CancelService {
                 .orderId(cancel.getOrderId())
                 .orderNumber(cancel.getOrderNumber())
                 .userId(cancel.getUserId())
+                .refundAmount(refundAmount)
                 .items(items)
                 .build();
 
@@ -297,7 +307,7 @@ public class CancelService {
             throw new CancelDomainException(CancelDomainExceptionCode.CancelNotInRequestedStatusException);
         }
 
-        assertAdminMayProcessCancel(cancel.getOrderId());
+        assertAdminMayProcessCancel(fetchAdminOrderOrThrow(cancel.getOrderId()));
 
         cancel.reject(rejectedReason);
 

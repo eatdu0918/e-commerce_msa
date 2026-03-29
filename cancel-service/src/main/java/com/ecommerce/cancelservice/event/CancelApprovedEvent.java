@@ -22,6 +22,10 @@ public class CancelApprovedEvent {
     Long orderId;
     String orderNumber;
     Long userId;
+    /**
+     * 할인·쿠폰 반영 실제 결제액 기준 환불액. 없으면 구 소비자는 품목 단가 합으로 계산한다.
+     */
+    BigDecimal refundAmount;
     List<CancelItemEvent> items;
 
     @Getter

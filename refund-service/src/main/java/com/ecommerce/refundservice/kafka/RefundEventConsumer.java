@@ -37,10 +37,7 @@ public class RefundEventConsumer {
                                 event.getCancelId(), event.getOrderId());
 
                 try {
-                        BigDecimal totalAmount = event.getItems().stream()
-                                        .map(item -> item.getUnitPrice()
-                                                        .multiply(BigDecimal.valueOf(item.getQuantity())))
-                                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                        BigDecimal totalAmount = resolveRefundAmount(event);
 
                         Refund refund = Refund.create(
                                         event.getOrderId(),
@@ -100,6 +97,20 @@ public class RefundEventConsumer {
 
                         outboxEventPublisher.publishRefundFailedEvent(failedEvent);
                 }
+        }
+
+        private static BigDecimal resolveRefundAmount(CancelApprovedEvent event) {
+                if (event.getRefundAmount() != null) {
+                        return event.getRefundAmount();
+                }
+                if (event.getItems() == null || event.getItems().isEmpty()) {
+                        return BigDecimal.ZERO;
+                }
+                return event.getItems().stream()
+                                .map(item -> item.getUnitPrice() != null && item.getQuantity() != null
+                                                ? item.getUnitPrice().multiply(BigDecimal.valueOf(item.getQuantity()))
+                                                : BigDecimal.ZERO)
+                                .reduce(BigDecimal.ZERO, BigDecimal::add);
         }
 
         private boolean isDuplicate(String eventId, String eventType) {

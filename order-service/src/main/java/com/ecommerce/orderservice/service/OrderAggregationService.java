@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 @Slf4j
 @Service
@@ -43,6 +44,15 @@ public class OrderAggregationService {
                 .first(page.isFirst())
                 .last(page.isLast())
                 .build();
+    }
+
+    /**
+     * 단건 주문 조회를 목록·상세와 동일하게 결제·스킵 플래그 반영 progressStatus까지 채운다.
+     * (cancel-service 등에서 DB 상태만 보면 배송완료 표시와 어긋나는 경우 방지)
+     */
+    public OrderResponse getMyOrderEnriched(Long orderId, Long userId) {
+        OrderResponse order = orderService.getOrder(orderId, userId);
+        return withPaymentStatus(order);
     }
 
     public OrderDetailResponse getOrderDetail(Long orderId, Long userId) {
@@ -118,6 +128,7 @@ public class OrderAggregationService {
         String activeCancel = statusOf(cancelSummary);
         OrderResponse built = order.toBuilder()
                 .paymentStatus(paymentStatus)
+                .paymentAmount(info != null ? info.getAmount() : null)
                 .activeCancelStatus(activeCancel)
                 .activeCancelId(cancelIdOf(cancelSummary))
                 .activeCancelRequestType(requestTypeOf(cancelSummary))
@@ -205,6 +216,7 @@ public class OrderAggregationService {
         String activeCancel = statusOf(cancelSummary);
         OrderResponse built = order.toBuilder()
                 .paymentStatus(paymentStatus)
+                .paymentAmount(info != null ? info.getAmount() : null)
                 .activeCancelStatus(activeCancel)
                 .activeCancelId(cancelIdOf(cancelSummary))
                 .activeCancelRequestType(requestTypeOf(cancelSummary))
@@ -219,14 +231,15 @@ public class OrderAggregationService {
     }
 
     /**
-     * DB에 할인이 비어 있는데 결제 완료 금액이 상품 합계보다 작으면, API 응답상 할인·최종금액을 맞춤(과거 데이터·사가 지연).
+     * DB에 할인이 비어 있는데 실제 승인 금액이 상품 합계보다 작으면, API 응답상 할인·최종금액을 맞춤(과거 데이터·사가 지연).
+     * 취소/환불로 결제 상태가 바뀐 뒤에도 동일 금액 필드가 유지되므로 COMPLETED뿐 아니라 CANCELLED·REFUNDED에서도 맞춘다.
      */
     private OrderResponse reconcileOrderFinancialsFromPayment(OrderResponse order, PaymentInfo payment) {
         if (payment == null || payment.getAmount() == null) {
             return order;
         }
         String payStatus = payment.getStatus();
-        if (payStatus == null || !"COMPLETED".equalsIgnoreCase(payStatus.trim())) {
+        if (payStatus == null || !isPaymentAmountComparableToOrderTotal(payStatus)) {
             return order;
         }
         BigDecimal total = order.getTotalAmount();
@@ -249,6 +262,14 @@ public class OrderAggregationService {
                 .discountAmount(implied)
                 .finalAmount(paid)
                 .build();
+    }
+
+    /**
+     * {@link PaymentInfo#getAmount()}가 주문 합계 대비 할인 추론에 쓸 수 있는 상태인지 판별.
+     */
+    private static boolean isPaymentAmountComparableToOrderTotal(String payStatus) {
+        String s = payStatus.trim().toUpperCase(Locale.ROOT);
+        return "COMPLETED".equals(s) || "CANCELLED".equals(s) || "REFUNDED".equals(s);
     }
 
     private static String requestTypeOf(OrderCancelSummaryResponse summary) {
