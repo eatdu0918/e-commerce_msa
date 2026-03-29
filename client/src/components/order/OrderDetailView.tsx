@@ -13,7 +13,11 @@ import type { CancelReason, CreateCancelRequest, CancelRequestType } from '../..
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { isCancelledOrderWithRefundComplete, orderStatusHeadlineLabel } from '../../lib/adminOrderStatus';
+import {
+    isCancelledOrderWithRefundComplete,
+    orderStatusHeadlineLabel,
+    shouldShowOrderEstimatedArrival,
+} from '../../lib/adminOrderStatus';
 
 /** 출고 전 주문 취소 신청 가능 상태 */
 const ORDER_CANCEL_STATUSES = ['PENDING', 'CONFIRMED', 'PREPARING'];
@@ -184,6 +188,16 @@ export default function OrderDetailView() {
     const orderIsCancelled = order.status === 'CANCELLED' || progressStatus === 'CANCELLED';
     const orderItems = order.items || [];
     const headerStatusKey = fulfillmentPhaseKey;
+    const refundSettled = isCancelledOrderWithRefundComplete(
+        headerStatusKey,
+        order.payment?.status,
+        effectiveCancelRequestType
+    );
+    const showEstimatedArrivalCard = shouldShowOrderEstimatedArrival({
+        progressStatus,
+        orderDbStatus: order.status,
+        paymentStatus: order.payment?.status,
+    });
     const headlineStatusLabel =
         orderStatusHeadlineLabel(
             t,
@@ -226,7 +240,11 @@ export default function OrderDetailView() {
                     <div className="h-8 w-px bg-stone-100 mx-1"></div>
                     <span className={`px-5 py-2.5 rounded-2xl text-xs font-black uppercase tracking-widest ${
                         headerStatusKey === 'DELIVERED' ? 'bg-emerald-50 text-emerald-600' :
-                        isCancelledOrderWithRefundComplete(headerStatusKey, order.payment?.status)
+                        isCancelledOrderWithRefundComplete(
+                            headerStatusKey,
+                            order.payment?.status,
+                            effectiveCancelRequestType
+                        )
                             ? 'bg-emerald-50 text-emerald-600' :
                         headerStatusKey === 'CANCEL_REQUESTED' ? 'bg-amber-50 text-amber-800' :
                         headerStatusKey === 'CANCELLED' ? 'bg-rose-50 text-rose-600' :
@@ -473,18 +491,24 @@ export default function OrderDetailView() {
                                 </div>
                             </div>
 
-                            <div className="bg-emerald-50/50 rounded-2xl p-5 border border-emerald-100/50 flex items-start gap-4">
-                                <div className="p-2 bg-emerald-500 text-white rounded-lg">
-                                    <Calendar size={16} />
+                            {showEstimatedArrivalCard ? (
+                                <div className="bg-emerald-50/50 rounded-2xl p-5 border border-emerald-100/50 flex items-start gap-4">
+                                    <div className="p-2 bg-emerald-500 text-white rounded-lg">
+                                        <Calendar size={16} />
+                                    </div>
+                                    <div>
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 block mb-1">
+                                            {t('orderDetail.estimated_arrival')}
+                                        </span>
+                                        <p className="text-sm font-black text-stone-900">
+                                            {t('orderDetail.arrival_by', { date: getEstimatedArrivalDate(order.createdAt) })}
+                                        </p>
+                                        <p className="text-[10px] text-emerald-600/70 font-bold mt-0.5 select-none animate-pulse">
+                                            {t('orderDetail.express_note')}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 block mb-1">{t('orderDetail.estimated_arrival')}</span>
-                                    <p className="text-sm font-black text-stone-900">
-                                        {t('orderDetail.arrival_by', { date: getEstimatedArrivalDate(order.createdAt) })}
-                                    </p>
-                                    <p className="text-[10px] text-emerald-600/70 font-bold mt-0.5 select-none animate-pulse">{t('orderDetail.express_note')}</p>
-                                </div>
-                            </div>
+                            ) : null}
                         </div>
                     </section>
 
@@ -497,10 +521,16 @@ export default function OrderDetailView() {
                             <div className="space-y-4">
                                 {orderIsCancelled && (
                                     <div
-                                        className="rounded-2xl border border-rose-200 bg-rose-50/90 p-4 text-sm font-bold text-rose-900"
+                                        className={
+                                            refundSettled
+                                                ? 'rounded-2xl border border-emerald-200 bg-emerald-50/90 p-4 text-sm font-bold text-emerald-900'
+                                                : 'rounded-2xl border border-rose-200 bg-rose-50/90 p-4 text-sm font-bold text-rose-900'
+                                        }
                                         role="status"
                                     >
-                                        {t('orderDetail.order_cancelled_notice')}
+                                        {refundSettled
+                                            ? t('orderDetail.return_refund_completed_notice')
+                                            : t('orderDetail.order_cancelled_notice')}
                                     </div>
                                 )}
                                 <div
@@ -551,15 +581,23 @@ export default function OrderDetailView() {
                                             </p>
                                             <p
                                                 className={`text-[10px] font-bold uppercase ${
-                                                    orderIsCancelled ? 'text-rose-600' : 'text-stone-400'
+                                                    orderIsCancelled && !refundSettled
+                                                        ? 'text-rose-600'
+                                                        : orderIsCancelled && refundSettled
+                                                          ? 'text-emerald-700'
+                                                          : 'text-stone-400'
                                                 }`}
                                             >
                                                 {(order.payment?.status || '').toUpperCase() === 'COMPLETED' &&
                                                 orderIsCancelled
                                                     ? t('orderDetail.payment_status_order_cancelled')
-                                                    : (order.payment?.status || '').toUpperCase() === 'CANCELLED'
-                                                      ? t('orderDetail.payment_status_cancelled')
-                                                      : order.payment?.status}
+                                                    : refundSettled
+                                                      ? t('paymentHistory.status_REFUNDED')
+                                                      : (order.payment?.status || '').toUpperCase() === 'CANCELLED'
+                                                        ? t('orderDetail.payment_status_cancelled')
+                                                        : (order.payment?.status || '').toUpperCase() === 'REFUNDED'
+                                                          ? t('paymentHistory.status_REFUNDED')
+                                                          : order.payment?.status}
                                             </p>
                                         </div>
                                     </div>
