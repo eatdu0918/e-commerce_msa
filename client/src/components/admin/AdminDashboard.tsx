@@ -2,19 +2,12 @@ import { useMemo } from 'react';
 import { Users, ShoppingCart, CreditCard, Ticket, RefreshCw } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { adminApi } from '../../api/services/admin';
+import { adminApi, type Order } from '../../api/services/admin';
+import { isCancelledOrderWithRefundComplete, orderStatusHeadlineLabel } from '../../lib/adminOrderStatus';
+import { buildOrderCouponDetailSummary, getEffectiveCancelRequestTypeForDisplay } from '../../api/services/order';
 
 const AdminDashboard = () => {
   const { t } = useTranslation();
-
-  const orderStatusLabel = useMemo(() => {
-    const keys = ['PENDING', 'CONFIRMED', 'PAYMENT_COMPLETED', 'CANCELLED', 'COMPLETED'] as const;
-    const map: Record<string, string> = {};
-    keys.forEach((k) => {
-      map[k] = t(`admin.order_dash_${k}`);
-    });
-    return map;
-  }, [t]);
 
   const formatRelativeTime = (dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime();
@@ -99,6 +92,39 @@ const AdminDashboard = () => {
 
   const recentOrders = recentOrdersData?.data?.content ?? [];
 
+  const orderRowMeta = (order: Order) => {
+    const displayStatus = (order.progressStatus || order.status || '').toUpperCase();
+    const discount = Number(order.discountAmount ?? 0);
+    const finalPrice =
+      order.finalAmount != null && !Number.isNaN(Number(order.finalAmount))
+        ? Number(order.finalAmount)
+        : Number(order.totalAmount ?? 0);
+    const couponDetail = buildOrderCouponDetailSummary(t, order);
+    const effectiveCancel = getEffectiveCancelRequestTypeForDisplay(order);
+    const headline = orderStatusHeadlineLabel(t, displayStatus, order.paymentStatus, effectiveCancel);
+    return { displayStatus, discount, finalPrice, couponDetail, headline };
+  };
+
+  const statusBadgeClass = (order: Order, displayStatus: string) => {
+    return displayStatus === 'DELIVERED'
+      ? 'bg-emerald-100 text-emerald-800'
+      : isCancelledOrderWithRefundComplete(
+            displayStatus,
+            order.paymentStatus,
+            getEffectiveCancelRequestTypeForDisplay(order)
+          )
+        ? 'bg-emerald-100 text-emerald-800'
+        : displayStatus === 'CANCELLED'
+          ? 'bg-red-100 text-red-800'
+          : displayStatus === 'CANCEL_REQUESTED'
+            ? 'bg-amber-100 text-amber-900'
+            : displayStatus === 'CONFIRMED' ||
+                displayStatus === 'PREPARING' ||
+                displayStatus === 'SHIPPING'
+              ? 'bg-green-100 text-green-800'
+              : 'bg-blue-100 text-blue-800';
+  };
+
   return (
     <div>
       <h2 className="text-2xl font-bold text-gray-900 mb-6">{t('admin.dashboard_title')}</h2>
@@ -133,26 +159,54 @@ const AdminDashboard = () => {
           <p className="text-center py-8 text-gray-400">{t('admin.no_recent_orders')}</p>
         ) : (
           <div className="space-y-4">
-            {recentOrders.map((order, index) => (
-              <div
-                key={order.id}
-                className={`flex items-center justify-between py-3 ${index < recentOrders.length - 1 ? 'border-b border-gray-100' : ''
+            {recentOrders.map((order, index) => {
+              const { displayStatus, discount, finalPrice, couponDetail, headline } = orderRowMeta(order);
+              return (
+                <div
+                  key={order.id}
+                  className={`flex items-start justify-between gap-4 py-3 ${
+                    index < recentOrders.length - 1 ? 'border-b border-gray-100' : ''
                   }`}
-              >
-                <div>
-                  <p className="font-medium text-gray-900">{t('admin.order_row', { id: order.id })}</p>
-                  <p className="text-sm text-gray-500">
-                    {orderStatusLabel[order.progressStatus || order.status] ??
-                      order.progressStatus ??
-                      order.status}
-                    {' · '}
-                    {order.totalAmount.toLocaleString()}
-                    {t('common.currency_won')}
-                  </p>
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-medium text-gray-900">{t('admin.order_row', { id: order.id })}</p>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusBadgeClass(
+                          order,
+                          displayStatus
+                        )}`}
+                      >
+                        {headline}
+                      </span>
+                    </div>
+                    <div className="mt-1 text-sm text-gray-600">
+                      <span className="font-medium tabular-nums text-gray-900">
+                        {finalPrice.toLocaleString()}
+                        {t('common.currency_won')}
+                      </span>
+                      {discount > 0 && (
+                        <span className="ml-2 text-gray-500">
+                          <span className="line-through tabular-nums">
+                            {Number(order.totalAmount).toLocaleString()}
+                            {t('common.currency_won')}
+                          </span>
+                          <span className="ml-2 text-rose-600 font-medium tabular-nums">
+                            {t('orderList.list_discount_hint', { amount: discount.toLocaleString() })}
+                          </span>
+                        </span>
+                      )}
+                    </div>
+                    {couponDetail ? (
+                      <p className="mt-1 text-xs text-gray-500 leading-snug">
+                        {t('admin.order_coupon_applied', { detail: couponDetail })}
+                      </p>
+                    ) : null}
+                  </div>
+                  <span className="shrink-0 text-sm text-gray-500">{formatRelativeTime(order.createdAt)}</span>
                 </div>
-                <span className="text-sm text-gray-500">{formatRelativeTime(order.createdAt)}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
