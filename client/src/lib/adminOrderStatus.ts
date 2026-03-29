@@ -151,11 +151,18 @@ export function adminDisplayStatusLabel(
 /**
  * 주문 DB/진행 상태가 취소여도 PG 환불까지 끝나면 화면 헤드라인은 「환불 완료」 우선.
  */
+export type AdminHeadlineFulfillmentSkipContext = {
+  skipConfirmAndPreparing?: boolean;
+  skipShippingAndDelivered?: boolean;
+};
+
 export function orderStatusHeadlineLabel(
   t: (key: string) => string,
   displayStatusKey: string,
   paymentStatus?: string | null,
-  activeCancelRequestType?: string | null
+  activeCancelRequestType?: string | null,
+  /** 어드민 주문 상세: 첫 스킵만 선택 시 집계가 SHIPPING이어도 헤드라인을 「상품 준비 완료」로 표시 */
+  adminFulfillmentSkipHeadline?: AdminHeadlineFulfillmentSkipContext | null
 ): string {
   const s = (displayStatusKey || '').toUpperCase();
   const pay = (paymentStatus ?? '').trim().toUpperCase();
@@ -165,6 +172,14 @@ export function orderStatusHeadlineLabel(
   const rt = (activeCancelRequestType ?? '').trim().toUpperCase();
   if (s === 'CANCEL_REQUESTED' && rt === 'RETURN_REFUND') {
     return t('orderStatus.RETURN_REFUND_REQUESTED_DETAIL');
+  }
+  if (adminFulfillmentSkipHeadline) {
+    const onlyFirstSkip =
+      adminFulfillmentSkipHeadline.skipConfirmAndPreparing === true &&
+      adminFulfillmentSkipHeadline.skipShippingAndDelivered !== true;
+    if (onlyFirstSkip && s === 'SHIPPING' && pay === 'COMPLETED') {
+      return t('orderStatus.PREPARING_COMPLETE_HEADLINE');
+    }
   }
   return adminDisplayStatusLabel(t, displayStatusKey);
 }

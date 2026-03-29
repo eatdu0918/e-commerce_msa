@@ -265,7 +265,11 @@ export default function AdminOrderDetail() {
                 t,
                 displayKey,
                 payStatus,
-                getEffectiveCancelRequestTypeForDisplay(order)
+                getEffectiveCancelRequestTypeForDisplay(order),
+                {
+                  skipConfirmAndPreparing: order.skipConfirmAndPreparing,
+                  skipShippingAndDelivered: order.skipShippingAndDelivered,
+                }
               )}
             </p>
             {order.activeCancelStatus && paymentNorm !== 'REFUNDED' && (

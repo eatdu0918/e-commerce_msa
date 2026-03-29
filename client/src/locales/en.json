@@ -202,6 +202,7 @@
         "CONFIRMED_LIST": "Paid",
         "CONFIRMED_BADGE": "Confirmed",
         "PREPARING": "Preparing",
+        "PREPARING_COMPLETE_HEADLINE": "Product preparation complete",
         "SHIPPING": "In transit",
         "DELIVERED": "Delivered",
         "CANCELLED": "Cancelled",
