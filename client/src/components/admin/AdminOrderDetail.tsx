@@ -10,6 +10,7 @@ import {
   getNextAdminOrderStatus,
   getAdminFulfillmentStepperDisplay,
   isAdminFulfillmentAdvanceBlocked,
+  isCancelledOrderWithRefundComplete,
   orderStatusHeadlineLabel,
 } from '../../lib/adminOrderStatus';
 import {
@@ -272,7 +273,12 @@ export default function AdminOrderDetail() {
                 }
               )}
             </p>
-            {order.activeCancelStatus && paymentNorm !== 'REFUNDED' && (
+            {order.activeCancelStatus &&
+              !isCancelledOrderWithRefundComplete(
+                displayKey,
+                payStatus,
+                getEffectiveCancelRequestTypeForDisplay(order)
+              ) && (
               <p className="text-xs text-amber-800 bg-amber-50 px-2 py-1 rounded-md inline-block">
                 {t('admin.order_active_cancel', { status: order.activeCancelStatus })}
               </p>

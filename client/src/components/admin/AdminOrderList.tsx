@@ -163,7 +163,11 @@ export default function AdminOrderList() {
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           displayStatus === 'DELIVERED'
                             ? 'bg-emerald-100 text-emerald-800'
-                            : isCancelledOrderWithRefundComplete(displayStatus, order.paymentStatus)
+                            : isCancelledOrderWithRefundComplete(
+                                  displayStatus,
+                                  order.paymentStatus,
+                                  getEffectiveCancelRequestTypeForDisplay(order)
+                                )
                               ? 'bg-emerald-100 text-emerald-800'
                               : displayStatus === 'CANCELLED'
                                 ? 'bg-red-100 text-red-800'
