@@ -56,6 +56,17 @@ public class OrderDetailResponse {
     /** 진행 중인 취소·반품 건의 요청 유형({@code ORDER_CANCEL} | {@code RETURN_REFUND}). 없으면 null. */
     String activeCancelRequestType;
 
+    /**
+     * 출고 전 주문 취소(ORDER_CANCEL)가 거절된 이력이 있으면 true. 동일 유형 재요청·버튼 비활성화용.
+     * 주문 취소 거절 후에도 반품·환불(RETURN_REFUND) 요청은 가능.
+     */
+    @Builder.Default
+    boolean hasRejectedOrderCancelRequest = false;
+
+    /** 반품·환불(RETURN_REFUND)가 거절된 이력이 있으면 true. */
+    @Builder.Default
+    boolean hasRejectedReturnRefundRequest = false;
+
     boolean skipConfirmAndPreparing;
     boolean skipShippingAndDelivered;
 
@@ -65,7 +76,9 @@ public class OrderDetailResponse {
             PaymentInfo payment,
             String activeCancelStatus,
             Long activeCancelId,
-            String activeCancelRequestType) {
+            String activeCancelRequestType,
+            boolean hasRejectedOrderCancelRequest,
+            boolean hasRejectedReturnRefundRequest) {
         String pay = payment != null ? payment.getStatus() : null;
         OrderStatus progress = OrderProgressStatusResolver.resolveForDisplayWithActiveCancel(
                 order.getStatus(),
@@ -99,6 +112,8 @@ public class OrderDetailResponse {
                 .activeCancelStatus(activeCancelStatus)
                 .activeCancelId(activeCancelId)
                 .activeCancelRequestType(activeCancelRequestType)
+                .hasRejectedOrderCancelRequest(hasRejectedOrderCancelRequest)
+                .hasRejectedReturnRefundRequest(hasRejectedReturnRefundRequest)
                 .skipConfirmAndPreparing(order.isSkipConfirmAndPreparing())
                 .skipShippingAndDelivered(order.isSkipShippingAndDelivered())
                 .build();

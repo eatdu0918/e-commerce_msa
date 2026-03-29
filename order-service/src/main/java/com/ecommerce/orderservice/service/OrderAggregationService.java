@@ -4,6 +4,7 @@ import com.ecommerce.orderservice.client.CancelServiceClient;
 import com.ecommerce.orderservice.client.PaymentServiceClient;
 import com.ecommerce.orderservice.client.ProductServiceClient;
 import com.ecommerce.orderservice.client.dto.OrderCancelSummaryResponse;
+import com.ecommerce.orderservice.client.dto.OrderCancelSyncResponse;
 import com.ecommerce.orderservice.client.dto.PaymentInfo;
 import com.ecommerce.orderservice.client.dto.ProductInfo;
 import com.ecommerce.orderservice.dto.OrderProgressStatusResolver;
@@ -62,7 +63,9 @@ public class OrderAggregationService {
         PaymentInfo paymentInfo = fetchPaymentInfo(orderId);
         order = reconcileOrderFinancialsFromPayment(order, paymentInfo);
         List<OrderItemDetailResponse> enrichedItems = enrichOrderItems(order.getItems());
-        OrderCancelSummaryResponse cancelSummary = fetchActiveCancelSummaryUser(orderId);
+        OrderCancelSyncResponse cancelSync = fetchCancelSyncUser(orderId);
+        OrderCancelSummaryResponse cancelSummary =
+                cancelSync != null ? cancelSync.getActiveCancel() : null;
 
         return OrderDetailResponse.from(
                 order,
@@ -70,7 +73,9 @@ public class OrderAggregationService {
                 paymentInfo,
                 statusOf(cancelSummary),
                 cancelIdOf(cancelSummary),
-                requestTypeOf(cancelSummary));
+                requestTypeOf(cancelSummary),
+                cancelSync != null && cancelSync.isHasRejectedOrderCancelRequest(),
+                cancelSync != null && cancelSync.isHasRejectedReturnRefundRequest());
     }
 
     public OrderDetailResponse getOrderDetailAdmin(Long orderId) {
@@ -80,7 +85,9 @@ public class OrderAggregationService {
         PaymentInfo paymentInfo = fetchPaymentInfo(orderId);
         order = reconcileOrderFinancialsFromPayment(order, paymentInfo);
         List<OrderItemDetailResponse> enrichedItems = enrichOrderItems(order.getItems());
-        OrderCancelSummaryResponse cancelSummary = fetchActiveCancelSummaryAdmin(orderId);
+        OrderCancelSyncResponse cancelSync = fetchCancelSyncAdmin(orderId);
+        OrderCancelSummaryResponse cancelSummary =
+                cancelSync != null ? cancelSync.getActiveCancel() : null;
 
         return OrderDetailResponse.from(
                 order,
@@ -88,7 +95,9 @@ public class OrderAggregationService {
                 paymentInfo,
                 statusOf(cancelSummary),
                 cancelIdOf(cancelSummary),
-                requestTypeOf(cancelSummary));
+                requestTypeOf(cancelSummary),
+                cancelSync != null && cancelSync.isHasRejectedOrderCancelRequest(),
+                cancelSync != null && cancelSync.isHasRejectedReturnRefundRequest());
     }
 
     public PageResponse<OrderResponse> getAllOrdersForAdmin(Pageable pageable) {
@@ -124,7 +133,9 @@ public class OrderAggregationService {
     private OrderResponse withPaymentStatusForAdmin(OrderResponse order) {
         PaymentInfo info = fetchPaymentInfo(order.getId());
         String paymentStatus = info != null ? info.getStatus() : null;
-        OrderCancelSummaryResponse cancelSummary = fetchActiveCancelSummaryAdmin(order.getId());
+        OrderCancelSyncResponse cancelSync = fetchCancelSyncAdmin(order.getId());
+        OrderCancelSummaryResponse cancelSummary =
+                cancelSync != null ? cancelSync.getActiveCancel() : null;
         String activeCancel = statusOf(cancelSummary);
         OrderResponse built = order.toBuilder()
                 .paymentStatus(paymentStatus)
@@ -175,28 +186,27 @@ public class OrderAggregationService {
         }
     }
 
-    private OrderCancelSummaryResponse fetchActiveCancelSummaryUser(Long orderId) {
+    private OrderCancelSyncResponse fetchCancelSyncUser(Long orderId) {
         try {
-            ApiResponse<OrderCancelSummaryResponse> response =
-                    cancelServiceClient.getActiveCancelForOrder(orderId);
+            ApiResponse<OrderCancelSyncResponse> response = cancelServiceClient.getCancelSyncForOrder(orderId);
             if (response != null && response.isSuccess() && response.getData() != null) {
                 return response.getData();
             }
         } catch (Exception e) {
-            log.warn("진행 중 취소 요약 조회 실패: orderId={}, error={}", orderId, e.getMessage());
+            log.warn("취소 동기화 조회 실패: orderId={}, error={}", orderId, e.getMessage());
         }
         return null;
     }
 
-    private OrderCancelSummaryResponse fetchActiveCancelSummaryAdmin(Long orderId) {
+    private OrderCancelSyncResponse fetchCancelSyncAdmin(Long orderId) {
         try {
-            ApiResponse<OrderCancelSummaryResponse> response =
-                    cancelServiceClient.getActiveCancelForOrderAdmin(orderId);
+            ApiResponse<OrderCancelSyncResponse> response =
+                    cancelServiceClient.getCancelSyncForOrderAdmin(orderId);
             if (response != null && response.isSuccess() && response.getData() != null) {
                 return response.getData();
             }
         } catch (Exception e) {
-            log.warn("관리자용 진행 중 취소 요약 조회 실패: orderId={}, error={}", orderId, e.getMessage());
+            log.warn("관리자용 취소 동기화 조회 실패: orderId={}, error={}", orderId, e.getMessage());
         }
         return null;
     }
@@ -212,7 +222,9 @@ public class OrderAggregationService {
     private OrderResponse withPaymentStatus(OrderResponse order) {
         PaymentInfo info = fetchPaymentInfo(order.getId());
         String paymentStatus = info != null ? info.getStatus() : null;
-        OrderCancelSummaryResponse cancelSummary = fetchActiveCancelSummaryUser(order.getId());
+        OrderCancelSyncResponse cancelSync = fetchCancelSyncUser(order.getId());
+        OrderCancelSummaryResponse cancelSummary =
+                cancelSync != null ? cancelSync.getActiveCancel() : null;
         String activeCancel = statusOf(cancelSummary);
         OrderResponse built = order.toBuilder()
                 .paymentStatus(paymentStatus)
