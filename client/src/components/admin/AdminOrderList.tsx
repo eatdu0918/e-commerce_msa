@@ -110,6 +110,9 @@ export default function AdminOrderList() {
                   const nextCode = getNextAdminOrderStatus(order.status, {
                     paymentStatus: order.paymentStatus,
                     activeCancelStatus: order.activeCancelStatus,
+                    progressStatus: order.progressStatus,
+                    skipConfirmAndPreparing: order.skipConfirmAndPreparing,
+                    skipShippingAndDelivered: order.skipShippingAndDelivered,
                   });
                   const nextLabel = nextCode ? adminNextTargetLabel(t, nextCode) : null;
                   return (

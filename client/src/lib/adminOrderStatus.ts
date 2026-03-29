@@ -12,6 +12,10 @@ const NEXT_BY_STATUS: Record<string, string | null> = {
 export type AdminFulfillmentContext = {
   paymentStatus?: string | null;
   activeCancelStatus?: string | null;
+  /** 집계 API progressStatus(체크아웃 단계 생략·결제 반영). DB보다 앞선 표시일 때 잘못된 진행 버튼 방지 */
+  progressStatus?: string | null;
+  skipConfirmAndPreparing?: boolean;
+  skipShippingAndDelivered?: boolean;
 };
 
 /** 취소·환불(결제 취소/환불)·진행 중 취소가 있으면 배송 단계 진행 불가 */
@@ -43,6 +47,47 @@ export function getNextAdminOrderStatus(
     return null;
   }
   if (!dbStatus) return null;
+  const display = (ctx?.progressStatus || '').toUpperCase();
+  const db = dbStatus.toUpperCase();
+
+  if (db === 'DELIVERED') {
+    return null;
+  }
+
+  /*
+   * 표시는 배송완료인데 DB만 늦은 경우(체크아웃 스킵·집계 표시 등) — 관리자가 DB를 배송완료로 맞춤.
+   */
+  if (
+    display === 'DELIVERED' &&
+    (db === 'SHIPPING' || db === 'PREPARING' || db === 'CONFIRMED')
+  ) {
+    return 'DELIVERED';
+  }
+
+  /*
+   * 표시는 이미 «배송 중»인데 DB가 뒤처진 경우: 다음 API 호출로 DB를 맞춤.
+   * CONFIRMED + 아직 상품준비 시작 전이면 표시만 앞선 경우 → 통상 다음 단계(PREPARING)로 복귀.
+   */
+  if (display === 'SHIPPING' && db !== 'SHIPPING' && db !== 'DELIVERED') {
+    if (db === 'PREPARING') {
+      return 'SHIPPING';
+    }
+    /*
+     * DB는 아직 PENDING인데 결제·집계만 앞선 경우(체크아웃 단계 생략 + 사가 반영 지연).
+     * 백엔드에서 skip 주문에 한해 PENDING → SHIPPING 동기화를 허용한다.
+     */
+    if (db === 'PENDING' && ctx?.skipConfirmAndPreparing === true) {
+      return 'SHIPPING';
+    }
+    if (db === 'CONFIRMED' && ctx?.skipConfirmAndPreparing === true) {
+      return 'SHIPPING';
+    }
+    if (db === 'CONFIRMED') {
+      return 'PREPARING';
+    }
+    return null;
+  }
+
   const key = dbStatus.toUpperCase();
   return NEXT_BY_STATUS[key] ?? null;
 }

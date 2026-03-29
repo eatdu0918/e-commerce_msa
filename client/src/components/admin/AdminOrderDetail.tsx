@@ -150,8 +150,12 @@ export default function AdminOrderDetail() {
   const nextStatus = getNextAdminOrderStatus(order.status, {
     paymentStatus: payStatus,
     activeCancelStatus: order.activeCancelStatus,
+    progressStatus: order.progressStatus,
+    skipConfirmAndPreparing: order.skipConfirmAndPreparing,
+    skipShippingAndDelivered: order.skipShippingAndDelivered,
   });
   const nextLabel = nextStatus ? adminNextTargetLabel(t, nextStatus) : null;
+  /** DB 기준 종료만 '진행 완료'로 본다(표시만 앞선 경우에도 완료 버튼 노출). */
   const deliveryClosed =
     dbStatus === 'CANCELLED' || dbStatus === 'CANCEL_REQUESTED' || dbStatus === 'DELIVERED';
 

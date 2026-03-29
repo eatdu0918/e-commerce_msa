@@ -33,6 +33,8 @@ export interface Order {
   recipientName: string;
   createdAt: string;
   updatedAt: string;
+  skipConfirmAndPreparing?: boolean;
+  skipShippingAndDelivered?: boolean;
 }
 
 /** GET /api/admin/orders/{id}/detail 응답 */
@@ -60,6 +62,8 @@ export interface OrderDetail {
   activeCancelRequestType?: string | null;
   /** 취소 요청 직전 주문 상태(예: SHIPPING 차단 판별) */
   statusBeforeCancelRequest?: string | null;
+  skipConfirmAndPreparing?: boolean;
+  skipShippingAndDelivered?: boolean;
 }
 
 export interface AdminOrderPaymentInfo {
