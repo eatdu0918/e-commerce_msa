@@ -284,7 +284,7 @@ const AdminCancelList = ({ category }: AdminCancelListProps) => {
       {/* Detail modal */}
       {detailId !== null && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
           onClick={() => setDetailId(null)}
         >
           <div
@@ -384,7 +384,7 @@ const AdminCancelList = ({ category }: AdminCancelListProps) => {
 
       {/* Reject Modal */}
       {rejectingId && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">{rejectModalTitle}</h3>
