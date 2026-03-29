@@ -111,6 +111,34 @@ class CancelServiceTest {
         }
 
         @Test
+        @DisplayName("쿠폰·할인이 있는 주문은 취소 품목 단가에 할인 비율이 반영된다")
+        void createCancel_appliesOrderDiscountToUnitPrice() {
+            CancelItemRequest itemRequest = new CancelItemRequest(
+                    1L, "테스트 상품", 2, new BigDecimal("10000")
+            );
+            CreateCancelRequest request = new CreateCancelRequest(
+                    ORDER_ID, ORDER_NUMBER, CancelReason.CHANGE_OF_MIND, "단순 변심", null, List.of(itemRequest)
+            );
+
+            when(cancelRepository.existsByOrderIdAndUserIdAndStatusIn(anyLong(), anyLong(), any()))
+                    .thenReturn(false);
+            when(orderServiceClient.getMyOrder(ORDER_ID))
+                    .thenReturn(ApiResponse.success(discountOrderPayload("PENDING")));
+            when(cancelRepository.save(any(Cancel.class))).thenAnswer(invocation -> {
+                Cancel cancel = invocation.getArgument(0);
+                ReflectionTestUtils.setField(cancel, "id", CANCEL_ID);
+                return cancel;
+            });
+            doNothing().when(outboxEventPublisher).publishCancelRequestedEvent(any());
+
+            CancelResponse response = cancelService.createCancel(USER_ID, request);
+
+            assertThat(response.getItems()).hasSize(1);
+            assertThat(response.getItems().get(0).getUnitPrice()).isEqualByComparingTo(new BigDecimal("500.00"));
+            assertThat(response.getItems().get(0).getTotalPrice()).isEqualByComparingTo(new BigDecimal("1000.00"));
+        }
+
+        @Test
         @DisplayName("반품·환불 요청 생성 시 requestType 저장")
         void createCancel_returnRefundType_success() {
             CancelItemRequest itemRequest = new CancelItemRequest(
@@ -300,6 +328,8 @@ class CancelServiceTest {
             // given
             when(cancelRepository.findByIdAndUserIdWithItems(CANCEL_ID, USER_ID))
                     .thenReturn(Optional.of(testCancel));
+            when(orderServiceClient.getMyOrder(ORDER_ID))
+                    .thenReturn(ApiResponse.success(discountOrderPayload("PENDING")));
 
             // when
             CancelResponse response = cancelService.getCancel(CANCEL_ID, USER_ID);
@@ -308,6 +338,7 @@ class CancelServiceTest {
             assertThat(response).isNotNull();
             assertThat(response.getId()).isEqualTo(CANCEL_ID);
             assertThat(response.getUserId()).isEqualTo(USER_ID);
+            assertThat(response.getItems().get(0).getUnitPrice()).isEqualByComparingTo(new BigDecimal("500.00"));
         }
 
         @Test
@@ -402,6 +433,8 @@ class CancelServiceTest {
         void getCancelById_success() {
             // given
             when(cancelRepository.findByIdWithItems(CANCEL_ID)).thenReturn(Optional.of(testCancel));
+            when(orderServiceClient.getAdminOrder(ORDER_ID))
+                    .thenReturn(ApiResponse.success(adminOrderPayloadForRefund("REQUESTED", "PREPARING")));
 
             // when
             CancelResponse response = cancelService.getCancelById(CANCEL_ID);
@@ -409,6 +442,8 @@ class CancelServiceTest {
             // then
             assertThat(response).isNotNull();
             assertThat(response.getId()).isEqualTo(CANCEL_ID);
+            assertThat(response.getItems()).hasSize(1);
+            assertThat(response.getItems().get(0).getUnitPrice()).isEqualByComparingTo(new BigDecimal("500.00"));
         }
 
         @Test
@@ -556,6 +591,19 @@ class CancelServiceTest {
     private static OrderPayload userOrderPayload(String status) {
         OrderPayload p = new OrderPayload();
         p.setStatus(status);
+        return p;
+    }
+
+    /** total 20000 → final 1000, 품목 1×2라인 — 단가 보정 테스트용 */
+    private static OrderPayload discountOrderPayload(String status) {
+        OrderPayload p = userOrderPayload(status);
+        p.setTotalAmount(new BigDecimal("20000"));
+        p.setFinalAmount(new BigDecimal("1000"));
+        OrderPayload.OrderItemLinePayload line = new OrderPayload.OrderItemLinePayload();
+        line.setProductId(1L);
+        line.setQuantity(2);
+        line.setTotalPrice(new BigDecimal("20000"));
+        p.setItems(List.of(line));
         return p;
     }
 

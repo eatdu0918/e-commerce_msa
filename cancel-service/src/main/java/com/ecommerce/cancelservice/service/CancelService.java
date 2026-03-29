@@ -4,6 +4,7 @@ import com.ecommerce.cancelservice.client.OrderServiceClient;
 import com.ecommerce.cancelservice.client.dto.OrderPayload;
 import com.ecommerce.cancelservice.dto.request.CancelItemRequest;
 import com.ecommerce.cancelservice.dto.request.CreateCancelRequest;
+import com.ecommerce.cancelservice.dto.response.CancelItemResponse;
 import com.ecommerce.cancelservice.dto.response.CancelResponse;
 import com.ecommerce.cancelservice.dto.response.OrderCancelSummaryResponse;
 import com.ecommerce.cancelservice.dto.response.OrderCancelSyncResponse;
@@ -70,7 +71,8 @@ public class CancelService {
             throw new CancelDomainException(CancelDomainExceptionCode.CancelRequestBlockedAfterRejectionException);
         }
 
-        validateUserCancelAgainstOrder(request.getOrderId(), resolvedType);
+        OrderPayload order = fetchUserOrderOrThrow(request.getOrderId());
+        assertUserCancelAllowed(order, resolvedType);
 
         Cancel cancel = Cancel.create(
                 request.getOrderId(),
@@ -82,11 +84,16 @@ public class CancelService {
         );
 
         for (CancelItemRequest itemRequest : request.getItems()) {
+            BigDecimal unitPrice = OrderDiscountPricing.discountedUnitPriceForCancelQuantity(
+                    order,
+                    itemRequest.getProductId(),
+                    itemRequest.getQuantity(),
+                    itemRequest.getUnitPrice());
             CancelItem cancelItem = CancelItem.create(
                     itemRequest.getProductId(),
                     itemRequest.getProductName(),
                     itemRequest.getQuantity(),
-                    itemRequest.getUnitPrice()
+                    unitPrice
             );
             cancel.addCancelItem(cancelItem);
         }
@@ -98,7 +105,7 @@ public class CancelService {
         CancelRequestedEvent event = createCancelRequestedEvent(savedCancel);
         outboxEventPublisher.publishCancelRequestedEvent(event);
 
-        return CancelResponse.from(savedCancel);
+        return CancelResponse.from(savedCancel, pricedItemResponses(savedCancel, order));
     }
 
     private CancelRequestedEvent createCancelRequestedEvent(Cancel cancel) {
@@ -122,11 +129,6 @@ public class CancelService {
                 .requestType(cancel.getRequestType().name())
                 .items(items)
                 .build();
-    }
-
-    private void validateUserCancelAgainstOrder(Long orderId, CancelRequestType type) {
-        OrderPayload payload = fetchUserOrderOrThrow(orderId);
-        assertUserCancelAllowed(payload, type);
     }
 
     private OrderPayload fetchUserOrderOrThrow(Long orderId) {
@@ -178,11 +180,48 @@ public class CancelService {
         return raw == null ? "" : raw.trim().toUpperCase();
     }
 
+    /**
+     * 취소 상세 품목가 표시용 주문 스냅샷. Feign 실패 시 null(엔티티 단가 그대로).
+     */
+    private static List<CancelItemResponse> pricedItemResponses(Cancel cancel, OrderPayload order) {
+        if (cancel.getCancelItems() == null) {
+            return null;
+        }
+        if (order == null) {
+            return null;
+        }
+        return cancel.getCancelItems().stream()
+                .map(ci -> {
+                    BigDecimal unit = OrderDiscountPricing.discountedUnitPriceForCancelQuantity(
+                            order,
+                            ci.getProductId(),
+                            ci.getQuantity(),
+                            ci.getUnitPrice());
+                    return CancelItemResponse.fromWithUnitPrice(ci, unit);
+                })
+                .toList();
+    }
+
+    private OrderPayload tryFetchOrderForCancelDetail(Long orderId, boolean admin) {
+        try {
+            ApiResponse<OrderPayload> res = admin
+                    ? orderServiceClient.getAdminOrder(orderId)
+                    : orderServiceClient.getMyOrder(orderId);
+            if (res != null && res.isSuccess() && res.getData() != null) {
+                return res.getData();
+            }
+        } catch (Exception e) {
+            log.warn("주문 스냅샷 조회 실패로 취소 품목 단가 보정 생략: orderId={}, admin={}", orderId, admin, e);
+        }
+        return null;
+    }
+
     @Transactional(readOnly = true)
     public CancelResponse getCancel(Long cancelId, Long userId) {
         Cancel cancel = cancelRepository.findByIdAndUserIdWithItems(cancelId, userId)
                 .orElseThrow(() -> new CancelDomainException(CancelDomainExceptionCode.CancelNotFoundException));
-        return CancelResponse.from(cancel);
+        OrderPayload order = tryFetchOrderForCancelDetail(cancel.getOrderId(), false);
+        return CancelResponse.from(cancel, pricedItemResponses(cancel, order));
     }
 
     /**
@@ -285,7 +324,8 @@ public class CancelService {
     public CancelResponse getCancelById(Long cancelId) {
         Cancel cancel = cancelRepository.findByIdWithItems(cancelId)
                 .orElseThrow(() -> new CancelDomainException(CancelDomainExceptionCode.CancelNotFoundException));
-        return CancelResponse.from(cancel);
+        OrderPayload order = tryFetchOrderForCancelDetail(cancel.getOrderId(), true);
+        return CancelResponse.from(cancel, pricedItemResponses(cancel, order));
     }
 
     @Transactional
@@ -330,7 +370,7 @@ public class CancelService {
         outboxEventPublisher.publishCancelApprovedEvent(event);
         log.info("취소 승인 완료: cancelId={}", cancelId);
 
-        return CancelResponse.from(cancel);
+        return CancelResponse.from(cancel, pricedItemResponses(cancel, orderSnapshot));
     }
 
     @Transactional
@@ -344,7 +384,8 @@ public class CancelService {
             throw new CancelDomainException(CancelDomainExceptionCode.CancelNotInRequestedStatusException);
         }
 
-        assertAdminMayProcessCancel(fetchAdminOrderOrThrow(cancel.getOrderId()));
+        OrderPayload orderPayload = fetchAdminOrderOrThrow(cancel.getOrderId());
+        assertAdminMayProcessCancel(orderPayload);
 
         cancel.reject(rejectedReason);
 
@@ -361,6 +402,6 @@ public class CancelService {
         outboxEventPublisher.publishCancelRejectedEvent(event);
         log.info("취소 거부 완료: cancelId={}", cancelId);
 
-        return CancelResponse.from(cancel);
+        return CancelResponse.from(cancel, pricedItemResponses(cancel, orderPayload));
     }
 }
