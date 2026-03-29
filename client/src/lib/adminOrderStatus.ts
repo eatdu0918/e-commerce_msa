@@ -55,13 +55,11 @@ export function getNextAdminOrderStatus(
   }
 
   /*
-   * 표시는 배송완료인데 DB만 늦은 경우(체크아웃 스킵·집계 표시 등) — 관리자가 DB를 배송완료로 맞춤.
+   * 집계(progressStatus)가 이미 배송 완료면 흐름 종료 — 스킵 결제 등으로 화면만 먼저 끝난 경우에도
+   * «다음: 배송 완료» 같은 불필요한 PATCH를 노출하지 않음(DB는 사가에서 맞춰짐).
    */
-  if (
-    display === 'DELIVERED' &&
-    (db === 'SHIPPING' || db === 'PREPARING' || db === 'CONFIRMED')
-  ) {
-    return 'DELIVERED';
+  if (display === 'DELIVERED') {
+    return null;
   }
 
   /*
