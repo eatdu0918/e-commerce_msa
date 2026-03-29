@@ -22,7 +22,11 @@ public final class OrderProgressStatusResolver {
      * 승인·완료 후 주문 서비스 Kafka 반영 전에도 상세·목록에서 취소 완료로 보이게 한다.
      */
     public static OrderStatus resolveForDisplayWithActiveCancel(
-            OrderStatus orderStatus, String paymentStatus, String activeCancelStatus) {
+            OrderStatus orderStatus,
+            String paymentStatus,
+            String activeCancelStatus,
+            boolean skipConfirmAndPreparing,
+            boolean skipShippingAndDelivered) {
         /*
          * 결제가 취소·환불되었는데 주문 엔티티가 아직 CANCEL_REQUESTED인 경우(Kafka 지연 등).
          * 사용자 상세·목록에서 «취소 요청 중»이 아닌 «주문 취소»로 맞춘다.
@@ -32,13 +36,45 @@ public final class OrderProgressStatusResolver {
         }
         OrderStatus progress = resolveForDisplay(orderStatus, paymentStatus);
         if (activeCancelStatus == null || orderStatus == OrderStatus.CANCELLED) {
-            return progress;
+            return applyCheckoutSkipToProgress(progress, paymentStatus, skipConfirmAndPreparing, skipShippingAndDelivered);
         }
         if ("REQUESTED".equals(activeCancelStatus)) {
             return OrderStatus.CANCEL_REQUESTED;
         }
         if ("APPROVED".equals(activeCancelStatus) || "COMPLETED".equals(activeCancelStatus)) {
             return OrderStatus.CANCELLED;
+        }
+        return applyCheckoutSkipToProgress(progress, paymentStatus, skipConfirmAndPreparing, skipShippingAndDelivered);
+    }
+
+    /**
+     * 체크아웃에서 단계 생략을 선택했고 결제가 완료된 경우, 사가·DB 반영 전에도 목록·상세·관리자 표시 상태를 맞춘다.
+     */
+    private static OrderStatus applyCheckoutSkipToProgress(
+            OrderStatus progress,
+            String paymentStatus,
+            boolean skipConfirmAndPreparing,
+            boolean skipShippingAndDelivered) {
+        if (!isPaymentCompleted(paymentStatus)) {
+            return progress;
+        }
+        if (progress == OrderStatus.CANCELLED || progress == OrderStatus.CANCEL_REQUESTED) {
+            return progress;
+        }
+        if (skipShippingAndDelivered && skipConfirmAndPreparing) {
+            if (progress == OrderStatus.PENDING
+                    || progress == OrderStatus.CONFIRMED
+                    || progress == OrderStatus.PREPARING
+                    || progress == OrderStatus.SHIPPING) {
+                return OrderStatus.DELIVERED;
+            }
+        }
+        if (skipConfirmAndPreparing) {
+            if (progress == OrderStatus.PENDING
+                    || progress == OrderStatus.CONFIRMED
+                    || progress == OrderStatus.PREPARING) {
+                return OrderStatus.SHIPPING;
+            }
         }
         return progress;
     }

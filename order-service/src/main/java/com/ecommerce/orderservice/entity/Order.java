@@ -72,12 +72,23 @@ public class Order extends BaseEntity {
     @Column(name = "recipient_phone", length = 20)
     String recipientPhone;
 
+    /** 체크아웃 시 주문 확인(확정)·상품 준비 단계를 건너뛰고 배송 중까지 진행 */
+    @Column(name = "skip_confirm_and_preparing", nullable = false)
+    @Builder.Default
+    boolean skipConfirmAndPreparing = false;
+
+    /** 체크아웃 시 배송 중·배송 완료 단계를 건너뛰고 즉시 배송 완료 (위 플래그가 true일 때만 요청 가능) */
+    @Column(name = "skip_shipping_and_delivered", nullable = false)
+    @Builder.Default
+    boolean skipShippingAndDelivered = false;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     List<OrderItem> orderItems = new ArrayList<>();
 
     public static Order create(Long userId, BigDecimal totalAmount, Long userCouponId,
-                               String shippingAddress, String recipientName, String recipientPhone) {
+                               String shippingAddress, String recipientName, String recipientPhone,
+                               boolean skipConfirmAndPreparing, boolean skipShippingAndDelivered) {
         return Order.builder()
                 .userId(userId)
                 .orderNumber(generateOrderNumber())
@@ -87,6 +98,8 @@ public class Order extends BaseEntity {
                 .shippingAddress(shippingAddress)
                 .recipientName(recipientName)
                 .recipientPhone(recipientPhone)
+                .skipConfirmAndPreparing(skipConfirmAndPreparing)
+                .skipShippingAndDelivered(skipShippingAndDelivered)
                 .build();
     }
 
@@ -105,7 +118,29 @@ public class Order extends BaseEntity {
     }
 
     public void confirm() {
-        this.status = OrderStatus.CONFIRMED;
+        if (this.status == OrderStatus.PENDING) {
+            this.status = OrderStatus.CONFIRMED;
+        }
+    }
+
+    /**
+     * 결제·쿠폰 사가 완료 시 호출: PENDING이면 확정 후, 옵션에 따라 배송 단계를 즉시 진행합니다.
+     * coupon-used / payment-completed 처리 순서가 바뀌어도 상태가 덮어씌워지지 않도록 합니다.
+     */
+    public void markPaidAndApplyFulfillmentFastForward() {
+        confirm();
+        applyFulfillmentFastForwardFromConfirmed();
+    }
+
+    private void applyFulfillmentFastForwardFromConfirmed() {
+        if (this.status != OrderStatus.CONFIRMED) {
+            return;
+        }
+        if (this.skipShippingAndDelivered) {
+            this.status = OrderStatus.DELIVERED;
+        } else if (this.skipConfirmAndPreparing) {
+            this.status = OrderStatus.SHIPPING;
+        }
     }
 
     public void cancel() {

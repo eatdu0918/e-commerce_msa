@@ -75,7 +75,7 @@ class OrderServiceTest {
                 .quantity(2)
                 .build();
         CreateOrderRequest request = new CreateOrderRequest(
-                List.of(itemRequest), null, "서울시 강남구", "홍길동", "010-1234-5678"
+                List.of(itemRequest), null, "서울시 강남구", "홍길동", "010-1234-5678", null, null
         );
 
         when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
@@ -102,7 +102,7 @@ class OrderServiceTest {
         // given
         Long userId = 1L;
         CreateOrderRequest request = new CreateOrderRequest(
-                Collections.emptyList(), null, "서울시", "홍길동", "010-0000-0000"
+                Collections.emptyList(), null, "서울시", "홍길동", "010-0000-0000", null, null
         );
 
         // when & then
@@ -117,7 +117,7 @@ class OrderServiceTest {
         // given
         Long userId = 1L;
         CreateOrderRequest request = new CreateOrderRequest(
-                null, null, "서울시", "홍길동", "010-0000-0000"
+                null, null, "서울시", "홍길동", "010-0000-0000", null, null
         );
 
         // when & then
@@ -268,16 +268,98 @@ class OrderServiceTest {
     }
 
     @Test
-    @DisplayName("주문 상태 변경 실패 - 단계 건너뛰기")
-    void updateOrderStatus_skipStep_throwsException() {
+    @DisplayName("주문 상태 변경 실패 - PENDING에서 배송완료로 점프")
+    void updateOrderStatus_pendingToDelivered_throwsException() {
         Long orderId = 1L;
-        Order order = createTestOrder(orderId, 1L, OrderStatus.CONFIRMED);
+        Order order = createTestOrder(orderId, 1L, OrderStatus.PENDING);
 
         when(orderRepository.findByIdWithItems(orderId)).thenReturn(Optional.of(order));
 
         assertThatThrownBy(() -> orderService.updateOrderStatus(orderId, OrderStatus.DELIVERED))
                 .isInstanceOf(OrderDomainException.class)
                 .hasMessageContaining("허용되지 않는");
+    }
+
+    @Test
+    @DisplayName("주문 상태 변경 성공 - 관리자 CONFIRMED → DELIVERED (배송 완료 확정)")
+    void updateOrderStatus_admin_confirmedToDelivered() {
+        Long orderId = 1L;
+        Order order = createTestOrder(orderId, 1L, OrderStatus.CONFIRMED);
+
+        when(orderRepository.findByIdWithItems(orderId)).thenReturn(Optional.of(order));
+
+        OrderResponse response = orderService.updateOrderStatus(orderId, OrderStatus.DELIVERED);
+
+        assertThat(response.getStatus()).isEqualTo(OrderStatus.DELIVERED);
+    }
+
+    @Test
+    @DisplayName("주문 상태 변경 성공 - 체크아웃 상품준비 생략 주문: CONFIRMED → SHIPPING")
+    void updateOrderStatus_skipConfirm_confirmedToShipping() {
+        Long orderId = 1L;
+        Order order = createTestOrder(orderId, 1L, OrderStatus.CONFIRMED);
+        ReflectionTestUtils.setField(order, "skipConfirmAndPreparing", true);
+
+        when(orderRepository.findByIdWithItems(orderId)).thenReturn(Optional.of(order));
+
+        OrderResponse response = orderService.updateOrderStatus(orderId, OrderStatus.SHIPPING);
+
+        assertThat(response.getStatus()).isEqualTo(OrderStatus.SHIPPING);
+    }
+
+    @Test
+    @DisplayName("주문 상태 변경 성공 - 체크아웃 상품준비 생략 주문: PENDING → SHIPPING (표시·결제만 앞선 경우 동기화)")
+    void updateOrderStatus_skipConfirm_pendingToShipping() {
+        Long orderId = 1L;
+        Order order = createTestOrder(orderId, 1L, OrderStatus.PENDING);
+        ReflectionTestUtils.setField(order, "skipConfirmAndPreparing", true);
+
+        when(orderRepository.findByIdWithItems(orderId)).thenReturn(Optional.of(order));
+
+        OrderResponse response = orderService.updateOrderStatus(orderId, OrderStatus.SHIPPING);
+
+        assertThat(response.getStatus()).isEqualTo(OrderStatus.SHIPPING);
+    }
+
+    @Test
+    @DisplayName("주문 상태 변경 실패 - PENDING → SHIPPING (생략 옵션 없음)")
+    void updateOrderStatus_pendingToShipping_withoutFlag_throws() {
+        Long orderId = 1L;
+        Order order = createTestOrder(orderId, 1L, OrderStatus.PENDING);
+
+        when(orderRepository.findByIdWithItems(orderId)).thenReturn(Optional.of(order));
+
+        assertThatThrownBy(() -> orderService.updateOrderStatus(orderId, OrderStatus.SHIPPING))
+                .isInstanceOf(OrderDomainException.class)
+                .hasMessageContaining("허용되지 않는");
+    }
+
+    @Test
+    @DisplayName("주문 상태 변경 실패 - CONFIRMED → SHIPPING (생략 옵션 없음)")
+    void updateOrderStatus_confirmedToShipping_withoutFlag_throws() {
+        Long orderId = 1L;
+        Order order = createTestOrder(orderId, 1L, OrderStatus.CONFIRMED);
+
+        when(orderRepository.findByIdWithItems(orderId)).thenReturn(Optional.of(order));
+
+        assertThatThrownBy(() -> orderService.updateOrderStatus(orderId, OrderStatus.SHIPPING))
+                .isInstanceOf(OrderDomainException.class)
+                .hasMessageContaining("허용되지 않는");
+    }
+
+    @Test
+    @DisplayName("주문 상태 변경 성공 - 체크아웃 배송까지 생략: PREPARING → DELIVERED")
+    void updateOrderStatus_skipBoth_preparingToDelivered() {
+        Long orderId = 1L;
+        Order order = createTestOrder(orderId, 1L, OrderStatus.PREPARING);
+        ReflectionTestUtils.setField(order, "skipConfirmAndPreparing", true);
+        ReflectionTestUtils.setField(order, "skipShippingAndDelivered", true);
+
+        when(orderRepository.findByIdWithItems(orderId)).thenReturn(Optional.of(order));
+
+        OrderResponse response = orderService.updateOrderStatus(orderId, OrderStatus.DELIVERED);
+
+        assertThat(response.getStatus()).isEqualTo(OrderStatus.DELIVERED);
     }
 
     @Test
@@ -328,7 +410,8 @@ class OrderServiceTest {
     }
 
     private Order createTestOrder(Long id, Long userId, OrderStatus status) {
-        Order order = Order.create(userId, new BigDecimal("20000"), null, "서울시", "홍길동", "010-1234-5678");
+        Order order = Order.create(userId, new BigDecimal("20000"), null, "서울시", "홍길동", "010-1234-5678",
+                false, false);
         ReflectionTestUtils.setField(order, "id", id);
         ReflectionTestUtils.setField(order, "status", status);
         return order;

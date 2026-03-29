@@ -57,6 +57,11 @@ public class OrderResponse {
      */
     String activeCancelRequestType;
 
+    /** 체크아웃 시 주문 확인·상품 준비 단계 생략 선택 여부(표시용 진행 상태 보정에 사용) */
+    boolean skipConfirmAndPreparing;
+    /** 체크아웃 시 배송 중·완료 단계 생략 선택 여부 */
+    boolean skipShippingAndDelivered;
+
     public static OrderResponse from(Order order) {
         List<OrderItemResponse> items = order.getOrderItems().stream()
                 .map(OrderItemResponse::from)
@@ -80,6 +85,8 @@ public class OrderResponse {
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())
                 .progressStatus(order.getStatus())
+                .skipConfirmAndPreparing(order.isSkipConfirmAndPreparing())
+                .skipShippingAndDelivered(order.isSkipShippingAndDelivered())
                 .build();
     }
 
@@ -101,6 +108,8 @@ public class OrderResponse {
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())
                 .progressStatus(order.getStatus())
+                .skipConfirmAndPreparing(order.isSkipConfirmAndPreparing())
+                .skipShippingAndDelivered(order.isSkipShippingAndDelivered())
                 .build();
     }
 }

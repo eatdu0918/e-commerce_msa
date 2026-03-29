@@ -57,7 +57,9 @@ class OrderServiceIntegrationTest extends IntegrationTestBase {
                 null,
                 "서울시 강남구 테헤란로 123",
                 "홍길동",
-                "010-1234-5678"
+                "010-1234-5678",
+                null,
+                null
         );
 
         // when
@@ -93,7 +95,9 @@ class OrderServiceIntegrationTest extends IntegrationTestBase {
                 null,
                 "부산시 해운대구",
                 "김철수",
-                "010-9876-5432"
+                "010-9876-5432",
+                null,
+                null
         );
 
         // when
@@ -164,7 +168,9 @@ class OrderServiceIntegrationTest extends IntegrationTestBase {
                 null,
                 "테스트 주소",
                 "테스트 수령인",
-                "010-0000-0000"
+                "010-0000-0000",
+                null,
+                null
         );
         return orderService.createOrder(userId, request);
     }

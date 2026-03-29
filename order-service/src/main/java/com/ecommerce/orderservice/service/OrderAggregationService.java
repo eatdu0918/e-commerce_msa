@@ -119,7 +119,11 @@ public class OrderAggregationService {
                 .activeCancelId(cancelIdOf(cancelSummary))
                 .activeCancelRequestType(requestTypeOf(cancelSummary))
                 .progressStatus(OrderProgressStatusResolver.resolveForDisplayWithActiveCancel(
-                        order.getStatus(), paymentStatus, activeCancel))
+                        order.getStatus(),
+                        paymentStatus,
+                        activeCancel,
+                        order.isSkipConfirmAndPreparing(),
+                        order.isSkipShippingAndDelivered()))
                 .build();
     }
 
@@ -201,7 +205,11 @@ public class OrderAggregationService {
                 .activeCancelId(cancelIdOf(cancelSummary))
                 .activeCancelRequestType(requestTypeOf(cancelSummary))
                 .progressStatus(OrderProgressStatusResolver.resolveForDisplayWithActiveCancel(
-                        order.getStatus(), paymentStatus, activeCancel))
+                        order.getStatus(),
+                        paymentStatus,
+                        activeCancel,
+                        order.isSkipConfirmAndPreparing(),
+                        order.isSkipShippingAndDelivered()))
                 .build();
     }
 

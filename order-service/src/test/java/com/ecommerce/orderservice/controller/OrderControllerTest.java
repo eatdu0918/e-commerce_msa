@@ -178,6 +178,33 @@ class OrderControllerTest {
                             .content(requestBody))
                     .andExpect(status().isBadRequest());
         }
+
+        @Test
+        @DisplayName("주문 생성 실패 - 배송 단계 생략만 단독 선택")
+        void createOrder_validation_fail_skipShippingWithoutSkipConfirm() throws Exception {
+            String requestBody = """
+                    {
+                        "items": [
+                            {
+                                "productId": 1,
+                                "productName": "테스트 상품",
+                                "unitPrice": 10000,
+                                "quantity": 1
+                            }
+                        ],
+                        "shippingAddress": "서울시 강남구",
+                        "recipientName": "홍길동",
+                        "recipientPhone": "010-1234-5678",
+                        "skipConfirmAndPreparing": false,
+                        "skipShippingAndDelivered": true
+                    }
+                    """;
+
+            mockMvc.perform(post("/api/orders")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(requestBody))
+                    .andExpect(status().isBadRequest());
+        }
     }
 
     @Nested

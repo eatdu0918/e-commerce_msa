@@ -50,13 +50,18 @@ public class OrderService {
 
         BigDecimal totalAmount = calculateTotalAmount(request.getItems());
 
+        boolean skipConfirmAndPreparing = Boolean.TRUE.equals(request.getSkipConfirmAndPreparing());
+        boolean skipShippingAndDelivered = Boolean.TRUE.equals(request.getSkipShippingAndDelivered());
+
         Order order = Order.create(
                 userId,
                 totalAmount,
                 request.getUserCouponId(),
                 request.getShippingAddress(),
                 request.getRecipientName(),
-                request.getRecipientPhone()
+                request.getRecipientPhone(),
+                skipConfirmAndPreparing,
+                skipShippingAndDelivered
         );
 
         for (OrderItemRequest itemRequest : request.getItems()) {
@@ -192,7 +197,7 @@ public class OrderService {
             assertAdminFulfillmentNotBlockedByCancelOrRefund(orderId);
         }
 
-        validateAdminFulfillmentTransition(order.getStatus(), newStatus);
+        validateAdminFulfillmentTransition(order, newStatus);
 
         order.updateStatus(newStatus);
         log.info("주문 상태 변경 완료: orderId={}, status={}", orderId, newStatus);
@@ -201,9 +206,12 @@ public class OrderService {
     }
 
     /**
-     * 관리자 배송·준비 단계: 한 단계씩만 전환 (PENDING→CONFIRMED→PREPARING→SHIPPING→DELIVERED).
+     * 관리자 배송·준비 단계: 기본은 한 단계씩 전환.
+     * 체크아웃에서 «주문 확인·상품 준비 생략» 선택 주문은 관리자가 상품 준비를 건너뛰고 배송 중으로 맞출 수 있다.
+     * «배송 단계까지 생략» 선택 주문은 중간 상태에서 배송 완료로 한 번에 맞출 수 있다.
      */
-    private void validateAdminFulfillmentTransition(OrderStatus current, OrderStatus next) {
+    private void validateAdminFulfillmentTransition(Order order, OrderStatus next) {
+        OrderStatus current = order.getStatus();
         if (current == next) {
             return;
         }
@@ -214,9 +222,31 @@ public class OrderService {
             case SHIPPING -> OrderStatus.DELIVERED;
             default -> null;
         };
-        if (allowedNext != next) {
-            throw new OrderDomainException(OrderDomainExceptionCode.OrderStatusTransitionNotAllowedException);
+        if (allowedNext == next) {
+            return;
         }
+        if (order.isSkipConfirmAndPreparing() && next == OrderStatus.SHIPPING) {
+            if (current == OrderStatus.PENDING || current == OrderStatus.CONFIRMED) {
+                return;
+            }
+        }
+        if (order.isSkipShippingAndDelivered() && order.isSkipConfirmAndPreparing()) {
+            if ((current == OrderStatus.CONFIRMED || current == OrderStatus.PREPARING)
+                    && next == OrderStatus.DELIVERED) {
+                return;
+            }
+        }
+        /*
+         * 관리자 배송 완료 확정: 출고 이후 단계(CONFIRMED~)에서 한 번에 DELIVERED로 마무리 가능.
+         * PENDING(주문 미확정)은 제외.
+         */
+        if (next == OrderStatus.DELIVERED
+                && (current == OrderStatus.CONFIRMED
+                    || current == OrderStatus.PREPARING
+                    || current == OrderStatus.SHIPPING)) {
+            return;
+        }
+        throw new OrderDomainException(OrderDomainExceptionCode.OrderStatusTransitionNotAllowedException);
     }
 
     private void assertAdminFulfillmentNotBlockedByCancelOrRefund(Long orderId) {

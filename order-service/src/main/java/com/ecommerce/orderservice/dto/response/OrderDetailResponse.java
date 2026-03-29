@@ -52,6 +52,9 @@ public class OrderDetailResponse {
     /** 진행 중인 취소·반품 건의 요청 유형({@code ORDER_CANCEL} | {@code RETURN_REFUND}). 없으면 null. */
     String activeCancelRequestType;
 
+    boolean skipConfirmAndPreparing;
+    boolean skipShippingAndDelivered;
+
     public static OrderDetailResponse from(
             OrderResponse order,
             List<OrderItemDetailResponse> items,
@@ -61,7 +64,11 @@ public class OrderDetailResponse {
             String activeCancelRequestType) {
         String pay = payment != null ? payment.getStatus() : null;
         OrderStatus progress = OrderProgressStatusResolver.resolveForDisplayWithActiveCancel(
-                order.getStatus(), pay, activeCancelStatus);
+                order.getStatus(),
+                pay,
+                activeCancelStatus,
+                order.isSkipConfirmAndPreparing(),
+                order.isSkipShippingAndDelivered());
         return OrderDetailResponse.builder()
                 .id(order.getId())
                 .userId(order.getUserId())
@@ -84,6 +91,8 @@ public class OrderDetailResponse {
                 .activeCancelStatus(activeCancelStatus)
                 .activeCancelId(activeCancelId)
                 .activeCancelRequestType(activeCancelRequestType)
+                .skipConfirmAndPreparing(order.isSkipConfirmAndPreparing())
+                .skipShippingAndDelivered(order.isSkipShippingAndDelivered())
                 .build();
     }
 }
