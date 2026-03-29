@@ -160,16 +160,20 @@ export function orderStatusHeadlineLabel(
   t: (key: string) => string,
   displayStatusKey: string,
   paymentStatus?: string | null,
-  activeCancelRequestType?: string | null,
+  /** 목록·상세 집계의 유효 요청 유형(getEffectiveCancelRequestTypeForDisplay 권장) */
+  effectiveCancelRequestType?: string | null,
   /** 어드민 주문 상세: 첫 스킵만 선택 시 집계가 SHIPPING이어도 헤드라인을 「상품 준비 완료」로 표시 */
   adminFulfillmentSkipHeadline?: AdminHeadlineFulfillmentSkipContext | null
 ): string {
   const s = (displayStatusKey || '').toUpperCase();
   const pay = (paymentStatus ?? '').trim().toUpperCase();
-  if (s === 'CANCELLED' && pay === 'REFUNDED') {
+  const rt = (effectiveCancelRequestType ?? '').trim().toUpperCase();
+  if (
+    s === 'CANCELLED' &&
+    (pay === 'REFUNDED' || (pay === 'CANCELLED' && rt === 'RETURN_REFUND'))
+  ) {
     return t('paymentHistory.status_REFUNDED');
   }
-  const rt = (activeCancelRequestType ?? '').trim().toUpperCase();
   if (s === 'CANCEL_REQUESTED' && rt === 'RETURN_REFUND') {
     return t('orderStatus.RETURN_REFUND_REQUESTED_DETAIL');
   }
@@ -186,11 +190,34 @@ export function orderStatusHeadlineLabel(
 
 export function isCancelledOrderWithRefundComplete(
   displayStatusKey: string,
-  paymentStatus?: string | null
+  paymentStatus?: string | null,
+  effectiveCancelRequestType?: string | null
 ): boolean {
   const s = (displayStatusKey || '').toUpperCase();
   const pay = (paymentStatus ?? '').trim().toUpperCase();
-  return s === 'CANCELLED' && pay === 'REFUNDED';
+  const rt = (effectiveCancelRequestType ?? '').trim().toUpperCase();
+  if (s !== 'CANCELLED') return false;
+  if (pay === 'REFUNDED') return true;
+  return pay === 'CANCELLED' && rt === 'RETURN_REFUND';
+}
+
+/**
+ * 추정 도착일·빠른 배송 안내 카드는 배송 완료, 주문 취소 완료, 환불(처리) 완료일 때 숨김.
+ */
+export function shouldShowOrderEstimatedArrival(input: {
+  progressStatus: string | null | undefined;
+  orderDbStatus: string | null | undefined;
+  paymentStatus?: string | null | undefined;
+}): boolean {
+  const progress = (input.progressStatus || '').toUpperCase();
+  const db = (input.orderDbStatus || '').toUpperCase();
+  const pay = (input.paymentStatus ?? '').trim().toUpperCase();
+
+  if (progress === 'DELIVERED' || db === 'DELIVERED') return false;
+  if (progress === 'CANCELLED' || db === 'CANCELLED') return false;
+  if (pay === 'REFUNDED') return false;
+
+  return true;
 }
 
 /** 다음 단계로 바꿀 때 안내 문구 */
