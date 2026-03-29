@@ -1,7 +1,9 @@
 package com.ecommerce.discountservice.service;
 
+import com.ecommerce.discountservice.dto.request.BulkGrantCouponRequest;
 import com.ecommerce.discountservice.dto.request.CreateCouponRequest;
 import com.ecommerce.discountservice.dto.request.UpdateCouponRequest;
+import com.ecommerce.discountservice.dto.response.BulkGrantCouponResponse;
 import com.ecommerce.discountservice.dto.response.CouponResponse;
 import com.ecommerce.discountservice.dto.response.PageResponse;
 import com.ecommerce.discountservice.dto.response.UserCouponResponse;
@@ -140,6 +142,46 @@ public class CouponService {
                 savedUserCoupon.getId(), userId, coupon.getId());
 
         return UserCouponResponse.from(savedUserCoupon);
+    }
+
+    @Transactional
+    public BulkGrantCouponResponse bulkGrantCoupon(BulkGrantCouponRequest request) {
+        String couponCode = request.getCouponCode();
+        List<Long> userIds = request.getUserIds().stream().distinct().toList();
+
+        log.info("쿠폰 일괄 발급 시도: code={}, userCount={}", couponCode, userIds.size());
+
+        Coupon coupon = couponRepository.findByCodeAndIsActiveTrue(couponCode)
+                .orElseThrow(() -> new DiscountDomainException(DiscountDomainExceptionCode.CouponNotFoundException));
+
+        if (!coupon.isValid()) {
+            throw new DiscountDomainException(DiscountDomainExceptionCode.CouponNotValidException);
+        }
+
+        int granted = 0;
+        int skipped = 0;
+
+        for (Long userId : userIds) {
+            if (userCouponRepository.existsByUserIdAndCouponId(userId, coupon.getId())) {
+                skipped++;
+                continue;
+            }
+            if (!coupon.hasAvailableQuantity()) {
+                log.warn("쿠폰 수량 소진으로 일괄 발급 중단: code={}", couponCode);
+                break;
+            }
+            coupon.incrementIssuedQuantity();
+            userCouponRepository.save(UserCoupon.create(userId, coupon));
+            granted++;
+        }
+
+        log.info("쿠폰 일괄 발급 완료: code={}, granted={}, skipped={}", couponCode, granted, skipped);
+
+        return BulkGrantCouponResponse.builder()
+                .couponCode(couponCode)
+                .grantedCount(granted)
+                .skippedCount(skipped)
+                .build();
     }
 
     @Transactional(readOnly = true)

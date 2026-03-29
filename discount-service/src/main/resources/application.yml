@@ -2,7 +2,7 @@ spring:
   application:
     name: discount-service
   datasource:
-    url: jdbc:mysql://localhost:3310/discount_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
+    url: jdbc:mysql://localhost:3310/discount_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true&useUnicode=true&characterEncoding=UTF-8
     username: root
     password: password
     driver-class-name: com.mysql.cj.jdbc.Driver

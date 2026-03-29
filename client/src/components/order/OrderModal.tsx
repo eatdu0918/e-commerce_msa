@@ -1,10 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { getTossPayments } from '../../lib/tossPayments';
 import { digitsOnlyPhone, isValidKoreanMobile } from '../../lib/koreanPhone';
 import { v4 as uuidv4 } from 'uuid';
 import type { UserResponse } from '../../api/services/user';
 import type { Product } from '../../types/product';
-import { X } from 'lucide-react';
+import { getAvailableCoupons, calculateDiscount } from '../../api/services/coupon';
+import type { UserCouponResponse, DiscountCalculationResponse } from '../../api/services/coupon';
+import { X, Check, Ticket } from 'lucide-react';
 import { useScrollLock } from '../../hooks/useScrollLock';
 import AddressSearchModal from '../common/AddressSearchModal';
 import { useTranslation } from 'react-i18next';
@@ -28,6 +31,8 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
     const [widgetsReady, setWidgetsReady] = useState(false);
     const [skipConfirmAndPreparing, setSkipConfirmAndPreparing] = useState(false);
     const [skipShippingAndDelivered, setSkipShippingAndDelivered] = useState(false);
+    const [selectedCouponId, setSelectedCouponId] = useState<number | null>(null);
+    const [discountInfo, setDiscountInfo] = useState<DiscountCalculationResponse | null>(null);
 
     // Address state
     const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
@@ -37,6 +42,12 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
 
     // 토스페이먼츠 위젯 관련
     const widgetsRef = useRef<any>(null);
+
+    const { data: coupons } = useQuery({
+        queryKey: ['coupons', 'available'],
+        queryFn: getAvailableCoupons,
+        enabled: isOpen,
+    });
 
     useEffect(() => {
         if (roadAddress) {
@@ -56,6 +67,19 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
     void onOrderSuccess;
 
     const totalAmount = product.price * quantity;
+
+    useEffect(() => {
+        if (selectedCouponId && totalAmount > 0) {
+            calculateDiscount({ userCouponId: selectedCouponId, orderAmount: totalAmount })
+                .then(setDiscountInfo)
+                .catch(() => setDiscountInfo(null));
+        } else {
+            setDiscountInfo(null);
+        }
+    }, [selectedCouponId, totalAmount]);
+
+    const finalAmount = discountInfo ? Number(discountInfo.finalAmount) : totalAmount;
+    const discountAmount = discountInfo ? Number(discountInfo.discountAmount) : 0;
 
     // 모달 열리면 위젯 초기화
     useEffect(() => {
@@ -108,6 +132,24 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
         };
     }, [isOpen, totalAmount, t]);
 
+    useEffect(() => {
+        if (widgetsRef.current && isOpen && finalAmount > 0) {
+            widgetsRef.current
+                .setAmount({
+                    currency: 'KRW',
+                    value: Math.round(finalAmount),
+                })
+                .catch(console.error);
+        }
+    }, [finalAmount, isOpen]);
+
+    useEffect(() => {
+        if (!isOpen) {
+            setSelectedCouponId(null);
+            setDiscountInfo(null);
+        }
+    }, [isOpen]);
+
     if (!isOpen) return null;
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -149,6 +191,7 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
                 shippingAddress: address,
                 recipientName,
                 recipientPhone,
+                ...(selectedCouponId ? { userCouponId: selectedCouponId } : {}),
                 paymentMethod: 'TOSSPAYMENTS',
                 skipConfirmAndPreparing,
                 skipShippingAndDelivered,
@@ -264,6 +307,51 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
                         />
                     </div>
 
+                    <div>
+                        <label className="flex items-center gap-2 text-sm font-bold text-stone-700 mb-2">
+                            <Ticket size={16} className="text-purple-500" />
+                            {t('checkout.coupon_apply')}
+                        </label>
+                        {coupons && coupons.length > 0 ? (
+                            <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedCouponId(null)}
+                                    className={`w-full p-3 rounded-xl border text-left text-xs transition-all ${!selectedCouponId ? 'border-black bg-stone-50 font-bold' : 'border-stone-200 hover:border-stone-300'}`}
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <span>{t('checkout.coupon_none_selected')}</span>
+                                        {!selectedCouponId && <Check size={14} className="text-green-500 shrink-0" />}
+                                    </div>
+                                </button>
+                                {coupons.map((coupon: UserCouponResponse) => (
+                                    <button
+                                        type="button"
+                                        key={coupon.id}
+                                        onClick={() => setSelectedCouponId(coupon.id)}
+                                        className={`w-full p-3 rounded-xl border text-left text-xs transition-all ${selectedCouponId === coupon.id ? 'border-black bg-stone-50' : 'border-stone-200 hover:border-stone-300'}`}
+                                    >
+                                        <div className="flex items-center justify-between gap-2">
+                                            <div className="min-w-0">
+                                                <p className="font-bold truncate">{coupon.couponName}</p>
+                                                <p className="text-[10px] text-stone-400 mt-0.5">
+                                                    {coupon.couponType === 'PERCENTAGE'
+                                                        ? t('checkout.discount_percent', { value: coupon.discountValue })
+                                                        : t('checkout.discount_fixed', {
+                                                              value: `${coupon.discountValue.toLocaleString()}${t('common.currency_won')}`,
+                                                          })}
+                                                </p>
+                                            </div>
+                                            {selectedCouponId === coupon.id && <Check size={14} className="text-green-500 shrink-0" />}
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-xs text-stone-400 py-2">{t('checkout.no_coupons')}</p>
+                        )}
+                    </div>
+
                     {/* TossPayments 결제위젯 */}
                     <div>
                         <label className="block text-sm font-bold text-stone-700 mb-2">{t('checkout.payment_method')}</label>
@@ -317,9 +405,17 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
                     {/* 약관 동의 위젯 */}
                     <div id="modal-agreement-widget" className="w-full" />
 
-                    <div className="pt-4 border-t border-stone-100 flex justify-between items-center font-bold">
-                        <span>{t('checkout.total_payment')}</span>
-                        <span className="text-xl">{totalAmount.toLocaleString()}{t('common.currency_won')}</span>
+                    <div className="pt-4 border-t border-stone-100 space-y-2">
+                        {discountAmount > 0 && (
+                            <div className="flex justify-between text-sm text-stone-600">
+                                <span>{t('checkout.coupon_discount')}</span>
+                                <span>-{discountAmount.toLocaleString()}{t('common.currency_won')}</span>
+                            </div>
+                        )}
+                        <div className="flex justify-between items-center font-bold">
+                            <span>{t('checkout.total_payment')}</span>
+                            <span className="text-xl">{finalAmount.toLocaleString()}{t('common.currency_won')}</span>
+                        </div>
                     </div>
 
                     {error && <p className="text-red-500 text-sm">{error}</p>}

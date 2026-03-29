@@ -53,6 +53,12 @@ export default function PaymentSuccessPage() {
 
             const order = await createOrder(orderRequest);
 
+            const paidFromToss =
+                amount != null && amount !== '' ? Number.parseInt(amount, 10) : Number.NaN;
+            /** 주문 생성 직후에는 saga(coupon-used) 전이라 finalAmount가 상품 합계일 수 있음. 실제 청구액은 Toss redirect의 amount와 맞춤 */
+            const paymentAmount =
+                Number.isFinite(paidFromToss) && paidFromToss > 0 ? paidFromToss : order.finalAmount;
+
             // 결제 기록 생성
             // 실제 서비스에서는 여기서 백엔드의 '결제 승인 API'를 호출해야 하며, 
             // 백엔드에서 Toss API를 통해 받은 상세 응답(issuerCode, installmentPlanMonths 등)을 
@@ -73,7 +79,7 @@ export default function PaymentSuccessPage() {
                 orderId: order.id,
                 orderNumber: order.orderNumber,
                 paymentMethod: orderData.paymentMethod,
-                amount: order.finalAmount,
+                amount: paymentAmount,
                 paymentDetails: mockPaymentDetails,
             });
 

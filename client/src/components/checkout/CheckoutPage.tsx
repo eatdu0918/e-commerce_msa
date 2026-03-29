@@ -39,6 +39,7 @@ export default function CheckoutPage() {
 
     // 토스페이먼츠 위젯 관련
     const widgetsRef = useRef<any>(null);
+    const finalAmountRef = useRef(0);
     const [widgetsReady, setWidgetsReady] = useState(false);
 
     const { data: cart, isLoading: cartLoading } = useQuery({
@@ -101,7 +102,7 @@ export default function CheckoutPage() {
     // Calculate discount when coupon changes
     useEffect(() => {
         if (selectedCouponId && totalPrice > 0) {
-            calculateDiscount({ userCouponId: selectedCouponId, totalAmount: totalPrice })
+            calculateDiscount({ userCouponId: selectedCouponId, orderAmount: totalPrice })
                 .then(setDiscountInfo)
                 .catch(() => setDiscountInfo(null));
         } else {
@@ -122,12 +123,14 @@ export default function CheckoutPage() {
         setDetailAddress('');
     };
 
-    const finalAmount = discountInfo ? discountInfo.finalAmount : totalPrice;
-    const discountAmount = discountInfo ? discountInfo.discountAmount : 0;
+    const finalAmount = discountInfo ? Number(discountInfo.finalAmount) : totalPrice;
+    const discountAmount = discountInfo ? Number(discountInfo.discountAmount) : 0;
 
-    // 결제 단계에 진입하면 위젯 초기화
+    finalAmountRef.current = finalAmount;
+
+    // 결제 단계 진입 시에만 위젯 생성 (쿠폰 변경마다 teardown 하면 setAmount 보강이 레이스로 실패할 수 있음)
     useEffect(() => {
-        if (step !== 'payment' || finalAmount <= 0) return;
+        if (step !== 'payment' || totalPrice <= 0) return;
 
         let cancelled = false;
 
@@ -140,7 +143,7 @@ export default function CheckoutPage() {
 
                 await widgets.setAmount({
                     currency: 'KRW',
-                    value: Math.round(finalAmount),
+                    value: Math.round(finalAmountRef.current),
                 });
 
                 if (cancelled) return;
@@ -156,6 +159,12 @@ export default function CheckoutPage() {
 
                 widgetsRef.current = widgets;
                 setWidgetsReady(true);
+                await widgets
+                    .setAmount({
+                        currency: 'KRW',
+                        value: Math.round(finalAmountRef.current),
+                    })
+                    .catch(console.error);
             } catch (err) {
                 console.error('결제 위젯 초기화 실패:', err);
                 if (!cancelled) {
@@ -171,17 +180,19 @@ export default function CheckoutPage() {
             setWidgetsReady(false);
             widgetsRef.current = null;
         };
-    }, [step, finalAmount, t]);
+    }, [step, totalPrice, t]);
 
-    // 금액 변경 시 위젯 업데이트
     useEffect(() => {
-        if (widgetsRef.current && finalAmount > 0) {
-            widgetsRef.current.setAmount({
+        if (step !== 'payment') return;
+        if (!widgetsRef.current || finalAmount <= 0) return;
+        widgetsRef.current
+            .setAmount({
                 currency: 'KRW',
                 value: Math.round(finalAmount),
-            }).catch(console.error);
-        }
-    }, [finalAmount]);
+            })
+            .catch(console.error);
+    }, [finalAmount, step]);
+
 
     // 단계(step)가 변경될 때 에러 메시지 초기화
     useEffect(() => {

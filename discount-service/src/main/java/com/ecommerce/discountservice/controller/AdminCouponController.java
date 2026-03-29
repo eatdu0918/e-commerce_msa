@@ -1,7 +1,9 @@
 package com.ecommerce.discountservice.controller;
 
+import com.ecommerce.discountservice.dto.request.BulkGrantCouponRequest;
 import com.ecommerce.discountservice.dto.request.CreateCouponRequest;
 import com.ecommerce.discountservice.dto.request.UpdateCouponRequest;
+import com.ecommerce.discountservice.dto.response.BulkGrantCouponResponse;
 import com.ecommerce.discountservice.dto.response.CouponResponse;
 import com.ecommerce.discountservice.dto.response.PageResponse;
 import com.ecommerce.discountservice.response.ApiResponse;
@@ -30,6 +32,14 @@ public class AdminCouponController {
             @Valid @RequestBody CreateCouponRequest request) {
         CouponResponse response = couponService.createCoupon(request);
         return ResponseEntity.ok(ApiResponse.success(response, "쿠폰이 생성되었습니다."));
+    }
+
+    @Operation(summary = "쿠폰 일괄 발급(관리자)")
+    @PostMapping("/bulk-grant")
+    public ResponseEntity<ApiResponse<BulkGrantCouponResponse>> bulkGrantCoupon(
+            @Valid @RequestBody BulkGrantCouponRequest request) {
+        BulkGrantCouponResponse response = couponService.bulkGrantCoupon(request);
+        return ResponseEntity.ok(ApiResponse.success(response, "쿠폰 일괄 발급이 처리되었습니다."));
     }
 
     @Operation(summary = "전체 쿠폰 목록 조회")

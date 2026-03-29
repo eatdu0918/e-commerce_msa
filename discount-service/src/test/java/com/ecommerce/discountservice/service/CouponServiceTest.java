@@ -1,7 +1,9 @@
 package com.ecommerce.discountservice.service;
 
+import com.ecommerce.discountservice.dto.request.BulkGrantCouponRequest;
 import com.ecommerce.discountservice.dto.request.CreateCouponRequest;
 import com.ecommerce.discountservice.dto.request.UpdateCouponRequest;
+import com.ecommerce.discountservice.dto.response.BulkGrantCouponResponse;
 import com.ecommerce.discountservice.dto.response.CouponResponse;
 import com.ecommerce.discountservice.dto.response.PageResponse;
 import com.ecommerce.discountservice.dto.response.UserCouponResponse;
@@ -336,6 +338,63 @@ class CouponServiceTest {
             assertThatThrownBy(() -> couponService.claimCoupon(USER_ID, COUPON_CODE))
                     .isInstanceOf(DiscountDomainException.class)
                     .hasMessageContaining("이미 발급받은 쿠폰");
+        }
+    }
+
+    @Nested
+    @DisplayName("쿠폰 일괄 발급")
+    class BulkGrantCouponTest {
+
+        @Test
+        @DisplayName("일괄 발급 성공")
+        void bulkGrantCoupon_success() {
+            Long userId2 = 101L;
+            BulkGrantCouponRequest request = new BulkGrantCouponRequest(
+                    COUPON_CODE, List.of(USER_ID, userId2));
+
+            when(couponRepository.findByCodeAndIsActiveTrue(COUPON_CODE)).thenReturn(Optional.of(testCoupon));
+            when(userCouponRepository.existsByUserIdAndCouponId(USER_ID, COUPON_ID)).thenReturn(false);
+            when(userCouponRepository.existsByUserIdAndCouponId(userId2, COUPON_ID)).thenReturn(false);
+            when(userCouponRepository.save(any(UserCoupon.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+            BulkGrantCouponResponse response = couponService.bulkGrantCoupon(request);
+
+            assertThat(response.getCouponCode()).isEqualTo(COUPON_CODE);
+            assertThat(response.getGrantedCount()).isEqualTo(2);
+            assertThat(response.getSkippedCount()).isZero();
+            assertThat(testCoupon.getIssuedQuantity()).isEqualTo(2);
+            verify(userCouponRepository, times(2)).save(any(UserCoupon.class));
+        }
+
+        @Test
+        @DisplayName("일괄 발급 - 이미 보유한 사용자는 건너뜀")
+        void bulkGrantCoupon_skipsAlreadyGranted() {
+            Long userId2 = 101L;
+            BulkGrantCouponRequest request = new BulkGrantCouponRequest(
+                    COUPON_CODE, List.of(USER_ID, userId2));
+
+            when(couponRepository.findByCodeAndIsActiveTrue(COUPON_CODE)).thenReturn(Optional.of(testCoupon));
+            when(userCouponRepository.existsByUserIdAndCouponId(USER_ID, COUPON_ID)).thenReturn(true);
+            when(userCouponRepository.existsByUserIdAndCouponId(userId2, COUPON_ID)).thenReturn(false);
+            when(userCouponRepository.save(any(UserCoupon.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+            BulkGrantCouponResponse response = couponService.bulkGrantCoupon(request);
+
+            assertThat(response.getGrantedCount()).isEqualTo(1);
+            assertThat(response.getSkippedCount()).isEqualTo(1);
+            assertThat(testCoupon.getIssuedQuantity()).isEqualTo(1);
+            verify(userCouponRepository, times(1)).save(any(UserCoupon.class));
+        }
+
+        @Test
+        @DisplayName("일괄 발급 실패 - 쿠폰 없음")
+        void bulkGrantCoupon_notFound() {
+            BulkGrantCouponRequest request = new BulkGrantCouponRequest("NONE", List.of(USER_ID));
+            when(couponRepository.findByCodeAndIsActiveTrue("NONE")).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> couponService.bulkGrantCoupon(request))
+                    .isInstanceOf(DiscountDomainException.class)
+                    .hasMessageContaining("쿠폰을 찾을 수 없습니다");
         }
     }
 

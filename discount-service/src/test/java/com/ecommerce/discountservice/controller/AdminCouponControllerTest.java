@@ -1,5 +1,6 @@
 package com.ecommerce.discountservice.controller;
 
+import com.ecommerce.discountservice.dto.response.BulkGrantCouponResponse;
 import com.ecommerce.discountservice.dto.response.CouponResponse;
 import com.ecommerce.discountservice.dto.response.PageResponse;
 import com.ecommerce.discountservice.enums.CouponType;
@@ -123,6 +124,55 @@ class AdminCouponControllerTest {
 
             // when & then
             mockMvc.perform(post("/api/admin/coupons")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(requestBody))
+                    .andExpect(status().isBadRequest());
+        }
+    }
+
+    @Nested
+    @DisplayName("POST /api/admin/coupons/bulk-grant - 쿠폰 일괄 발급")
+    class BulkGrantCouponTest {
+
+        @Test
+        @DisplayName("일괄 발급 성공")
+        void bulkGrantCoupon_success() throws Exception {
+            BulkGrantCouponResponse response = BulkGrantCouponResponse.builder()
+                    .couponCode("WELCOME10")
+                    .grantedCount(2)
+                    .skippedCount(0)
+                    .build();
+
+            when(couponService.bulkGrantCoupon(any())).thenReturn(response);
+
+            String requestBody = """
+                    {
+                        "couponCode": "WELCOME10",
+                        "userIds": [1, 2]
+                    }
+                    """;
+
+            mockMvc.perform(post("/api/admin/coupons/bulk-grant")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(requestBody))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data.couponCode").value("WELCOME10"))
+                    .andExpect(jsonPath("$.data.grantedCount").value(2))
+                    .andExpect(jsonPath("$.data.skippedCount").value(0));
+        }
+
+        @Test
+        @DisplayName("일괄 발급 실패 - userIds 비어 있음")
+        void bulkGrantCoupon_validation_emptyUserIds() throws Exception {
+            String requestBody = """
+                    {
+                        "couponCode": "WELCOME10",
+                        "userIds": []
+                    }
+                    """;
+
+            mockMvc.perform(post("/api/admin/coupons/bulk-grant")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(requestBody))
                     .andExpect(status().isBadRequest());

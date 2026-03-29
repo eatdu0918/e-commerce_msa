@@ -37,15 +37,19 @@ export const claimCoupon = async (code: string): Promise<UserCouponResponse> => 
 
 export interface CalculateDiscountRequest {
     userCouponId: number;
-    totalAmount: number;
+    /** 백엔드 CalculateDiscountRequest.orderAmount 와 동일 */
+    orderAmount: number;
 }
 
 export interface DiscountCalculationResponse {
-    originalAmount: number;
+    userCouponId?: number;
+    couponId?: number;
+    couponName?: string;
+    orderAmount?: number;
     discountAmount: number;
     finalAmount: number;
-    couponName: string;
-    couponType: string;
+    isApplicable?: boolean;
+    message?: string;
 }
 
 export const calculateDiscount = async (data: CalculateDiscountRequest): Promise<DiscountCalculationResponse> => {
