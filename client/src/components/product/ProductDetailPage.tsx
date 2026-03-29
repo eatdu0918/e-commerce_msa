@@ -25,7 +25,6 @@ export default function ProductDetailPage() {
     const navigate = useNavigate();
     const { openLogin, openCart } = useOutletContext<OutletContextType>();
 
-    const [selectedSize, setSelectedSize] = useState('S');
     const [quantity, setQuantity] = useState(1);
     const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
     const [isReviewFormOpen, setIsReviewFormOpen] = useState(false);
@@ -85,8 +84,6 @@ export default function ProductDetailPage() {
             queryClient.invalidateQueries({ queryKey: ['wishlist'] });
         },
     });
-
-    const sizes = ['S', 'M', 'L'];
 
     const handleAddToCart = () => {
         if (!user) {
@@ -181,44 +178,24 @@ export default function ProductDetailPage() {
                         )}
                         <p className="text-stone-500 mb-12 leading-relaxed max-w-md">{product.description}</p>
 
-                        <div className="space-y-8 mb-12">
-                            <div>
-                                <p className="text-xs font-bold mb-4 uppercase tracking-wider text-stone-400">{t('product.size')}</p>
-                                <div className="flex space-x-3">
-                                    {sizes.map(size => (
-                                        <button
-                                            key={size}
-                                            onClick={() => setSelectedSize(size)}
-                                            className={`w-12 h-12 rounded-full text-xs font-bold border transition-all ${selectedSize === size
-                                                ? 'bg-black text-white border-black'
-                                                : 'border-stone-200 text-stone600 hover:border-black'
-                                                }`}
-                                        >
-                                            {size}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div>
-                                <p className="text-xs font-bold mb-4 uppercase tracking-wider text-stone-400">{t('product.quantity')}</p>
-                                <div className={`flex items-center space-x-4 border border-stone-200 w-fit rounded-full px-4 py-2 bg-white ${(!stockInfo || stockInfo.stockQuantity === 0) ? 'opacity-50 cursor-not-allowed' : ''}`}>
-                                    <button
-                                        onClick={() => setQuantity((prev: number) => Math.max(1, prev - 1))}
-                                        disabled={!stockInfo || stockInfo.stockQuantity === 0 || quantity <= 1}
-                                        className="text-stone-400 hover:text-black transition-colors disabled:cursor-not-allowed"
-                                    >
-                                        <Minus size={16} />
-                                    </button>
-                                    <span className="text-sm font-bold w-6 text-center">{quantity}</span>
-                                    <button
-                                        onClick={() => setQuantity((prev: number) => prev + 1)}
-                                        disabled={!stockInfo || stockInfo.stockQuantity === 0 || quantity >= (stockInfo?.stockQuantity || 0)}
-                                        className="text-stone-400 hover:text-black transition-colors disabled:cursor-not-allowed"
-                                    >
-                                        <Plus size={16} />
-                                    </button>
-                                </div>
+                        <div className="mb-12">
+                            <p className="text-xs font-bold mb-4 uppercase tracking-wider text-stone-400">{t('product.quantity')}</p>
+                            <div className={`flex items-center space-x-4 border border-stone-200 w-fit rounded-full px-4 py-2 bg-white ${(!stockInfo || stockInfo.stockQuantity === 0) ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                                <button
+                                    onClick={() => setQuantity((prev: number) => Math.max(1, prev - 1))}
+                                    disabled={!stockInfo || stockInfo.stockQuantity === 0 || quantity <= 1}
+                                    className="text-stone-400 hover:text-black transition-colors disabled:cursor-not-allowed"
+                                >
+                                    <Minus size={16} />
+                                </button>
+                                <span className="text-sm font-bold w-6 text-center">{quantity}</span>
+                                <button
+                                    onClick={() => setQuantity((prev: number) => prev + 1)}
+                                    disabled={!stockInfo || stockInfo.stockQuantity === 0 || quantity >= (stockInfo?.stockQuantity || 0)}
+                                    className="text-stone-400 hover:text-black transition-colors disabled:cursor-not-allowed"
+                                >
+                                    <Plus size={16} />
+                                </button>
                             </div>
                         </div>
 

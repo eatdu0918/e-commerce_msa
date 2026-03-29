@@ -183,7 +183,6 @@
         "in_stock": "In Stock ({{count}})",
         "low_stock": "Low Stock - Only {{count}} left",
         "out_of_stock": "Out of Stock",
-        "size": "SIZE",
         "quantity": "QUANTITY",
         "not_found": "Product Not Found",
         "not_found_desc": "The product you're looking for doesn't exist or is currently unavailable."
