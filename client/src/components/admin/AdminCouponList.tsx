@@ -94,6 +94,16 @@ const AdminCouponList = () => {
   const pageData = data?.data;
   const dateLocale = i18n.language.startsWith('ko') ? 'ko-KR' : undefined;
 
+  const resolvedCouponType = (c: Coupon) =>
+    String(c.couponType ?? c.discountType ?? '').toUpperCase();
+  const isPercentageCoupon = (c: Coupon) => resolvedCouponType(c) === 'PERCENTAGE';
+  const discountDisplayNum = (c: Coupon) => Number(c.discountValue ?? 0);
+  const minPurchaseDisplay = (c: Coupon) => {
+    const raw = c.minOrderAmount ?? c.minimumPurchaseAmount;
+    if (raw == null || raw === '') return null;
+    return Number(raw);
+  };
+
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
@@ -140,7 +150,13 @@ const AdminCouponList = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {coupons.map((coupon: Coupon) => (
+            {coupons.map((coupon: Coupon) => {
+              const minPurchase = minPurchaseDisplay(coupon);
+              const minPurchaseLabel =
+                minPurchase != null && !Number.isNaN(minPurchase)
+                  ? `${minPurchase.toLocaleString()}${t('common.currency_won')}`
+                  : '-';
+              return (
               <tr key={coupon.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   {coupon.code}
@@ -149,12 +165,12 @@ const AdminCouponList = () => {
                   {coupon.name}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {coupon.discountType === 'PERCENTAGE'
-                    ? `${coupon.discountValue ?? 0}%`
-                    : `${coupon.discountValue?.toLocaleString() ?? '-'}${t('common.currency_won')}`}
+                  {isPercentageCoupon(coupon)
+                    ? `${discountDisplayNum(coupon)}%`
+                    : `${discountDisplayNum(coupon).toLocaleString()}${t('common.currency_won')}`}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {coupon.minimumPurchaseAmount?.toLocaleString() ?? '-'}{t('common.currency_won')}
+                  {minPurchaseLabel}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {new Date(coupon.validFrom).toLocaleDateString(dateLocale)} ~{' '}
@@ -180,7 +196,8 @@ const AdminCouponList = () => {
                   </button>
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>

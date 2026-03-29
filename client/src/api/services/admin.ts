@@ -112,18 +112,23 @@ export interface Payment {
   updatedAt: string;
 }
 
+/** GET /api/admin/coupons — discount-service CouponResponse */
 export interface Coupon {
   id: number;
   code: string;
   name: string;
-  discountType: string;
-  discountValue: number;
-  minimumPurchaseAmount: number;
-  maxDiscountAmount: number;
+  description?: string;
+  couponType: string;
+  discountValue: number | string;
+  minOrderAmount?: number | string | null;
+  maxDiscountAmount?: number | string | null;
   validFrom: string;
   validUntil: string;
   isActive: boolean;
   createdAt: string;
+  /** 구 클라이언트/목 필드 호환 */
+  discountType?: string;
+  minimumPurchaseAmount?: number | string | null;
 }
 
 export interface CancelItemRow {
@@ -201,9 +206,10 @@ export interface CreateCouponRequest {
 
 export interface UpdateCouponRequest {
   name: string;
-  discountType: string;
+  description?: string;
+  couponType: string;
   discountValue: number;
-  minimumPurchaseAmount: number;
+  minOrderAmount: number;
   maxDiscountAmount: number;
   validFrom: string;
   validUntil: string;
@@ -354,7 +360,24 @@ export const adminApi = {
 
   // Coupons
   createCoupon: async (data: CreateCouponRequest) => {
-    const response = await api.post<ApiResponse<Coupon>>('/api/admin/coupons', data);
+    const couponType =
+      data.discountType === 'PERCENTAGE'
+        ? 'PERCENTAGE'
+        : data.discountType === 'FIXED_AMOUNT' || data.discountType === 'FIXED'
+          ? 'FIXED_AMOUNT'
+          : data.discountType;
+    const toLocalDateTime = (s: string) => (s.length === 16 ? `${s}:00` : s);
+    const payload = {
+      code: data.code,
+      name: data.name,
+      couponType,
+      discountValue: data.discountValue,
+      minOrderAmount: data.minimumPurchaseAmount,
+      maxDiscountAmount: data.maxDiscountAmount,
+      validFrom: toLocalDateTime(data.validFrom),
+      validUntil: toLocalDateTime(data.validUntil),
+    };
+    const response = await api.post<ApiResponse<Coupon>>('/api/admin/coupons', payload);
     return response.data;
   },
 
