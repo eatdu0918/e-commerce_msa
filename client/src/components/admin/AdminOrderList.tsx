@@ -8,7 +8,10 @@ import {
   adminNextTargetLabel,
   getNextAdminOrderStatus,
 } from '../../lib/adminOrderStatus';
-import { getEffectiveCancelRequestTypeForDisplay } from '../../api/services/order';
+import {
+  buildOrderCouponDetailSummary,
+  getEffectiveCancelRequestTypeForDisplay,
+} from '../../api/services/order';
 import { Eye, Search, Filter, ChevronLeft, ChevronRight, ChevronRightCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -115,6 +118,12 @@ export default function AdminOrderList() {
                     skipShippingAndDelivered: order.skipShippingAndDelivered,
                   });
                   const nextLabel = nextCode ? adminNextTargetLabel(t, nextCode) : null;
+                  const discount = Number(order.discountAmount ?? 0);
+                  const finalPrice =
+                    order.finalAmount != null && !Number.isNaN(Number(order.finalAmount))
+                      ? Number(order.finalAmount)
+                      : Number(order.totalAmount ?? 0);
+                  const listCouponDetail = buildOrderCouponDetailSummary(t, order);
                   return (
                   <tr key={order.id} className="hover:bg-stone-50/50 transition-colors relative group">
                     <td className="px-6 py-4 font-medium">#{order.id}</td>
@@ -129,7 +138,26 @@ export default function AdminOrderList() {
                         <span>{order.recipientName || `User #${order.userId}`}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 font-bold">₩{order.totalAmount.toLocaleString()}</td>
+                    <td className="px-6 py-4">
+                      <div className="font-bold tabular-nums">₩{finalPrice.toLocaleString()}</div>
+                      {discount > 0 && (
+                        <div className="text-[11px] text-stone-500 mt-1 space-y-0.5">
+                          <div className="line-through tabular-nums">
+                            ₩{Number(order.totalAmount).toLocaleString()}
+                          </div>
+                          <div className="text-rose-600 font-medium tabular-nums">
+                            {t('orderList.list_discount_hint', {
+                              amount: discount.toLocaleString(),
+                            })}
+                          </div>
+                          {listCouponDetail ? (
+                            <div className="text-stone-600 leading-tight max-w-[200px]">
+                              {t('admin.order_coupon_applied', { detail: listCouponDetail })}
+                            </div>
+                          ) : null}
+                        </div>
+                      )}
+                    </td>
                     <td className="px-6 py-4">
                       <span
                         className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${

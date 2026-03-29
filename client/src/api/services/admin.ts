@@ -18,6 +18,12 @@ export interface Order {
   userId: number;
   orderNumber?: string;
   totalAmount: number;
+  discountAmount?: number;
+  finalAmount?: number;
+  appliedCouponName?: string | null;
+  appliedCouponCode?: string | null;
+  appliedCouponType?: string | null;
+  appliedCouponRuleValue?: number | null;
   status: string;
   /** 결제·취소 반영 후 목록 표시용(있으면 우선) */
   progressStatus?: string | null;
@@ -48,6 +54,10 @@ export interface OrderDetail {
   totalAmount: number;
   discountAmount?: number;
   finalAmount?: number;
+  appliedCouponName?: string | null;
+  appliedCouponCode?: string | null;
+  appliedCouponType?: string | null;
+  appliedCouponRuleValue?: number | null;
   shippingAddress?: string;
   recipientName?: string;
   recipientPhone?: string;

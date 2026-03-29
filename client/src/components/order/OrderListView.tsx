@@ -119,6 +119,12 @@ export default function OrderListView() {
                         const firstItem = items.length > 0 ? items[0] : null;
                         const itemName = firstItem?.productName || t('orderList.order_ref', { no: order.orderNumber });
                         const etcCount = items.length > 1 ? items.length - 1 : 0;
+                        const discountAmt = Number(order.discountAmount ?? 0);
+                        const totalAmt = Number(order.totalAmount ?? 0);
+                        const finalAmt =
+                            order.finalAmount != null && !Number.isNaN(Number(order.finalAmount))
+                                ? Number(order.finalAmount)
+                                : totalAmt;
 
                         const imgUrl = firstItem ? getItemPreviewUrl(firstItem) : getFallbackImage(itemName);
 
@@ -170,10 +176,37 @@ export default function OrderListView() {
                                             {etcCount > 0 ? ` ${t('orderList.extra_count', { count: etcCount })}` : ''}
                                         </h4>
                                         <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
-                                            <span className="text-2xl font-light text-stone-900">
-                                                {order.totalAmount.toLocaleString()}
-                                                {t('common.currency_won')}
-                                            </span>
+                                            {discountAmt > 0 ? (
+                                                <div className="flex flex-col gap-1">
+                                                    <div className="flex flex-wrap items-baseline gap-2">
+                                                        <span className="text-sm text-stone-400 line-through font-medium tabular-nums">
+                                                            {totalAmt.toLocaleString()}
+                                                            {t('common.currency_won')}
+                                                        </span>
+                                                        <span className="text-2xl font-light text-stone-900 tabular-nums">
+                                                            {finalAmt.toLocaleString()}
+                                                            {t('common.currency_won')}
+                                                        </span>
+                                                    </div>
+                                                    <span className="text-xs font-bold text-rose-600 tabular-nums">
+                                                        {t('orderList.list_discount_hint', {
+                                                            amount: discountAmt.toLocaleString(),
+                                                        })}
+                                                    </span>
+                                                    {order.appliedCouponName ? (
+                                                        <span className="text-[11px] font-bold text-stone-500 truncate max-w-[280px]">
+                                                            {order.appliedCouponCode
+                                                                ? `${order.appliedCouponName} (${order.appliedCouponCode})`
+                                                                : order.appliedCouponName}
+                                                        </span>
+                                                    ) : null}
+                                                </div>
+                                            ) : (
+                                                <span className="text-2xl font-light text-stone-900 tabular-nums">
+                                                    {finalAmt.toLocaleString()}
+                                                    {t('common.currency_won')}
+                                                </span>
+                                            )}
                                             <div className="flex items-center gap-2 bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-xl border border-emerald-100">
                                                 <CheckCircle2 size={14} />
                                                 <span className="text-[10px] font-black uppercase tracking-widest">

@@ -339,6 +339,12 @@
         "no_items": "상품 정보를 불러올 수 없습니다.",
         "total_payment": "결제 합계",
         "discount_amount": "할인 금액",
+        "coupon_applied_detail": "적용 쿠폰 · {{name}} (코드 {{code}})",
+        "coupon_applied_detail_name_only": "적용 쿠폰 · {{name}}",
+        "coupon_rule_percent": "{{value}}% 정률",
+        "coupon_rule_fixed": "{{value}}원 정액",
+        "coupon_generic_label": "쿠폰 할인",
+        "discount_matched_payment": "실결제 금액에 맞춘 할인",
         "final_total": "최종 금액",
         "shipping_title": "배송 정보",
         "recipient_details": "받는 분 정보",
@@ -380,7 +386,9 @@
         "total_label": "전체 {{count}}건",
         "track_order": "배송 조회",
         "arrival": "{{date}} 도착",
-        "item_count": "{{count}}개 상품"
+        "item_count": "{{count}}개 상품",
+        "paid_total": "결제 {{amount}}원",
+        "list_discount_hint": "할인 -{{amount}}원"
     },
     "homePage": {
         "title": "Sparta Shop | 홈",
@@ -678,6 +686,7 @@
         "order_recipient_section": "수령인·배송",
         "order_amount_section": "금액",
         "order_discount": "할인",
+        "order_coupon_applied": "적용 · {{detail}}",
         "order_final": "결제 금액",
         "order_items": "주문 상품",
         "order_active_cancel": "진행 중 취소: {{status}}",

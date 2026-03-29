@@ -1,7 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { formatDateTime, getEstimatedArrivalDate } from '../../utils/date';
 import { CreditCard, MapPin, Package, ArrowLeft, CheckCircle2, Truck, Receipt, Calendar, Info, ChevronRight, AlertCircle } from 'lucide-react';
-import { getEffectiveCancelRequestTypeForDisplay, getOrderDetail, getUiProgressStatus } from '../../api/services/order';
+import {
+    buildOrderCouponDetailSummary,
+    getEffectiveCancelRequestTypeForDisplay,
+    getOrderDetail,
+    getUiProgressStatus,
+} from '../../api/services/order';
 import type { OrderDetailResponse } from '../../api/services/order';
 import { createCancel, CANCEL_REASON_LABELS } from '../../api/services/cancel';
 import type { CancelReason, CreateCancelRequest, CancelRequestType } from '../../api/services/cancel';
@@ -182,6 +187,16 @@ export default function OrderDetailView() {
             order.payment?.status,
             effectiveCancelRequestType
         ) || order.statusDescription;
+
+    const discountNum = Number(order.discountAmount ?? 0);
+    const totalNum = Number(order.totalAmount ?? 0);
+    const finalNum =
+        order.finalAmount != null && !Number.isNaN(Number(order.finalAmount))
+            ? Number(order.finalAmount)
+            : Math.max(0, totalNum - discountNum);
+    const couponSummaryLine = buildOrderCouponDetailSummary(t, order);
+    const discountSubLabel =
+        discountNum > 0 && !couponSummaryLine ? t('orderDetail.discount_matched_payment') : null;
 
     return (
         <div className="max-w-5xl mx-auto px-4 py-12">
@@ -385,14 +400,21 @@ export default function OrderDetailView() {
                                 <div className="flex justify-between text-sm text-white/50">
                                     <span>{t('checkout.product_amount')}</span>
                                     <span>
-                                        {(order.totalAmount || 0).toLocaleString()}
+                                        {totalNum.toLocaleString()}
                                         {t('common.currency_won')}
                                     </span>
                                 </div>
-                                <div className="flex justify-between text-sm text-white/50">
-                                    <span>{t('orderDetail.discount_amount')}</span>
-                                    <span className="text-rose-400">
-                                        -{(order.discountAmount || 0).toLocaleString()}
+                                <div className="flex justify-between text-sm text-white/50 items-start gap-4">
+                                    <div className="min-w-0">
+                                        <span>{t('orderDetail.discount_amount')}</span>
+                                        {(couponSummaryLine || discountSubLabel) && (
+                                            <p className="text-[11px] text-white/35 font-medium mt-1 leading-snug">
+                                                {couponSummaryLine ?? discountSubLabel}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <span className="text-rose-400 shrink-0 tabular-nums">
+                                        -{discountNum.toLocaleString()}
                                         {t('common.currency_won')}
                                     </span>
                                 </div>
@@ -404,7 +426,7 @@ export default function OrderDetailView() {
                                 <div className="flex justify-between items-end">
                                     <span className="text-sm font-bold opacity-80 uppercase tracking-widest">{t('orderDetail.final_total')}</span>
                                     <span className="text-4xl font-black italic tracking-tighter">
-                                        {(order.finalAmount || 0).toLocaleString()}
+                                        {finalNum.toLocaleString()}
                                         {t('common.currency_won')}
                                     </span>
                                 </div>

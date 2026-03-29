@@ -341,6 +341,12 @@
         "no_items": "Could not load item details.",
         "total_payment": "Payment summary",
         "discount_amount": "Discount",
+        "coupon_applied_detail": "Coupon · {{name}} (code {{code}})",
+        "coupon_applied_detail_name_only": "Coupon · {{name}}",
+        "coupon_rule_percent": "{{value}}% off",
+        "coupon_rule_fixed": "{{value}} fixed amount",
+        "coupon_generic_label": "Coupon discount",
+        "discount_matched_payment": "Discount aligned to paid amount",
         "final_total": "Total",
         "shipping_title": "Shipping",
         "recipient_details": "Recipient",
@@ -382,7 +388,9 @@
         "total_label": "{{count}} total",
         "track_order": "Track order",
         "arrival": "Arrives {{date}}",
-        "item_count": "{{count}} items"
+        "item_count": "{{count}} items",
+        "paid_total": "Paid {{amount}}",
+        "list_discount_hint": "Discount -{{amount}}"
     },
     "homePage": {
         "title": "Sparta Shop | Home",
@@ -680,6 +688,7 @@
         "order_recipient_section": "Recipient & shipping",
         "order_amount_section": "Amounts",
         "order_discount": "Discount",
+        "order_coupon_applied": "Applied · {{detail}}",
         "order_final": "Final amount",
         "order_items": "Line items",
         "order_active_cancel": "Active cancel: {{status}}",

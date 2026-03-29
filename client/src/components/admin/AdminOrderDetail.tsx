@@ -12,7 +12,10 @@ import {
   isAdminFulfillmentAdvanceBlocked,
   orderStatusHeadlineLabel,
 } from '../../lib/adminOrderStatus';
-import { getEffectiveCancelRequestTypeForDisplay } from '../../api/services/order';
+import {
+  buildOrderCouponDetailSummary,
+  getEffectiveCancelRequestTypeForDisplay,
+} from '../../api/services/order';
 import { ArrowLeft, Check, Package, Truck, CircleDot, X } from 'lucide-react';
 
 export default function AdminOrderDetail() {
@@ -155,15 +158,20 @@ export default function AdminOrderDetail() {
     skipShippingAndDelivered: order.skipShippingAndDelivered,
   });
   const nextLabel = nextStatus ? adminNextTargetLabel(t, nextStatus) : null;
-  /** DB 기준 종료만 '진행 완료'로 본다(표시만 앞선 경우에도 완료 버튼 노출). */
+  /** DB 또는 집계 표시가 종료면 단계 진행 안내·버튼 없음 */
   const deliveryClosed =
-    dbStatus === 'CANCELLED' || dbStatus === 'CANCEL_REQUESTED' || dbStatus === 'DELIVERED';
+    dbStatus === 'CANCELLED' ||
+    dbStatus === 'CANCEL_REQUESTED' ||
+    dbStatus === 'DELIVERED' ||
+    displayKey === 'DELIVERED';
 
   const cancelledLike =
     dbStatus === 'CANCELLED' || dbStatus === 'CANCEL_REQUESTED' || blockedByCancelOrRefund;
 
   const { completedThrough, pulseAt } = getAdminFulfillmentStepperDisplay(displayKey);
   const lastStepIdx = ADMIN_FULFILLMENT_STEPS.length - 1;
+
+  const adminCouponDetail = buildOrderCouponDetailSummary(t, order);
 
   const handleAdvance = () => {
     if (!nextStatus || !nextLabel) return;
@@ -375,9 +383,22 @@ export default function AdminOrderDetail() {
                 </dd>
               </div>
               {order.discountAmount != null && Number(order.discountAmount) > 0 && (
-                <div className="flex justify-between">
-                  <dt className="text-stone-500">{t('admin.order_discount')}</dt>
-                  <dd>₩{Number(order.discountAmount).toLocaleString()}</dd>
+                <div className="space-y-1">
+                  <div className="flex justify-between gap-4">
+                    <dt className="text-stone-500 shrink-0">{t('admin.order_discount')}</dt>
+                    <dd className="text-rose-600 font-medium tabular-nums">
+                      -₩{Number(order.discountAmount).toLocaleString()}
+                    </dd>
+                  </div>
+                  {adminCouponDetail ? (
+                    <p className="text-xs text-stone-500 pl-0 leading-snug">
+                      {t('admin.order_coupon_applied', { detail: adminCouponDetail })}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-stone-500 pl-0 leading-snug">
+                      {t('orderDetail.discount_matched_payment')}
+                    </p>
+                  )}
                 </div>
               )}
               {order.finalAmount != null && (

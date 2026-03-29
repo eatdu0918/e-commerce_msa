@@ -1,3 +1,4 @@
+import type { TFunction } from 'i18next';
 import api from '../axios';
 
 export interface OrderItemRequest {
@@ -52,6 +53,12 @@ export interface OrderResponse {
     discountAmount: number;
     finalAmount: number;
     userCouponId: number | null;
+    /** coupon-used 후 주문에 저장된 표시용 스냅샷 */
+    appliedCouponName?: string | null;
+    appliedCouponCode?: string | null;
+    /** PERCENTAGE | FIXED_AMOUNT */
+    appliedCouponType?: string | null;
+    appliedCouponRuleValue?: number | null;
     shippingAddress: string;
     recipientName: string;
     recipientPhone: string;
@@ -147,3 +154,44 @@ export const cancelOrder = async (orderId: number): Promise<OrderResponse> => {
     const response = await api.put<{ data: OrderResponse }>(`/api/orders/${orderId}/cancel`);
     return response.data.data;
 };
+
+/** 주문에 저장된 쿠폰 규칙(정률/정액) 표시 문구 */
+export function formatAppliedCouponRuleLabel(
+    t: TFunction,
+    couponType: string | null | undefined,
+    ruleValue: number | null | undefined
+): string | null {
+    if (ruleValue == null || Number.isNaN(Number(ruleValue))) return null;
+    const type = (couponType || '').toUpperCase();
+    if (type === 'PERCENTAGE') {
+        return t('orderDetail.coupon_rule_percent', { value: ruleValue });
+    }
+    if (type === 'FIXED_AMOUNT') {
+        return t('orderDetail.coupon_rule_fixed', { value: Number(ruleValue).toLocaleString() });
+    }
+    return null;
+}
+
+type CouponSnapshotInput = {
+    appliedCouponName?: string | null;
+    appliedCouponCode?: string | null;
+    appliedCouponType?: string | null;
+    appliedCouponRuleValue?: number | null;
+};
+
+/** 사용자·관리자 공통: 쿠폰명·코드·규칙 한 줄 요약 */
+export function buildOrderCouponDetailSummary(t: TFunction, order: CouponSnapshotInput): string | null {
+    const rule = formatAppliedCouponRuleLabel(t, order.appliedCouponType, order.appliedCouponRuleValue);
+    if (order.appliedCouponName && order.appliedCouponCode) {
+        const base = t('orderDetail.coupon_applied_detail', {
+            name: order.appliedCouponName,
+            code: order.appliedCouponCode,
+        });
+        return rule ? `${base} · ${rule}` : base;
+    }
+    if (order.appliedCouponName) {
+        const base = t('orderDetail.coupon_applied_detail_name_only', { name: order.appliedCouponName });
+        return rule ? `${base} · ${rule}` : base;
+    }
+    return rule;
+}
