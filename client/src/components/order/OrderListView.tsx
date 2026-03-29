@@ -4,6 +4,11 @@ import { ShoppingBag, ChevronRight, Package, Truck, CheckCircle2, AlertCircle, R
 import type { LucideIcon } from 'lucide-react';
 import { getEffectiveCancelRequestTypeForDisplay, getMyOrders, getUiProgressStatus } from '../../api/services/order';
 import type { OrderItemResponse, OrderResponse } from '../../api/services/order';
+import {
+    isCancelledOrderWithRefundComplete,
+    orderStatusHeadlineLabel,
+    shouldShowOrderEstimatedArrival,
+} from '../../lib/adminOrderStatus';
 import { useTranslation } from 'react-i18next';
 import { formatDateTime, getEstimatedArrivalDate } from '../../utils/date';
 import { useEffect } from 'react';
@@ -107,13 +112,32 @@ export default function OrderListView() {
                 <div className="grid gap-8">
                     {orders.map((order: OrderResponse) => {
                         const displayStatus = getUiProgressStatus(order);
-                        const theme = STATUS_THEME[displayStatus] || STATUS_THEME.PENDING;
                         const effectiveRt = getEffectiveCancelRequestTypeForDisplay(order);
+                        const refundComplete =
+                            displayStatus === 'CANCELLED' &&
+                            isCancelledOrderWithRefundComplete(
+                                displayStatus,
+                                order.paymentStatus,
+                                effectiveRt
+                            );
+                        const baseTheme = STATUS_THEME[displayStatus] || STATUS_THEME.PENDING;
+                        const theme = refundComplete
+                            ? {
+                                  color: 'text-emerald-600',
+                                  bg: 'bg-emerald-50',
+                                  icon: CheckCircle2,
+                                  labelKey: baseTheme.labelKey,
+                              }
+                            : baseTheme;
                         const statusLabelKey =
                             displayStatus === 'CANCEL_REQUESTED' &&
                             (effectiveRt ?? '').toUpperCase() === 'RETURN_REFUND'
                                 ? 'RETURN_REFUND_REQUESTED_LIST'
                                 : theme.labelKey;
+                        const topStatusText =
+                            displayStatus === 'CANCELLED'
+                                ? orderStatusHeadlineLabel(t, displayStatus, order.paymentStatus, effectiveRt)
+                                : t(`orderStatus.${statusLabelKey}`);
                         const StatusIcon = theme.icon;
                         const items = order.items || [];
                         const firstItem = items.length > 0 ? items[0] : null;
@@ -127,6 +151,11 @@ export default function OrderListView() {
                                 : totalAmt;
 
                         const imgUrl = firstItem ? getItemPreviewUrl(firstItem) : getFallbackImage(itemName);
+                        const showArrivalBadge = shouldShowOrderEstimatedArrival({
+                            progressStatus: displayStatus,
+                            orderDbStatus: order.status,
+                            paymentStatus: order.paymentStatus,
+                        });
 
                         return (
                             <div
@@ -141,7 +170,7 @@ export default function OrderListView() {
                                         </div>
                                         <div>
                                             <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${theme.color}`}>
-                                                {t(`orderStatus.${statusLabelKey}`)}
+                                                {topStatusText}
                                             </span>
                                             <div className="flex items-center gap-3 mt-1">
                                                 <span className="text-sm font-black text-stone-900">
@@ -207,12 +236,16 @@ export default function OrderListView() {
                                                     {t('common.currency_won')}
                                                 </span>
                                             )}
-                                            <div className="flex items-center gap-2 bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-xl border border-emerald-100">
-                                                <CheckCircle2 size={14} />
-                                                <span className="text-[10px] font-black uppercase tracking-widest">
-                                                    {t('orderList.arrival', { date: getEstimatedArrivalDate(order.createdAt) })}
-                                                </span>
-                                            </div>
+                                            {showArrivalBadge ? (
+                                                <div className="flex items-center gap-2 bg-emerald-50 text-emerald-600 px-3 py-1.5 rounded-xl border border-emerald-100">
+                                                    <CheckCircle2 size={14} />
+                                                    <span className="text-[10px] font-black uppercase tracking-widest">
+                                                        {t('orderList.arrival', {
+                                                            date: getEstimatedArrivalDate(order.createdAt),
+                                                        })}
+                                                    </span>
+                                                </div>
+                                            ) : null}
                                         </div>
                                     </div>
                                 </div>
