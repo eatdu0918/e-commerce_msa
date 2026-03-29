@@ -361,6 +361,7 @@
         "return_pending_notice": "반품·환불 요청이 접수되었습니다",
         "return_pending_hint": "관리자 승인 결과에 따라 처리됩니다. 승인 전까지는 추가 반품·취소 요청을 하실 수 없습니다.",
         "order_cancelled_notice": "이 주문은 취소되었습니다.",
+        "return_refund_completed_notice": "반품·환불 처리가 완료되었습니다.",
         "payment_status_order_cancelled": "주문 취소됨 · 결제 취소 반영 중",
         "payment_status_cancelled": "결제 취소 완료",
         "request_cancel": "취소 요청",

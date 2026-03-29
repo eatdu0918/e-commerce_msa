@@ -363,6 +363,7 @@
         "return_pending_notice": "Return / refund request has been submitted",
         "return_pending_hint": "Your request is pending admin review. You cannot submit another cancel or return for this order until it is resolved.",
         "order_cancelled_notice": "This order has been cancelled.",
+        "return_refund_completed_notice": "Return and refund processing is complete.",
         "payment_status_order_cancelled": "Order cancelled · payment cancellation in progress",
         "payment_status_cancelled": "Payment cancelled",
         "request_cancel": "Request cancellation",
