@@ -232,6 +232,62 @@ class CancelServiceTest {
                     .isInstanceOf(CancelDomainException.class)
                     .hasMessageContaining("이미 접수");
         }
+
+        @Test
+        @DisplayName("취소 요청 생성 실패 - 동일 유형이 이미 거절됨")
+        void createCancel_sameTypeRejected_throwsException() {
+            CancelItemRequest itemRequest = new CancelItemRequest(
+                    1L, "테스트 상품", 2, new BigDecimal("10000")
+            );
+            CreateCancelRequest request = new CreateCancelRequest(
+                    ORDER_ID, ORDER_NUMBER, CancelReason.CHANGE_OF_MIND, "단순 변심", null, List.of(itemRequest)
+            );
+
+            when(cancelRepository.existsByOrderIdAndUserIdAndStatusIn(anyLong(), anyLong(), any()))
+                    .thenReturn(false);
+            when(cancelRepository.existsByOrderIdAndUserIdAndStatusAndRequestType(
+                    eq(ORDER_ID), eq(USER_ID), eq(CancelStatus.REJECTED), eq(CancelRequestType.ORDER_CANCEL)))
+                    .thenReturn(true);
+
+            assertThatThrownBy(() -> cancelService.createCancel(USER_ID, request))
+                    .isInstanceOf(CancelDomainException.class)
+                    .hasMessageContaining("거절");
+        }
+
+        @Test
+        @DisplayName("반품·환불 요청 시 거절 이력은 RETURN_REFUND 유형만 조회(주문 취소 거절은 재검사하지 않음)")
+        void createCancel_returnRefund_rejectionCheckUsesRequestTypeOnly() {
+            CancelItemRequest itemRequest = new CancelItemRequest(
+                    1L, "테스트 상품", 2, new BigDecimal("10000")
+            );
+            CreateCancelRequest request = new CreateCancelRequest(
+                    ORDER_ID, ORDER_NUMBER, CancelReason.CHANGE_OF_MIND, "단순 변심",
+                    CancelRequestType.RETURN_REFUND, List.of(itemRequest)
+            );
+
+            when(cancelRepository.existsByOrderIdAndUserIdAndStatusIn(anyLong(), anyLong(), any()))
+                    .thenReturn(false);
+            when(cancelRepository.existsByOrderIdAndUserIdAndStatusAndRequestType(
+                    eq(ORDER_ID), eq(USER_ID), eq(CancelStatus.REJECTED), eq(CancelRequestType.RETURN_REFUND)))
+                    .thenReturn(false);
+            when(orderServiceClient.getMyOrder(ORDER_ID))
+                    .thenReturn(ApiResponse.success(userOrderPayload("DELIVERED")));
+            when(cancelRepository.save(any(Cancel.class))).thenAnswer(invocation -> {
+                Cancel cancel = invocation.getArgument(0);
+                ReflectionTestUtils.setField(cancel, "id", CANCEL_ID);
+                return cancel;
+            });
+            doNothing().when(outboxEventPublisher).publishCancelRequestedEvent(any());
+
+            CancelResponse response = cancelService.createCancel(USER_ID, request);
+
+            assertThat(response.getRequestType()).isEqualTo(CancelRequestType.RETURN_REFUND);
+            verify(cancelRepository).existsByOrderIdAndUserIdAndStatusAndRequestType(
+                    ORDER_ID, USER_ID, CancelStatus.REJECTED, CancelRequestType.RETURN_REFUND);
+            verify(cancelRepository, never()).existsByOrderIdAndUserIdAndStatusAndRequestType(
+                    eq(ORDER_ID), eq(USER_ID), eq(CancelStatus.REJECTED), eq(CancelRequestType.ORDER_CANCEL));
+            verify(outboxEventPublisher).publishCancelRequestedEvent(any());
+        }
     }
 
     @Nested

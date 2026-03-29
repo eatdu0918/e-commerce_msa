@@ -4,6 +4,7 @@ import com.ecommerce.cancelservice.config.SecurityConfig;
 import com.ecommerce.cancelservice.dto.response.CancelItemResponse;
 import com.ecommerce.cancelservice.dto.response.CancelResponse;
 import com.ecommerce.cancelservice.dto.response.OrderCancelSummaryResponse;
+import com.ecommerce.cancelservice.dto.response.OrderCancelSyncResponse;
 import com.ecommerce.cancelservice.dto.response.PageResponse;
 import com.ecommerce.cancelservice.enums.CancelReason;
 import com.ecommerce.cancelservice.enums.CancelRequestType;
@@ -208,6 +209,23 @@ class AdminCancelControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data").doesNotExist());
+        }
+
+        @Test
+        @DisplayName("주문별 취소 동기화 (관리자)")
+        void getCancelSync_ok() throws Exception {
+            OrderCancelSyncResponse sync = OrderCancelSyncResponse.builder()
+                    .activeCancel(null)
+                    .hasRejectedOrderCancelRequest(true)
+                    .hasRejectedReturnRefundRequest(false)
+                    .build();
+            when(cancelService.getCancelSyncForOrderAdmin(10L)).thenReturn(sync);
+
+            mockMvc.perform(get("/api/admin/cancels/orders/10/sync"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data.hasRejectedOrderCancelRequest").value(true))
+                    .andExpect(jsonPath("$.data.hasRejectedReturnRefundRequest").value(false));
         }
     }
 

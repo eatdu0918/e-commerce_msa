@@ -35,6 +35,12 @@ public interface CancelRepository extends JpaRepository<Cancel, Long> {
 
     boolean existsByOrderIdAndUserIdAndStatusIn(Long orderId, Long userId, Collection<CancelStatus> statuses);
 
+    boolean existsByOrderIdAndUserIdAndStatusAndRequestType(
+            Long orderId, Long userId, CancelStatus status, CancelRequestType requestType);
+
+    boolean existsByOrderIdAndStatusAndRequestType(
+            Long orderId, CancelStatus status, CancelRequestType requestType);
+
     /**
      * 진행 중인 취소(요청·승인·완료 처리) 중 가장 최근 건 — 주문 상세에서 버튼 노출 여부 판단용
      */

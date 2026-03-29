@@ -6,6 +6,7 @@ import com.ecommerce.cancelservice.dto.request.CancelItemRequest;
 import com.ecommerce.cancelservice.dto.request.CreateCancelRequest;
 import com.ecommerce.cancelservice.dto.response.CancelResponse;
 import com.ecommerce.cancelservice.dto.response.OrderCancelSummaryResponse;
+import com.ecommerce.cancelservice.dto.response.OrderCancelSyncResponse;
 import com.ecommerce.cancelservice.dto.response.PageResponse;
 import com.ecommerce.cancelservice.entity.Cancel;
 import com.ecommerce.cancelservice.entity.CancelItem;
@@ -63,6 +64,12 @@ public class CancelService {
 
         CancelRequestType resolvedType =
                 request.getRequestType() != null ? request.getRequestType() : CancelRequestType.ORDER_CANCEL;
+
+        if (cancelRepository.existsByOrderIdAndUserIdAndStatusAndRequestType(
+                request.getOrderId(), userId, CancelStatus.REJECTED, resolvedType)) {
+            throw new CancelDomainException(CancelDomainExceptionCode.CancelRequestBlockedAfterRejectionException);
+        }
+
         validateUserCancelAgainstOrder(request.getOrderId(), resolvedType);
 
         Cancel cancel = Cancel.create(
@@ -206,6 +213,35 @@ public class CancelService {
                         .status(c.getStatus())
                         .requestType(c.getRequestType())
                         .build());
+    }
+
+    /** 주문 상세 UI·order-service 집계: 진행 중 건 + 요청 유형별 거절 이력 */
+    @Transactional(readOnly = true)
+    public OrderCancelSyncResponse getCancelSyncForOrder(Long orderId, Long userId) {
+        Optional<OrderCancelSummaryResponse> active = getActiveCancelForOrder(orderId, userId);
+        boolean rejOrderCancel = cancelRepository.existsByOrderIdAndUserIdAndStatusAndRequestType(
+                orderId, userId, CancelStatus.REJECTED, CancelRequestType.ORDER_CANCEL);
+        boolean rejReturn = cancelRepository.existsByOrderIdAndUserIdAndStatusAndRequestType(
+                orderId, userId, CancelStatus.REJECTED, CancelRequestType.RETURN_REFUND);
+        return OrderCancelSyncResponse.builder()
+                .activeCancel(active.orElse(null))
+                .hasRejectedOrderCancelRequest(rejOrderCancel)
+                .hasRejectedReturnRefundRequest(rejReturn)
+                .build();
+    }
+
+    @Transactional(readOnly = true)
+    public OrderCancelSyncResponse getCancelSyncForOrderAdmin(Long orderId) {
+        Optional<OrderCancelSummaryResponse> active = getActiveCancelForOrderAdmin(orderId);
+        boolean rejOrderCancel = cancelRepository.existsByOrderIdAndStatusAndRequestType(
+                orderId, CancelStatus.REJECTED, CancelRequestType.ORDER_CANCEL);
+        boolean rejReturn = cancelRepository.existsByOrderIdAndStatusAndRequestType(
+                orderId, CancelStatus.REJECTED, CancelRequestType.RETURN_REFUND);
+        return OrderCancelSyncResponse.builder()
+                .activeCancel(active.orElse(null))
+                .hasRejectedOrderCancelRequest(rejOrderCancel)
+                .hasRejectedReturnRefundRequest(rejReturn)
+                .build();
     }
 
     @Transactional(readOnly = true)

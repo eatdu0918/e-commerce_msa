@@ -4,6 +4,7 @@ import com.ecommerce.cancelservice.config.SecurityConfig;
 import com.ecommerce.cancelservice.dto.response.CancelItemResponse;
 import com.ecommerce.cancelservice.dto.response.CancelResponse;
 import com.ecommerce.cancelservice.dto.response.OrderCancelSummaryResponse;
+import com.ecommerce.cancelservice.dto.response.OrderCancelSyncResponse;
 import com.ecommerce.cancelservice.dto.response.PageResponse;
 import com.ecommerce.cancelservice.enums.CancelReason;
 import com.ecommerce.cancelservice.enums.CancelRequestType;
@@ -136,6 +137,30 @@ class CancelControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
                     .andExpect(jsonPath("$.data").doesNotExist());
+        }
+
+        @Test
+        @DisplayName("주문별 취소 동기화")
+        void getCancelSyncForOrder_ok() throws Exception {
+            OrderCancelSummaryResponse active = OrderCancelSummaryResponse.builder()
+                    .cancelId(10L)
+                    .cancelNumber("CAN-X")
+                    .status(CancelStatus.REQUESTED)
+                    .requestType(CancelRequestType.ORDER_CANCEL)
+                    .build();
+            OrderCancelSyncResponse sync = OrderCancelSyncResponse.builder()
+                    .activeCancel(active)
+                    .hasRejectedOrderCancelRequest(false)
+                    .hasRejectedReturnRefundRequest(true)
+                    .build();
+            when(cancelService.getCancelSyncForOrder(100L, 200L)).thenReturn(sync);
+
+            mockMvc.perform(get("/api/cancels/by-order/100/sync"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.success").value(true))
+                    .andExpect(jsonPath("$.data.activeCancel.cancelId").value(10))
+                    .andExpect(jsonPath("$.data.hasRejectedOrderCancelRequest").value(false))
+                    .andExpect(jsonPath("$.data.hasRejectedReturnRefundRequest").value(true));
         }
 
         @Test

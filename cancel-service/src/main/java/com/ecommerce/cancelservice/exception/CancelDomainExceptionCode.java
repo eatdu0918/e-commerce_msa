@@ -20,6 +20,9 @@ public enum CancelDomainExceptionCode {
     CancelNotInRequestedStatusException(HttpStatus.BAD_REQUEST, "취소 요청 상태가 아닙니다."),
     EmptyCancelItemsException(HttpStatus.BAD_REQUEST, "취소 상품이 비어있습니다."),
     DuplicateCancelRequestException(HttpStatus.CONFLICT, "해당 주문에 대한 취소 요청이 이미 접수되었습니다."),
+    /** 동일 유형(출고 전 취소 / 반품·환불)이 이미 거절된 경우에만 재요청 불가. 주문 취소 거절 후 반품 요청은 허용. */
+    CancelRequestBlockedAfterRejectionException(
+            HttpStatus.CONFLICT, "이미 거절된 동일 유형의 요청은 다시 제출할 수 없습니다."),
     OrderInfoUnavailableException(HttpStatus.BAD_GATEWAY, "주문 정보를 확인할 수 없습니다. 잠시 후 다시 시도해 주세요."),
     CancelBlockedWhileShippingException(HttpStatus.BAD_REQUEST, "배송 중인 주문은 취소·반품 요청을 할 수 없습니다."),
     ReturnRefundOnlyAfterDeliveredException(HttpStatus.BAD_REQUEST, "반품·환불은 배송 완료 후에만 요청할 수 있습니다."),

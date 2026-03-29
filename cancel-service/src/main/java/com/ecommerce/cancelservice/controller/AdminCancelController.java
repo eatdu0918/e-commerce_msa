@@ -3,6 +3,7 @@ package com.ecommerce.cancelservice.controller;
 import com.ecommerce.cancelservice.dto.request.RejectCancelRequest;
 import com.ecommerce.cancelservice.dto.response.CancelResponse;
 import com.ecommerce.cancelservice.dto.response.OrderCancelSummaryResponse;
+import com.ecommerce.cancelservice.dto.response.OrderCancelSyncResponse;
 import com.ecommerce.cancelservice.dto.response.PageResponse;
 import com.ecommerce.cancelservice.enums.CancelRequestType;
 import com.ecommerce.cancelservice.enums.CancelStatus;
@@ -51,6 +52,14 @@ public class AdminCancelController {
         return cancelService.getActiveCancelForOrderAdmin(orderId)
                 .map(r -> ResponseEntity.ok(ApiResponse.success(r)))
                 .orElse(ResponseEntity.ok(ApiResponse.success(null)));
+    }
+
+    @Operation(summary = "주문별 취소 동기화 (진행 건 + 유형별 거절 이력, order-service 집계)")
+    @GetMapping("/orders/{orderId}/sync")
+    public ResponseEntity<ApiResponse<OrderCancelSyncResponse>> getCancelSyncForOrder(
+            @PathVariable Long orderId) {
+        OrderCancelSyncResponse sync = cancelService.getCancelSyncForOrderAdmin(orderId);
+        return ResponseEntity.ok(ApiResponse.success(sync));
     }
 
     @Operation(summary = "취소 승인")
