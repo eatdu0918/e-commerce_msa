@@ -63,3 +63,5 @@ $ip = minikube ip
 Write-Host ""
 Write-Host "접속: http://${ip}:30080"
 Write-Host "Ingress: http://sparta-msa.local"
+Write-Host ""
+Write-Host "로컬에서 client/MySQL 터널 자동: .\k8s\start-dev-tunnels.ps1  (중지: .\k8s\stop-dev-tunnels.ps1)"
