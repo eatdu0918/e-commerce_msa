@@ -1,4 +1,5 @@
-FROM eclipse-temurin:17-jre-alpine
+# Alpine(musl) 대신 Jammy: 일부 환경에서 JVM이 느린 client/emulated 경로를 덜 타는 편
+FROM eclipse-temurin:17-jre-jammy
 
 WORKDIR /app
 
