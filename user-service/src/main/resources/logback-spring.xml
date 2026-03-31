@@ -1,42 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <springProperty scope="context" name="APP_NAME" source="spring.application.name" defaultValue="user-service"/>
-
-    <!-- Console Appender -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
         </encoder>
     </appender>
 
-    <!-- Logstash Appender -->
-    <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
-        <destination>${LOGSTASH_HOST:-localhost}:5044</destination>
-        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-            <customFields>{"service":"${APP_NAME}"}</customFields>
-        </encoder>
-        <connectionStrategy>
-            <roundRobin>
-                <connectionTTL>5 minutes</connectionTTL>
-            </roundRobin>
-        </connectionStrategy>
-    </appender>
-
-    <!-- Async Logstash Appender for better performance -->
-    <appender name="ASYNC_LOGSTASH" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="LOGSTASH"/>
-        <queueSize>512</queueSize>
-        <discardingThreshold>0</discardingThreshold>
-        <neverBlock>true</neverBlock>
-    </appender>
-
-    <!-- Root Logger -->
+    <!-- 콘솔만: Logback이 Spring 프로파일 적용 전에도 동작. Logstash는 프로파일 분기와 무관하게 켜져 k8s 부팅을 망가뜨릴 수 있음 -->
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="ASYNC_LOGSTASH"/>
     </root>
 
-    <!-- Application specific loggers -->
-    <logger name="com.ecommerce.userservice" level="INFO"/>
-    <logger name="org.hibernate.SQL" level="DEBUG"/>
+    <springProfile name="k8s">
+        <logger name="com.ecommerce.userservice" level="INFO"/>
+        <logger name="org.hibernate.SQL" level="WARN"/>
+    </springProfile>
+
+    <springProfile name="default">
+        <logger name="com.ecommerce.userservice" level="INFO"/>
+        <logger name="org.hibernate.SQL" level="DEBUG"/>
+    </springProfile>
 </configuration>
