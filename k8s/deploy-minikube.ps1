@@ -9,6 +9,9 @@ Set-Location $root
 Write-Host "=== 1/3 kustomize 적용 ==="
 kubectl apply -k k8s/
 
+Write-Host "=== 1a 단일 Deployment 잔여 리소스 제거 (Blue/Green 전환) ==="
+kubectl delete deployment gateway-service client -n sparta-msa --ignore-not-found=true
+
 Write-Host "=== 1b 레거시 per-service MySQL 제거(매니페스트에서 제외된 리소스 정리) ==="
 $legacyMysql = @(
     "user-mysql", "product-mysql", "order-mysql", "discount-mysql",
@@ -22,7 +25,8 @@ foreach ($n in $legacyMysql) {
 Write-Host "=== 1c 앱 Deployment 레플리카 0 (kustomize apply 후 Java/Kafka/MySQL 동시 기동 방지) ==="
 $scaleZero = @(
     "user-service", "product-service", "discount-service", "payment-service",
-    "order-service", "cancel-service", "refund-service", "gateway-service"
+    "order-service", "cancel-service", "refund-service",
+    "gateway-service-blue", "gateway-service-green", "client-blue", "client-green"
 )
 foreach ($d in $scaleZero) {
     kubectl scale "deployment/$d" -n sparta-msa --replicas=0
@@ -46,8 +50,10 @@ $apps = @(
     "order-service",
     "cancel-service",
     "refund-service",
-    "gateway-service",
-    "client"
+    "gateway-service-blue",
+    "gateway-service-green",
+    "client-blue",
+    "client-green"
 )
 foreach ($d in $apps) {
     Write-Host "-- scale 1 + Ready: $d --"

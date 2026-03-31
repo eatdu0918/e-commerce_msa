@@ -43,6 +43,6 @@ Write-Host "  (권장) Minikube: minikube start --cpus 8 --memory 24576  |  브�
 Write-Host "  배포(권장, DB 선기동): .\k8s\deploy-minikube.ps1"
 Write-Host "  또는: kubectl apply -k k8s/"
 Write-Host "  브라우저: http://`$(minikube ip):30080 (NodePort) 또는 Ingress: sparta-msa.local"
-Write-Host "  kubectl rollout restart deployment -n sparta-msa gateway-service user-service ..."
+Write-Host "  kubectl rollout restart deployment -n sparta-msa gateway-service-blue gateway-service-green client-blue client-green user-service ..."
 Write-Host "  (전체 재시작):"
-Write-Host "  kubectl rollout restart deployment -n sparta-msa gateway-service user-service product-service order-service discount-service payment-service cancel-service refund-service client"
+Write-Host "  kubectl rollout restart deployment -n sparta-msa gateway-service-blue gateway-service-green client-blue client-green user-service product-service order-service discount-service payment-service cancel-service refund-service"
