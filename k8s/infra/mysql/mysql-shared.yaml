@@ -1,0 +1,120 @@
+# Minikube 등 소규모 노드용: DB 스키마만 분리하고 MySQL 프로세스는 1개로 통합 (메모리·OOM 완화)
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-init-databases
+  namespace: sparta-msa
+data:
+  01-databases.sql: |
+    CREATE DATABASE IF NOT EXISTS user_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    CREATE DATABASE IF NOT EXISTS product_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    CREATE DATABASE IF NOT EXISTS order_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    CREATE DATABASE IF NOT EXISTS discount_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    CREATE DATABASE IF NOT EXISTS payment_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    CREATE DATABASE IF NOT EXISTS cancel_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    CREATE DATABASE IF NOT EXISTS refund_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pvc
+  namespace: sparta-msa
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  namespace: sparta-msa
+spec:
+  replicas: 1
+  progressDeadlineSeconds: 2400
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:8.0.40
+        ports:
+        - containerPort: 3306
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            configMapKeyRef:
+              name: sparta-msa-config
+              key: MYSQL_ROOT_PASSWORD
+        - name: MYSQL_ROOT_HOST
+          value: "%"
+        args:
+          - --character-set-server=utf8mb4
+          - --collation-server=utf8mb4_unicode_ci
+          - --innodb-buffer-pool-size=128M
+          - --innodb-buffer-pool-instances=1
+          - --innodb-redo-log-capacity=64M
+          - --max-connections=40
+          - --skip-performance-schema
+          - --table-open-cache=256
+          - --skip-log-bin
+          - --sort-buffer-size=512K
+          - --read-buffer-size=256K
+          - --read-rnd-buffer-size=256K
+          - --join-buffer-size=256K
+          - --tmp-table-size=16M
+          - --max-heap-table-size=16M
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/mysql
+        - name: initdb
+          mountPath: /docker-entrypoint-initdb.d
+          readOnly: true
+        startupProbe:
+          tcpSocket:
+            port: 3306
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 120
+        readinessProbe:
+          tcpSocket:
+            port: 3306
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 5
+        resources:
+          requests:
+            cpu: "300m"
+            memory: "768Mi"
+          limits:
+            cpu: "2000m"
+            memory: "4608Mi"
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: mysql-pvc
+      - name: initdb
+        configMap:
+          name: mysql-init-databases
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  namespace: sparta-msa
+spec:
+  ports:
+  - port: 3306
+    targetPort: 3306
+  selector:
+    app: mysql

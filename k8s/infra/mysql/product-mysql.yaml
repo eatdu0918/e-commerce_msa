@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: user-mysql
+  name: product-mysql
   namespace: sparta-msa
 spec:
   replicas: 1
@@ -10,11 +10,11 @@ spec:
     type: Recreate
   selector:
     matchLabels:
-      app: user-mysql
+      app: product-mysql
   template:
     metadata:
       labels:
-        app: user-mysql
+        app: product-mysql
     spec:
       containers:
       - name: mysql
@@ -30,7 +30,7 @@ spec:
         - name: MYSQL_ROOT_HOST
           value: "%"
         - name: MYSQL_DATABASE
-          value: user_db
+          value: product_db
         args:
           - --character-set-server=utf8mb4
           - --collation-server=utf8mb4_unicode_ci
@@ -71,11 +71,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: user-mysql
+  name: product-mysql
   namespace: sparta-msa
 spec:
   ports:
   - port: 3306
     targetPort: 3306
   selector:
-    app: user-mysql
+    app: product-mysql

@@ -1,0 +1,22 @@
+# Minikube: minikube addons enable ingress
+# /etc/hosts: <minikube ip> sparta-msa.local  → http://sparta-msa.local
+# Ingress 없이 바로 접속: kubectl get svc -n sparta-msa client → NodePort 30080
+#   예: http://$(minikube ip):30080
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sparta-msa
+  namespace: sparta-msa
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: sparta-msa.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: client
+            port:
+              number: 80

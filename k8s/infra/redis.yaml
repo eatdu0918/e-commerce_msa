@@ -5,6 +5,11 @@ metadata:
   namespace: sparta-msa
 spec:
   replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
   selector:
     matchLabels:
       app: redis
@@ -16,8 +21,20 @@ spec:
       containers:
       - name: redis
         image: redis:alpine
+        args:
+          - redis-server
+          - --maxmemory 512mb
+          - --maxmemory-policy
+          - allkeys-lru
         ports:
         - containerPort: 6379
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "256Mi"
+          limits:
+            cpu: "1000m"
+            memory: "768Mi"
 ---
 apiVersion: v1
 kind: Service
