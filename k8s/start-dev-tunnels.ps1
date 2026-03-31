@@ -3,6 +3,7 @@
 # - mysql:   jdbc/mysql 클라이언트용 127.0.0.1:<MysqlPort> (기본 3307)
 # 사용:  .\k8s\start-dev-tunnels.ps1
 #       .\k8s\start-dev-tunnels.ps1 -Ngrok -Dashboard
+#       .\k8s\start-dev-tunnels.ps1 -NgrokPreview   # 비활성 Blue/Green 슬롯을 ngrok으로 공개
 # 중지:  .\k8s\stop-dev-tunnels.ps1
 
 param(
@@ -13,6 +14,8 @@ param(
     [switch]$SkipClient,
     [switch]$SkipMysql,
     [switch]$Ngrok,
+    [switch]$NgrokPreview,
+    [int]$PreviewClientPort = 8090,
     [switch]$Dashboard,
     [switch]$EnsureMinikube,
     [switch]$Force
@@ -106,6 +109,22 @@ if ($Ngrok) {
     }
 }
 
+if ($NgrokPreview) {
+    $ng = Get-Command ngrok -ErrorAction SilentlyContinue
+    if (-not $ng) {
+        Write-Warning "ngrok이 PATH에 없습니다. -NgrokPreview 는 건너뜁니다."
+    } else {
+        $currentSlot = kubectl get svc client -n $Namespace -o jsonpath='{.spec.selector.slot}' 2>$null
+        if ([string]::IsNullOrWhiteSpace($currentSlot)) { $currentSlot = "blue" }
+        $previewSlot = if ($currentSlot -eq "blue") { "green" } else { "blue" }
+        $previewSvc = "client-preview-$previewSlot"
+        Write-Host "Blue/Green 비활성 슬롯($previewSvc) → 127.0.0.1:$PreviewClientPort → ngrok"
+        Start-TunnelWindow -Title "sparta-msa client preview ($previewSlot)" -Command "kubectl port-forward -n $Namespace svc/$previewSvc ${PreviewClientPort}:80"
+        Start-Sleep -Seconds 2
+        Start-TunnelWindow -Title "ngrok preview ($previewSlot)" -Command "ngrok http $PreviewClientPort"
+    }
+}
+
 if ($Dashboard) {
     Write-Host "Kubernetes Dashboard 창 실행"
     $p = Start-Process -FilePath "powershell.exe" -ArgumentList @(
@@ -130,4 +149,5 @@ if (-not $SkipMysql) {
     Write-Host "  MySQL:  jdbc:mysql://127.0.0.1:${MysqlPort}/user_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul"
 }
 if ($GatewayPort -gt 0) { Write-Host "  게이트웨이: http://127.0.0.1:$GatewayPort" }
+if ($NgrokPreview) { Write-Host "  프리뷰(비활성 슬롯): ngrok 창의 공개 URL 확인" }
 Write-Host "  터널 종료: .\k8s\stop-dev-tunnels.ps1"
