@@ -5,6 +5,12 @@ metadata:
   namespace: sparta-msa
 spec:
   replicas: 1
+  progressDeadlineSeconds: 2700
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
   selector:
     matchLabels:
       app: user-service
@@ -16,11 +22,16 @@ spec:
       containers:
       - name: user-service
         image: user-service:latest
+        imagePullPolicy: Never
         ports:
         - containerPort: 8080
         env:
+        - name: JAVA_TOOL_OPTIONS
+          value: "-XX:TieredStopAtLevel=1 -Xmx384m -Xms64m -XX:MaxMetaspaceSize=112m -XX:ReservedCodeCacheSize=32m -XX:+ExitOnOutOfMemoryError"
+        - name: SPRING_PROFILES_ACTIVE
+          value: "k8s"
         - name: SPRING_DATASOURCE_URL
-          value: "jdbc:mysql://user-mysql:3306/user_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul"
+          value: "jdbc:mysql://mysql:3306/user_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul"
         - name: SPRING_DATASOURCE_USERNAME
           value: "root"
         - name: SPRING_DATASOURCE_PASSWORD
@@ -43,9 +54,28 @@ spec:
             configMapKeyRef:
               name: sparta-msa-config
               key: JWT_SECRET
+        startupProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8080
+          initialDelaySeconds: 90
+          failureThreshold: 150
+          periodSeconds: 10
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8080
+          periodSeconds: 10
+          timeoutSeconds: 10
+          failureThreshold: 6
         resources:
+          requests:
+            cpu: "200m"
+            memory: "384Mi"
           limits:
-            memory: "512Mi"
+            cpu: "2000m"
+            memory: "2048Mi"
 ---
 apiVersion: v1
 kind: Service

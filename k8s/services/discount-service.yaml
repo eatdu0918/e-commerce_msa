@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: gateway-service
+  name: discount-service
   namespace: sparta-msa
 spec:
   replicas: 1
@@ -13,47 +13,44 @@ spec:
       maxUnavailable: 1
   selector:
     matchLabels:
-      app: gateway-service
+      app: discount-service
   template:
     metadata:
       labels:
-        app: gateway-service
+        app: discount-service
     spec:
       containers:
-      - name: gateway-service
-        image: gateway-service:latest # 로컬 빌드 이미지 사용 가정
+      - name: discount-service
+        image: discount-service:latest
         imagePullPolicy: Never
         ports:
-        - containerPort: 8000
+        - containerPort: 8083
         env:
         - name: JAVA_TOOL_OPTIONS
-          value: "-XX:TieredStopAtLevel=1 -Xmx448m -Xms64m -XX:MaxMetaspaceSize=128m -XX:MaxDirectMemorySize=64m -XX:ReservedCodeCacheSize=32m -XX:+ExitOnOutOfMemoryError"
+          value: "-XX:TieredStopAtLevel=1 -Xmx384m -Xms64m -XX:MaxMetaspaceSize=112m -XX:ReservedCodeCacheSize=32m -XX:+ExitOnOutOfMemoryError"
         - name: SPRING_PROFILES_ACTIVE
           value: "k8s"
-        - name: REDIS_HOST
+        - name: SPRING_DATASOURCE_URL
+          value: "jdbc:mysql://mysql:3306/discount_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&useUnicode=true&characterEncoding=UTF-8"
+        - name: SPRING_DATASOURCE_USERNAME
+          value: "root"
+        - name: SPRING_DATASOURCE_PASSWORD
+          valueFrom:
+            configMapKeyRef:
+              name: sparta-msa-config
+              key: MYSQL_ROOT_PASSWORD
+        - name: SPRING_DATA_REDIS_HOST
           valueFrom:
             configMapKeyRef:
               name: sparta-msa-config
               key: REDIS_HOST
-        - name: REDIS_PORT
+        - name: SPRING_DATA_REDIS_PORT
           valueFrom:
             configMapKeyRef:
               name: sparta-msa-config
               key: REDIS_PORT
-        - name: USER_SERVICE_URL
-          value: "http://user-service:8080"
-        - name: PRODUCT_SERVICE_URL
-          value: "http://product-service:8081"
-        - name: ORDER_SERVICE_URL
-          value: "http://order-service:8082"
-        - name: DISCOUNT_SERVICE_URL
-          value: "http://discount-service:8083"
-        - name: PAYMENT_SERVICE_URL
-          value: "http://payment-service:8084"
-        - name: CANCEL_SERVICE_URL
-          value: "http://cancel-service:8085"
-        - name: REFUND_SERVICE_URL
-          value: "http://refund-service:8086"
+        - name: KAFKA_SERVERS
+          value: "kafka:9092"
         - name: JWT_SECRET
           valueFrom:
             configMapKeyRef:
@@ -62,7 +59,7 @@ spec:
         startupProbe:
           httpGet:
             path: /actuator/health/liveness
-            port: 8000
+            port: 8083
           initialDelaySeconds: 90
           failureThreshold: 150
           periodSeconds: 10
@@ -70,27 +67,26 @@ spec:
         readinessProbe:
           httpGet:
             path: /actuator/health/readiness
-            port: 8000
+            port: 8083
           periodSeconds: 10
           timeoutSeconds: 10
           failureThreshold: 6
         resources:
           requests:
-            cpu: "300m"
-            memory: "448Mi"
+            cpu: "200m"
+            memory: "384Mi"
           limits:
             cpu: "2000m"
-            memory: "2560Mi"
+            memory: "2048Mi"
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: gateway-service
+  name: discount-service
   namespace: sparta-msa
 spec:
-  type: LoadBalancer # Minikube에서 외부 접속 유도
   ports:
-  - port: 8000
-    targetPort: 8000
+  - port: 8083
+    targetPort: 8083
   selector:
-    app: gateway-service
+    app: discount-service
