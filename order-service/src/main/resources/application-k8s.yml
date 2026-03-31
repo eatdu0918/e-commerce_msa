@@ -1,0 +1,17 @@
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+spring:
+  jmx:
+    enabled: false
+  datasource:
+    hikari:
+      maximum-pool-size: 8
+      minimum-idle: 2
+  data:
+    jpa:
+      repositories:
+        bootstrap-mode: deferred

@@ -1,0 +1,9 @@
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+spring:
+  jmx:
+    enabled: false
