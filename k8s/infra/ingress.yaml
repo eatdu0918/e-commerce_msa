@@ -10,9 +10,15 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-  - host: sparta-msa.local
-    http:
+  - http:
       paths:
+      - path: /kafka
+        pathType: Prefix
+        backend:
+          service:
+            name: kafka-ui
+            port:
+              number: 8080
       - path: /
         pathType: Prefix
         backend:

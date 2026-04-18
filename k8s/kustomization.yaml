@@ -10,6 +10,7 @@ resources:
   - infra/redis.yaml
   - infra/mysql/mysql-shared.yaml
   - infra/kafka/kafka.yaml
+  - infra/kafka-ui.yaml
   - services/user-service.yaml
   - services/product-service.yaml
   - services/order-service.yaml
@@ -20,3 +21,5 @@ resources:
   - services/gateway-service.yaml
   - services/client.yaml
   - infra/ingress.yaml
+  - infra/ingress-k8s.yaml
+  - infra/dashboard-bridge.yaml
