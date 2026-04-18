@@ -11,7 +11,7 @@ spec:
   rules:
   - http:
       paths:
-      - path: /k8s(/|$)(.*)
+      - path: /()(runtime.*\.js|polyfills.*\.js|scripts.*\.js|[a-z]{2}\.main.*\.js|styles.*\.css|assets/.*)
         pathType: ImplementationSpecific
         backend:
           service:
@@ -19,6 +19,13 @@ spec:
             port:
               number: 80
       - path: /()([0-9]+.*\.js|runtime.*\.js|polyfills.*\.js|scripts.*\.js|[a-z]{2}\.main.*\.js|styles.*\.css|assets/.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: dashboard-bridge
+            port:
+              number: 80
+      - path: /k8s(/|$)(.*)
         pathType: ImplementationSpecific
         backend:
           service:

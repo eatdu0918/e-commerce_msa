@@ -59,6 +59,8 @@ spec:
           value: "http://cancel-service:8085"
         - name: REFUND_SERVICE_URL
           value: "http://refund-service:8086"
+        - name: SERVER_FORWARD_HEADERS_STRATEGY
+          value: "native"
         - name: JWT_SECRET
           valueFrom:
             configMapKeyRef:
@@ -145,6 +147,8 @@ spec:
           value: "http://cancel-service:8085"
         - name: REFUND_SERVICE_URL
           value: "http://refund-service:8086"
+        - name: SERVER_FORWARD_HEADERS_STRATEGY
+          value: "native"
         - name: JWT_SECRET
           valueFrom:
             configMapKeyRef:
