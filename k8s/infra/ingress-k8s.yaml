@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sparta-msa-k8s
+  namespace: sparta-msa
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+  - http:
+      paths:
+      - path: /k8s(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: dashboard-bridge
+            port:
+              number: 80
+      - path: /()([0-9]+.*\.js|runtime.*\.js|polyfills.*\.js|scripts.*\.js|[a-z]{2}\.main.*\.js|styles.*\.css|assets/.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: dashboard-bridge
+            port:
+              number: 80
