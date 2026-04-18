@@ -1,5 +1,6 @@
 server:
   port: 8000
+  forward-headers-strategy: native
 
 spring:
   application:
@@ -15,30 +16,44 @@ spring:
           uri: ${USER_SERVICE_URL:http://localhost:8080}
           predicates:
             - Path=/api/users/**, /api/auth/**, /api/admin/users/**
+          filters:
+            - RewritePath=/api/users/(?<segment>.*), /$\{segment}
         - id: product-service
           uri: ${PRODUCT_SERVICE_URL:http://localhost:8081}
           predicates:
             - Path=/api/products/**, /api/categories/**, /api/cart/**, /api/wishlist/**, /api/reviews/**, /api/stocks/**
+          filters:
+            - RewritePath=/api/products/(?<segment>.*), /$\{segment}
         - id: order-service
           uri: ${ORDER_SERVICE_URL:http://localhost:8082}
           predicates:
             - Path=/api/orders/**, /api/admin/orders/**
+          filters:
+            - RewritePath=/api/orders/(?<segment>.*), /$\{segment}
         - id: discount-service
           uri: ${DISCOUNT_SERVICE_URL:http://localhost:8083}
           predicates:
             - Path=/api/discounts/**, /api/coupons/**, /api/admin/coupons/**
+          filters:
+            - RewritePath=/api/discounts/(?<segment>.*), /$\{segment}
         - id: payment-service
           uri: ${PAYMENT_SERVICE_URL:http://localhost:8084}
           predicates:
             - Path=/api/payments/**, /api/admin/payments/**
+          filters:
+            - RewritePath=/api/payments/(?<segment>.*), /$\{segment}
         - id: cancel-service
           uri: ${CANCEL_SERVICE_URL:http://localhost:8085}
           predicates:
             - Path=/api/cancels/**, /api/admin/cancels/**
+          filters:
+            - RewritePath=/api/cancels/(?<segment>.*), /$\{segment}
         - id: refund-service
           uri: ${REFUND_SERVICE_URL:http://localhost:8086}
           predicates:
             - Path=/api/refunds/**, /api/admin/refunds/**
+          filters:
+            - RewritePath=/api/refunds/(?<segment>.*), /$\{segment}
       globalcors:
         cors-configurations:
           '[/**]':
@@ -83,3 +98,28 @@ logging:
   level:
     com.ecommerce.gatewayservice: INFO
     org.springframework.cloud.gateway: INFO
+    org.springdoc: DEBUG
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    display-query-params-with-default: true
+    urls:
+      - name: 01. User Service
+        url: /api/users/api/v3/api-docs
+      - name: 02. Product Service
+        url: /api/products/api/v3/api-docs
+      - name: 03. Order Service
+        url: /api/orders/api/v3/api-docs
+      - name: 04. Discount Service
+        url: /api/discounts/api/v3/api-docs
+      - name: 05. Payment Service
+        url: /api/payments/api/v3/api-docs
+      - name: 06. Cancel Service
+        url: /api/cancels/api/v3/api-docs
+      - name: 07. Refund Service
+        url: /api/refunds/api/v3/api-docs
+  cache:
+    disabled: true

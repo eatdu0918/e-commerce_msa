@@ -42,6 +42,11 @@ dependencies {
 	// Logstash Logging
 	implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
 
+	// Swagger OpenAPI
+	implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.6.0'
+	implementation 'org.springdoc:springdoc-openapi-starter-webflux-api:2.6.0'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'

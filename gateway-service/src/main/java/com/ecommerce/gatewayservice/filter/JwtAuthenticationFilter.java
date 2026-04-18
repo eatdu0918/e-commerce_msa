@@ -50,8 +50,12 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
             "/api/auth/refresh",
             "/api/auth/findUser/**",
             "/api/v3/api-docs/**",
+            "/**/v3/api-docs/**",
             "/api/swagger-ui/**",
             "/api/swagger-ui.html",
+            "/swagger-ui.html",
+            "/swagger-ui/**",
+            "/webjars/**",
             "/actuator/**"
     );
 
@@ -141,6 +145,9 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
     }
 
     private boolean isPublicPath(String path) {
+        if (path.contains("v3/api-docs") || path.contains("swagger-ui") || path.contains("webjars")) {
+            return true;
+        }
         return PUBLIC_PATHS.stream().anyMatch(pattern -> pathMatcher.match(pattern, path));
     }
 
