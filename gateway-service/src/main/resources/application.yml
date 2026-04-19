@@ -12,6 +12,56 @@ spring:
   cloud:
     gateway:
       routes:
+        # ──────────────────────────────────────────────────────────────────
+        # 통합 Swagger UI 가 호출하는 서비스별 OpenAPI JSON 경로.
+        # 외부에서는 /api/{service}/api/v3/api-docs 로 들어오지만,
+        # 다운스트림 springdoc 는 /api/v3/api-docs 로만 노출하므로
+        # 여기서 RewritePath 로 prefix 를 잘라 다시 보낸다.
+        # 일반 라우팅보다 좁은 패턴이므로 반드시 위쪽에 둘 것 (정의 순서가 우선순위).
+        # ──────────────────────────────────────────────────────────────────
+        - id: docs-user-service
+          uri: ${USER_SERVICE_URL:http://localhost:8080}
+          predicates:
+            - Path=/api/users/api/v3/api-docs/**
+          filters:
+            - RewritePath=/api/users/api/v3/api-docs(?<rest>.*), /api/v3/api-docs${rest}
+        - id: docs-product-service
+          uri: ${PRODUCT_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/products/api/v3/api-docs/**
+          filters:
+            - RewritePath=/api/products/api/v3/api-docs(?<rest>.*), /api/v3/api-docs${rest}
+        - id: docs-order-service
+          uri: ${ORDER_SERVICE_URL:http://localhost:8082}
+          predicates:
+            - Path=/api/orders/api/v3/api-docs/**
+          filters:
+            - RewritePath=/api/orders/api/v3/api-docs(?<rest>.*), /api/v3/api-docs${rest}
+        - id: docs-discount-service
+          uri: ${DISCOUNT_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/discounts/api/v3/api-docs/**
+          filters:
+            - RewritePath=/api/discounts/api/v3/api-docs(?<rest>.*), /api/v3/api-docs${rest}
+        - id: docs-payment-service
+          uri: ${PAYMENT_SERVICE_URL:http://localhost:8084}
+          predicates:
+            - Path=/api/payments/api/v3/api-docs/**
+          filters:
+            - RewritePath=/api/payments/api/v3/api-docs(?<rest>.*), /api/v3/api-docs${rest}
+        - id: docs-cancel-service
+          uri: ${CANCEL_SERVICE_URL:http://localhost:8085}
+          predicates:
+            - Path=/api/cancels/api/v3/api-docs/**
+          filters:
+            - RewritePath=/api/cancels/api/v3/api-docs(?<rest>.*), /api/v3/api-docs${rest}
+        - id: docs-refund-service
+          uri: ${REFUND_SERVICE_URL:http://localhost:8086}
+          predicates:
+            - Path=/api/refunds/api/v3/api-docs/**
+          filters:
+            - RewritePath=/api/refunds/api/v3/api-docs(?<rest>.*), /api/v3/api-docs${rest}
+
         - id: user-service
           uri: ${USER_SERVICE_URL:http://localhost:8080}
           predicates:
@@ -51,6 +101,8 @@ spring:
               - "https://*.ngrok-free.app"
               - "https://*.ngrok-free.dev"
               - "https://*.ngrok.io"
+              - "https://*.ngrok.app"
+              - "https://*.ngrok.dev"
             allowedMethods:
               - GET
               - POST

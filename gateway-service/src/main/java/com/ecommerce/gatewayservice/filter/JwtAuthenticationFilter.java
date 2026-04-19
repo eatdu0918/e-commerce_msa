@@ -62,7 +62,9 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
     private static final List<String> PUBLIC_GET_PATHS = List.of(
             "/api/products/**",
             "/api/categories/**",
-            "/api/reviews/products/**"
+            "/api/reviews/products/**",
+            // 상품 상세·비로그인 조회용 재고 (프론트 getStock / checkStock)
+            "/api/stocks/**"
     );
 
     @PostConstruct

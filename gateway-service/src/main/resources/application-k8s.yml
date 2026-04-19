@@ -1,3 +1,7 @@
+# Kubernetes 프로파일 (SPRING_PROFILES_ACTIVE=k8s)
+# - application.yml 의 routes 등은 그대로 두고, 클러스터·외부 접속용 CORS 만 보강합니다.
+# - Ingress / NodePort / LoadBalancer / ngrok 등 브라우저 Origin 이 localhost 고정이 아닐 수 있습니다.
+
 management:
   endpoint:
     health:
@@ -7,3 +11,37 @@ management:
 spring:
   jmx:
     enabled: false
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns:
+              - "http://localhost:*"
+              - "http://127.0.0.1:*"
+              - "http://sparta-msa.local"
+              - "http://sparta-msa.local:*"
+              - "https://sparta-msa.local"
+              - "https://sparta-msa.local:*"
+              - "http://*.local"
+              - "http://*.local:*"
+              - "https://*.local"
+              - "https://*.local:*"
+              - "https://*.ngrok-free.app"
+              - "https://*.ngrok-free.dev"
+              - "https://*.ngrok.io"
+              - "https://*.ngrok.app"
+              - "https://*.ngrok.dev"
+              # Minikube/클러스터 외부 IP·임의 Ingress 호스트 등 (개발·스테이징)
+              - "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - PATCH
+              - OPTIONS
+            allowedHeaders: "*"
+            exposedHeaders:
+              - "X-Correlation-Id"
+            allowCredentials: true
