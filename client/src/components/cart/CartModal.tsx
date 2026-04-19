@@ -4,6 +4,7 @@ import { getCart, updateCartItem, removeFromCart } from '../../api/services/cart
 import type { CartResponse } from '../../api/services/cart';
 import { useTranslation } from 'react-i18next';
 import { useScrollLock } from '../../hooks/useScrollLock';
+import { getStoredAccessToken } from '../../lib/authStorage';
 
 interface CartModalProps {
     isOpen: boolean;
@@ -20,7 +21,8 @@ export default function CartModal({ isOpen, onClose, onCheckout }: CartModalProp
     const { data: cart, isLoading } = useQuery<CartResponse>({
         queryKey: ['cart', i18n.language],
         queryFn: getCart,
-        enabled: isOpen,
+        // 비로그인 상태에서 장바구니 모달만 열어도 GET /api/cart 가 나가 401(인증이 필요합니다) 발생
+        enabled: isOpen && !!getStoredAccessToken(),
     });
 
     const updateQuantityMutation = useMutation({

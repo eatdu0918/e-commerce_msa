@@ -1,4 +1,4 @@
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import ErrorBoundary from '../common/ErrorBoundary';
 import {
   LayoutDashboard,
@@ -24,25 +24,26 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const userRole = localStorage.getItem(AUTH_STORAGE_KEYS.role);
 
   useScrollLock(sidebarOpen);
 
   useEffect(() => {
-    const enforceAdmin = () => {
-      const userRole = localStorage.getItem(AUTH_STORAGE_KEYS.role);
-      if (userRole !== 'ADMIN') {
-        alert(t('admin.need_role'));
-        navigate('/');
-      }
-    };
-    enforceAdmin();
     const onStorage = (e: StorageEvent) => {
       if (!isAuthStorageKey(e.key)) return;
-      enforceAdmin();
+      const role = localStorage.getItem(AUTH_STORAGE_KEYS.role);
+      if (!role || role !== 'ADMIN') {
+        navigate('/admin/login', { replace: true });
+      }
     };
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
-  }, [navigate, t]);
+  }, [navigate]);
+
+  // 자식(관리자 API useQuery)보다 먼저 검사 — useEffect 이후가 아닌 첫 렌더에서 차단
+  if (!userRole || userRole !== 'ADMIN') {
+    return <Navigate to="/admin/login" replace />;
+  }
 
   const isActive = (path: string) => location.pathname === path;
 

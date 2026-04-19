@@ -27,6 +27,13 @@ export function isAuthStorageKey(key: string | null): boolean {
 }
 
 /** 이전 sessionStorage 기반 인증을 localStorage로 한 번만 이전합니다. */
+/** 액세스·리프레시 둘 다 없는데 user/role JSON만 남은 경우 제거 (401 연쇄 방지) */
+export function pruneStaleAuthProfile(): void {
+    if (getStoredAccessToken() || getStoredRefreshToken()) return;
+    localStorage.removeItem(AUTH_STORAGE_KEYS.user);
+    localStorage.removeItem(AUTH_STORAGE_KEYS.role);
+}
+
 export function migrateLegacySessionAuthToLocal(): void {
     if (getStoredAccessToken()) return;
     const access = sessionStorage.getItem(AUTH_STORAGE_KEYS.accessToken);

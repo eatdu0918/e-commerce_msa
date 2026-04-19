@@ -11,6 +11,7 @@ import { getStoredAccessToken, isAuthStorageKey } from './lib/authStorage';
 const HomePage = lazy(() => import('./components/home/HomePage'));
 const ProductListPage = lazy(() => import('./components/product/ProductListPage'));
 const ProductDetailPage = lazy(() => import('./components/product/ProductDetailPage'));
+const AdminLoginPage = lazy(() => import('./components/admin/AdminLoginPage'));
 const AdminLayout = lazy(() => import('./components/admin/AdminLayout'));
 const AdminDashboard = lazy(() => import('./components/admin/AdminDashboard'));
 const AdminProductList = lazy(() => import('./components/admin/AdminProductList'));
@@ -74,7 +75,6 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/shop" element={<ProductListPage />} />
           <Route path="/product/:id" element={<ProductDetailPage />} />
-          <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/order/complete/:id" element={<OrderCompletePage />} />
           <Route path="/orders/complete/:id" element={<OrderCompletePage />} />
           <Route path="/payment/success" element={<PaymentSuccessPage />} />
@@ -83,6 +83,7 @@ function App() {
 
           {/* User Routes - In real app, wrap in AuthGuard */}
           <Route element={<AuthGuard><Outlet /></AuthGuard>}>
+            <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/me" element={<MyPageView />} />
             <Route path="/me/profile" element={<EditProfileView />} />
             <Route path="/me/wishlist" element={<WishlistView />} />
@@ -99,7 +100,8 @@ function App() {
 
         <Route path="/signup" element={<SignupPage />} />
 
-        {/* Admin Routes */}
+          {/* Admin Routes */}
+        <Route path="/admin/login" element={<AdminLoginPage />} />
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
           <Route path="users" element={<AdminUserList />} />

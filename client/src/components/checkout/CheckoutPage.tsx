@@ -14,6 +14,7 @@ import AddressSearchModal from '../common/AddressSearchModal';
 
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { getStoredAccessToken } from '../../lib/authStorage';
 
 export default function CheckoutPage() {
     const { t } = useTranslation();
@@ -42,14 +43,18 @@ export default function CheckoutPage() {
     const finalAmountRef = useRef(0);
     const [widgetsReady, setWidgetsReady] = useState(false);
 
+    const hasToken = !!getStoredAccessToken();
+
     const { data: cart, isLoading: cartLoading } = useQuery({
         queryKey: ['cart'],
         queryFn: getCart,
+        enabled: hasToken,
     });
 
     const { data: coupons } = useQuery({
         queryKey: ['coupons', 'available'],
         queryFn: getAvailableCoupons,
+        enabled: hasToken,
     });
 
     const { data: ordersPrefillPage, isFetched: ordersPrefillFetched } = useQuery({
@@ -57,6 +62,7 @@ export default function CheckoutPage() {
         queryFn: () => getMyOrders(0, 1),
         staleTime: 60_000,
         retry: false,
+        enabled: hasToken,
     });
 
     const { data: profilePrefill, isFetched: profilePrefillFetched } = useQuery({
@@ -64,6 +70,7 @@ export default function CheckoutPage() {
         queryFn: getMyProfile,
         staleTime: 60_000,
         retry: false,
+        enabled: hasToken,
     });
 
     const shippingPrefillAppliedRef = useRef(false);

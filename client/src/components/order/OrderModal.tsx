@@ -11,6 +11,7 @@ import { X, Check, Ticket } from 'lucide-react';
 import { useScrollLock } from '../../hooks/useScrollLock';
 import AddressSearchModal from '../common/AddressSearchModal';
 import { useTranslation } from 'react-i18next';
+import { getStoredAccessToken } from '../../lib/authStorage';
 
 interface OrderModalProps {
     isOpen: boolean;
@@ -46,7 +47,7 @@ export default function OrderModal({ isOpen, onClose, product, quantity, user, o
     const { data: coupons } = useQuery({
         queryKey: ['coupons', 'available'],
         queryFn: getAvailableCoupons,
-        enabled: isOpen,
+        enabled: isOpen && !!getStoredAccessToken(),
     });
 
     useEffect(() => {

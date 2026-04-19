@@ -8,9 +8,10 @@ import './index.css'
 import './i18n';
 import App from './App.tsx'
 import ErrorBoundary from './components/common/ErrorBoundary';
-import { migrateLegacySessionAuthToLocal } from './lib/authStorage';
+import { migrateLegacySessionAuthToLocal, pruneStaleAuthProfile } from './lib/authStorage';
 
 migrateLegacySessionAuthToLocal();
+pruneStaleAuthProfile();
 
 const queryClient = new QueryClient();
 

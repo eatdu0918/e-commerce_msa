@@ -27,7 +27,9 @@ export default function RootLayout() {
         retry: false,
         refetchOnWindowFocus: false,
         enabled: !!getStoredAccessToken(),
+        // 토큰이 없는데 user JSON만 남아 있으면 user 가 truthy → getCart 가 401 유발
         initialData: () => {
+            if (!getStoredAccessToken()) return undefined;
             const savedUser = localStorage.getItem(AUTH_STORAGE_KEYS.user);
             return savedUser ? JSON.parse(savedUser) : undefined;
         },
@@ -36,7 +38,7 @@ export default function RootLayout() {
     const { data: cart } = useQuery({
         queryKey: ['cart', i18n.language],
         queryFn: getCart,
-        enabled: !!user,
+        enabled: !!getStoredAccessToken() && !!user,
     });
 
     return (
