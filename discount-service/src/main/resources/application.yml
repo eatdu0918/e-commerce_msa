@@ -35,6 +35,9 @@ spring:
     consumer:
       group-id: discount-service
       auto-offset-reset: earliest
+      properties:
+        spring.json.type.mapping: >-
+          com.ecommerce.orderservice.event.OrderCreatedEvent:com.ecommerce.discountservice.event.OrderCreatedEvent
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer

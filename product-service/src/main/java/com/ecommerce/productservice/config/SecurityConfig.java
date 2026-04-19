@@ -28,7 +28,9 @@ public class SecurityConfig {
             "/api/products/**",
             "/api/categories",
             "/api/categories/**",
-            "/api/reviews/products/**"
+            "/api/reviews/products/**",
+            "/api/stocks",
+            "/api/stocks/**"
     };
 
     // Swagger 및 정적 리소스
