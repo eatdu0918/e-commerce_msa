@@ -1,3 +1,5 @@
+# 공통 환경값 — gateway-service 및 user·product 등 JWT 를 쓰는 모든 배포가
+# 동일한 JWT_SECRET 을 참조해야 게이트웨이 검증 토큰이 하위 서비스에서도 유효합니다.
 apiVersion: v1
 kind: ConfigMap
 metadata:

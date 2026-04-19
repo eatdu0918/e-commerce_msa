@@ -1,0 +1,27 @@
+# ngrok 에이전트 설정 (프로젝트 루트에서 사용)
+# 설치: https://ngrok.com/download  후 `ngrok config add-authtoken <토큰>`
+#
+# 실행 예:
+#   ngrok start gateway --config ngrok.yml
+# 또는 PowerShell: .\scripts\ngrok-gateway.ps1
+#
+# 로컬 백엔드(MSA): 게이트웨이(8000) 단독 노출
+# 쿠버네티스 모드: client(nginx) → SPA + /api 프록시까지 한 번에 노출 (8080)
+#   사전 준비: kubectl port-forward -n sparta-msa svc/client 8080:80
+#   또는 헬퍼 스크립트:  .\scripts\ngrok-k8s.ps1
+version: "2"
+tunnels:
+  gateway:
+    proto: http
+    addr: 8000
+    inspect: true
+  # 쿠버에 띄운 client 서비스를 8080으로 port-forward 해 둔 상태에서 사용
+  k8s-client:
+    proto: http
+    addr: 8080
+    inspect: true
+  # 디버깅용: user-service만 단독 노출이 필요할 때만 사용 (무료 플랜은 동시 터널 수 제한 있음)
+  user-service:
+    proto: http
+    addr: 8080
+    inspect: true

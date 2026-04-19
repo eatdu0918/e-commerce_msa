@@ -18,10 +18,96 @@ data:
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
         }
+        # Kafka UI: 컨테이너 내부에 SERVER_SERVLET_CONTEXT_PATH=/kafka 설정되어
+        # 서브패스 그대로 프록시. (ngrok 진입 시 ingress 거치지 않으므로 client nginx 가 라우팅)
+        location /kafka {
+            proxy_pass http://kafka-ui.sparta-msa.svc.cluster.local:8080;
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_read_timeout 3600s;
+        }
+        # Kubernetes Dashboard: kubernetes-dashboard 네임스페이스의 ClusterIP 서비스로 프록시
+        # 대시보드 HTML은 상대 경로로 자산을 참조하므로 서브패스(/k8s/) 서빙 OK.
+        # Angular 라우팅(HTML5 history mode)을 위해 <base href="/k8s/"> 를 주입해
+        # 새로고침/딥링크에서도 라우터가 정상 동작하게 함.
+        location = /k8s {
+            # 호스트/포트/스킴을 보존해서 ngrok·로컬 port-forward 양쪽에서 정상 리다이렉트
+            # 기본 진입 시 sparta-msa 네임스페이스의 Deployment 뷰로 바로 이동
+            # (해시 라우팅이라 # 이하 쿼리는 클라이언트가 파싱)
+            return 301 "$scheme://$http_host/k8s/#/deployment?namespace=sparta-msa";
+        }
+        location /k8s/ {
+            # 끝에 슬래시(/) 가 있어야 nginx가 /k8s 접두사를 strip 하고 업스트림에 전달
+            proxy_pass http://kubernetes-dashboard.kubernetes-dashboard.svc.cluster.local/;
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            # 응답을 sub_filter 로 변형하기 위해 업스트림 gzip 비활성
+            proxy_set_header Accept-Encoding "";
+            # 로그 스트리밍/exec 등에서 사용되는 WebSocket 지원
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_read_timeout 3600s;
+            sub_filter_once on;
+            sub_filter '<head>' '<head><base href="/k8s/">';
+            sub_filter_types text/html;
+        }
+        # 통합 Swagger UI: 게이트웨이의 springdoc 가 모든 서비스 OpenAPI 를 모아 노출
+        # 진입점 /swagger-ui.html → springdoc 가 /swagger-ui/index.html 로 redirect
+        # 그래서 보조 경로(/swagger-ui/, /v3/api-docs, /webjars/) 도 함께 열어 둔다.
+        location = /swagger-ui.html {
+            proxy_pass http://gateway-service.sparta-msa.svc.cluster.local:8000;
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+        location ^~ /swagger-ui/ {
+            proxy_pass http://gateway-service.sparta-msa.svc.cluster.local:8000;
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+        location ^~ /v3/api-docs {
+            proxy_pass http://gateway-service.sparta-msa.svc.cluster.local:8000;
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+        location ^~ /webjars/ {
+            proxy_pass http://gateway-service.sparta-msa.svc.cluster.local:8000;
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+        # 콘텐츠 해시가 붙은 정적 자산: 장기 immutable 캐시
+        location ~* ^/assets/.*\.(js|css|woff2?|ttf|otf|eot|png|jpg|jpeg|gif|svg|webp|ico)$ {
+            root /usr/share/nginx/html;
+            add_header Cache-Control "public, max-age=31536000, immutable";
+            try_files $uri =404;
+        }
         location / {
             root /usr/share/nginx/html;
             index index.html index.htm;
             try_files $uri $uri/ /index.html;
+            # SPA index.html 은 항상 새로 받아야 새 빌드의 chunk 해시가 반영됨
+            add_header Cache-Control "no-store, no-cache, must-revalidate, max-age=0";
+            add_header Pragma "no-cache";
+            expires 0;
         }
         error_page 500 502 503 504 /50x.html;
         location = /50x.html {

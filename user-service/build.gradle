@@ -81,6 +81,10 @@ dependencies {
 //    annotationProcessor "jakarta.persistence:jakarta.persistence-api"
 }
 
+tasks.named('bootJar') {
+	archiveFileName = 'application.jar'
+}
+
 tasks.named('test') {
 	useJUnitPlatform()
 }

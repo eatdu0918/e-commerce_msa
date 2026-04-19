@@ -69,6 +69,10 @@ dependencies {
 	implementation 'org.springframework.kafka:spring-kafka'
 }
 
+tasks.named('bootJar') {
+	archiveFileName = 'application.jar'
+}
+
 tasks.named('test') {
 	useJUnitPlatform()
 }
