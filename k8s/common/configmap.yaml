@@ -10,3 +10,4 @@ data:
   JWT_SECRET: "your-256-bit-secret-key-here-minimum-32-characters-required"
   REDIS_HOST: "redis"
   REDIS_PORT: "6379"
+  SPRING_FLYWAY_VALIDATE_ON_MIGRATE: "false"
