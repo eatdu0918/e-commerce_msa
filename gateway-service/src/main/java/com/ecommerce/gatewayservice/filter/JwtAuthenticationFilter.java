@@ -136,11 +136,26 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
                     String email = claims.get(CLAIM_EMAIL, String.class);
                     String role = claims.get(CLAIM_ROLE, String.class);
 
-                    ServerHttpRequest mutatedRequest = request.mutate()
-                            .header("X-User-Id", userId)
-                            .header("X-User-Email", email)
-                            .header("X-User-Role", role)
-                            .build();
+                    log.debug("JWT 추출 정보 - userId: {}, email: {}, role: {}", userId, email, role);
+
+                    if (userId == null || email == null) {
+                        return onError(exchange, HttpStatus.UNAUTHORIZED, "토큰 정보가 부적절합니다.");
+                    }
+
+                    // ReadOnlyHttpHeaders 오류를 피하기 위해 Decorator를 사용하여 헤더를 교체합니다.
+                    HttpHeaders writableHeaders = new HttpHeaders();
+                    writableHeaders.addAll(exchange.getRequest().getHeaders());
+                    writableHeaders.set("X-User-Id", userId);
+                    writableHeaders.set("X-User-Email", email);
+                    writableHeaders.set("X-User-Role", role);
+
+                    org.springframework.http.server.reactive.ServerHttpRequest mutatedRequest = 
+                        new org.springframework.http.server.reactive.ServerHttpRequestDecorator(exchange.getRequest()) {
+                            @Override
+                            public HttpHeaders getHeaders() {
+                                return writableHeaders;
+                            }
+                        };
 
                     return chain.filter(exchange.mutate().request(mutatedRequest).build());
                 });
