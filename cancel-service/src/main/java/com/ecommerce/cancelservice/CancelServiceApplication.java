@@ -5,9 +5,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "com.ecommerce")
 @EnableScheduling
-@EnableFeignClients(basePackages = "com.ecommerce.cancelservice.client")
+@EnableFeignClients
 public class CancelServiceApplication {
     public static void main(String[] args) {
         SpringApplication.run(CancelServiceApplication.class, args);

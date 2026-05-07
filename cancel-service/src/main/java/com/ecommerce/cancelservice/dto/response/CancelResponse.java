@@ -44,7 +44,7 @@ public class CancelResponse {
     }
 
     /**
-     * {@code itemsOverride}가 있으면 그 목록을 쓰고, 없으면 엔티티 품목을 그대로 매핑한다.
+     * {@code itemsOverride}    ??   ? ?    ???   ? ??   ??  ?????  ??   ? ?    ??  .
      */
     public static CancelResponse from(Cancel cancel, List<CancelItemResponse> itemsOverride) {
         List<CancelItemResponse> items = itemsOverride != null

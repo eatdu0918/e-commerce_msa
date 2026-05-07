@@ -28,7 +28,7 @@ public class OutboxEventPublisher {
                 KafkaConfig.TOPIC_CANCEL_REQUESTED,
                 event
         );
-        log.info("Outbox 이벤트 저장 완료: CancelRequestedEvent, cancelId={}", event.getCancelId());
+        log.info("Outbox ??  ???????   : CancelRequestedEvent, cancelId={}", event.getCancelId());
     }
 
     public void publishCancelApprovedEvent(CancelApprovedEvent event) {
@@ -39,7 +39,7 @@ public class OutboxEventPublisher {
                 KafkaConfig.TOPIC_CANCEL_APPROVED,
                 event
         );
-        log.info("Outbox 이벤트 저장 완료: CancelApprovedEvent, cancelId={}", event.getCancelId());
+        log.info("Outbox ??  ???????   : CancelApprovedEvent, cancelId={}", event.getCancelId());
     }
 
     public void publishCancelRejectedEvent(CancelRejectedEvent event) {
@@ -50,7 +50,7 @@ public class OutboxEventPublisher {
                 KafkaConfig.TOPIC_CANCEL_REJECTED,
                 event
         );
-        log.info("Outbox 이벤트 저장 완료: CancelRejectedEvent, cancelId={}", event.getCancelId());
+        log.info("Outbox ??  ???????   : CancelRejectedEvent, cancelId={}", event.getCancelId());
     }
 
     private void saveOutboxEvent(String aggregateType, String aggregateId,
@@ -66,8 +66,8 @@ public class OutboxEventPublisher {
             );
             outboxEventRepository.save(outboxEvent);
         } catch (JsonProcessingException e) {
-            log.error("Outbox 이벤트 직렬화 실패: eventType={}", eventType, e);
-            throw new RuntimeException("이벤트 직렬화 실패", e);
+            log.error("Outbox ??  ??   ?????  : eventType={}", eventType, e);
+            throw new RuntimeException("??  ??   ?????  ", e);
         }
     }
 }

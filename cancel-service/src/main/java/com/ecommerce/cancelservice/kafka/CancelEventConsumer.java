@@ -21,7 +21,7 @@ public class CancelEventConsumer {
     private final ProcessedEventRepository processedEventRepository;
 
     /**
-     * 결제 취소 완료 시 Cancel 상태를 COMPLETED로 변경
+     *    ???  ???    ??Cancel ?   ??COMPLETED ?    ?
      */
     @KafkaListener(topics = "payment-cancelled", groupId = "cancel-service")
     @Transactional
@@ -41,7 +41,7 @@ public class CancelEventConsumer {
     }
 
     /**
-     * 환불 완료 시 Cancel 상태를 COMPLETED로 변경
+     * ??   ?    ??Cancel ?   ??COMPLETED ?    ?
      */
     @KafkaListener(topics = "refund-completed", groupId = "cancel-service")
     @Transactional
@@ -62,7 +62,7 @@ public class CancelEventConsumer {
     }
 
     /**
-     * 환불 실패 시 로그 기록 (관리자 수동 처리 필요)
+     * ??   ??   ??   ??    ?(?  ?    ??      ???   )
      */
     @KafkaListener(topics = "refund-failed", groupId = "cancel-service")
     @Transactional
@@ -75,7 +75,7 @@ public class CancelEventConsumer {
 
         cancelRepository.findById(event.getCancelId())
                 .ifPresent(cancel -> {
-                    log.error("환불 실패로 인한 취소 처리 보류: cancelId={}, orderId={}",
+                    log.error("??   ??   ??    ?  ??   ??  ? ? cancelId={}, orderId={}",
                             cancel.getId(), cancel.getOrderId());
                 });
 
@@ -84,7 +84,7 @@ public class CancelEventConsumer {
 
     private boolean isDuplicate(String eventId, String eventType) {
         if (eventId != null && processedEventRepository.existsByEventId(eventId)) {
-            log.warn("중복 이벤트 무시: eventId={}, eventType={}", eventId, eventType);
+            log.warn("   ????  ???  ?? eventId={}, eventType={}", eventId, eventType);
             return true;
         }
         return false;

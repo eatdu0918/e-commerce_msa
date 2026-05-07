@@ -1,93 +1,42 @@
 plugins {
-	id 'java'
-	id 'org.springframework.boot' version '3.2.11'
-	id 'io.spring.dependency-management' version '1.1.7'
-}
-
-group = 'com.ecommerce'
-version = '0.0.1-SNAPSHOT'
-description = 'cancel-service'
-
-java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(17)
-	}
-}
-
-configurations {
-	compileOnly {
-		extendsFrom annotationProcessor
-	}
-}
-
-repositories {
-	mavenCentral()
+    id 'org.springframework.boot'
 }
 
 ext {
-	set('springCloudVersion', "2023.0.5")
+    set('springCloudVersion', "2023.0.5")
 }
 
 dependencyManagement {
-	imports {
-		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
-	}
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
 }
 
 dependencies {
-	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
-	implementation('org.springframework.boot:spring-boot-starter-web') {
-		exclude group: 'org.springframework.boot', module: 'spring-boot-starter-tomcat'
-	}
+    implementation project(':ecommerce-common')
 
-	implementation 'org.springframework.boot:spring-boot-starter-undertow'
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-validation'
-	implementation 'org.springframework.boot:spring-boot-starter-actuator'
-	implementation 'io.micrometer:micrometer-registry-prometheus'
-	implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
-	implementation 'org.springframework.boot:spring-boot-configuration-processor'
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    implementation('org.springframework.boot:spring-boot-starter-web') {
+        exclude group: 'org.springframework.boot', module: 'spring-boot-starter-tomcat'
+    }
+    implementation 'org.springframework.boot:spring-boot-starter-undertow'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+    implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
+    implementation 'org.springframework.boot:spring-boot-configuration-processor'
 
-	compileOnly 'org.projectlombok:lombok'
-	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.springframework.security:spring-security-test'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    // DB
+    implementation 'mysql:mysql-connector-java:8.0.33'
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.flywaydb:flyway-mysql'
 
-	// MySQL
-	implementation 'mysql:mysql-connector-java:8.0.33'
+    // Kafka
+    implementation 'org.springframework.kafka:spring-kafka'
 
-	// Flyway
-	implementation 'org.flywaydb:flyway-core'
-	implementation 'org.flywaydb:flyway-mysql'
-
-	// Redis
-	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-
-	// Security
-	implementation 'org.springframework.boot:spring-boot-starter-security'
-	// JWT
-	implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
-	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
-	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
-
-	// Swagger (SpringDoc OpenAPI)
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
-
-	implementation 'jakarta.validation:jakarta.validation-api:3.0.2'
-
-	// Kafka
-	implementation 'org.springframework.kafka:spring-kafka'
+    // Swagger
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
 }
 
 tasks.named('bootJar') {
-	archiveFileName = 'application.jar'
-}
-
-tasks.named('test') {
-	useJUnitPlatform()
-}
-
-tasks.named('compileJava') {
-	options.annotationProcessorPath = configurations.annotationProcessor
+    archiveFileName = 'application.jar'
 }

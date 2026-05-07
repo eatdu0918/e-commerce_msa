@@ -9,7 +9,7 @@ import java.math.RoundingMode;
 import java.util.Map;
 
 /**
- * 취소/반품 환불액: 주문 라인(할인 전) 비중에 실결제·{@link OrderPayload#getFinalAmount()} 배율을 곱해 맞춘다.
+ * ?  ??    ???  ??      ??  (?    ?? ??  ????  ???@link OrderPayload#getFinalAmount()}    ????   ?   ???
  */
 final class RefundAmountCalculator {
 

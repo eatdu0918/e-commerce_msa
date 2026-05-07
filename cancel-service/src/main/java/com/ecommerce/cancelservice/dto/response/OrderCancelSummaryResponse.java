@@ -19,6 +19,6 @@ public class OrderCancelSummaryResponse {
     Long cancelId;
     String cancelNumber;
     CancelStatus status;
-    /** 출고 전 취소 vs 반품·환불 */
+    /** ?  ?????  ??vs       ??   */
     CancelRequestType requestType;
 }

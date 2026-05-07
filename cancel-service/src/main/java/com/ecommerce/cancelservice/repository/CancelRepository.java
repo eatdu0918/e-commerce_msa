@@ -42,12 +42,12 @@ public interface CancelRepository extends JpaRepository<Cancel, Long> {
             Long orderId, CancelStatus status, CancelRequestType requestType);
 
     /**
-     * 진행 중인 취소(요청·승인·완료 처리) 중 가장 최근 건 — 주문 상세에서 버튼 노출 여부 판단용
+     *     ?   ???  ???    ?  ?  ?       ??  ?   ??   ?? ???     ?   ? ?     ???    ??? ? ? ??
      */
     Optional<Cancel> findFirstByOrderIdAndUserIdAndStatusInOrderByIdDesc(
             Long orderId, Long userId, Collection<CancelStatus> statuses);
 
-    /** 관리자·order-service 집계: 주문 소유자와 무관하게 주문 ID만으로 진행 중 취소 조회 */
+    /** ?  ?     rder-service    ??      ????? ? ?  ???        ID   ?  ?    ? ??  ??   ??*/
     Optional<Cancel> findFirstByOrderIdAndStatusInOrderByIdDesc(
             Long orderId, Collection<CancelStatus> statuses);
 }

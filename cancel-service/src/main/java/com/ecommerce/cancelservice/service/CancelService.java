@@ -8,7 +8,7 @@ import com.ecommerce.cancelservice.dto.response.CancelItemResponse;
 import com.ecommerce.cancelservice.dto.response.CancelResponse;
 import com.ecommerce.cancelservice.dto.response.OrderCancelSummaryResponse;
 import com.ecommerce.cancelservice.dto.response.OrderCancelSyncResponse;
-import com.ecommerce.cancelservice.dto.response.PageResponse;
+import com.ecommerce.common.response.PageResponse;
 import com.ecommerce.cancelservice.entity.Cancel;
 import com.ecommerce.cancelservice.entity.CancelItem;
 import com.ecommerce.cancelservice.enums.CancelRequestType;
@@ -20,7 +20,7 @@ import com.ecommerce.cancelservice.exception.CancelDomainException;
 import com.ecommerce.cancelservice.exception.CancelDomainExceptionCode;
 import com.ecommerce.cancelservice.outbox.OutboxEventPublisher;
 import com.ecommerce.cancelservice.repository.CancelRepository;
-import com.ecommerce.cancelservice.response.ApiResponse;
+import com.ecommerce.common.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -52,7 +52,7 @@ public class CancelService {
 
     @Transactional
     public CancelResponse createCancel(Long userId, CreateCancelRequest request) {
-        log.info("취소 요청 생성 시도: userId={}, orderId={}", userId, request.getOrderId());
+        log.info("?  ???    ??   ??  : userId={}, orderId={}", userId, request.getOrderId());
 
         if (request.getItems() == null || request.getItems().isEmpty()) {
             throw new CancelDomainException(CancelDomainExceptionCode.EmptyCancelItemsException);
@@ -99,7 +99,7 @@ public class CancelService {
         }
 
         Cancel savedCancel = cancelRepository.save(cancel);
-        log.info("취소 요청 생성 완료: cancelId={}, cancelNumber={}",
+        log.info("?  ???    ??   ?   : cancelId={}, cancelNumber={}",
                 savedCancel.getId(), savedCancel.getCancelNumber());
 
         CancelRequestedEvent event = createCancelRequestedEvent(savedCancel);
@@ -146,7 +146,7 @@ public class CancelService {
             throw new CancelDomainException(CancelDomainExceptionCode.CancelBlockedWhileShippingException);
         }
         if (type == CancelRequestType.RETURN_REFUND) {
-            /* UI·집계는 결제 완료+스킵 플래그로 DELIVERED일 수 있는데 DB는 아직 PENDING 등일 수 있음 */
+            /* UI      ??   ???   +??   ???     ?DELIVERED??????  ??DB???    PENDING ?    ????   */
             if (!"DELIVERED".equals(st) && !"DELIVERED".equals(progress)) {
                 throw new CancelDomainException(CancelDomainExceptionCode.ReturnRefundOnlyAfterDeliveredException);
             }
@@ -181,7 +181,7 @@ public class CancelService {
     }
 
     /**
-     * 취소 상세 품목가 표시용 주문 스냅샷. Feign 실패 시 null(엔티티 단가 그대로).
+     * ?  ???    ??      ??  ??     ??  ?? Feign ??   ??null(?  ??????    ? ?.
      */
     private static List<CancelItemResponse> pricedItemResponses(Cancel cancel, OrderPayload order) {
         if (cancel.getCancelItems() == null) {
@@ -211,7 +211,7 @@ public class CancelService {
                 return res.getData();
             }
         } catch (Exception e) {
-            log.warn("주문 스냅샷 조회 실패로 취소 품목 단가 보정 생략: orderId={}, admin={}", orderId, admin, e);
+            log.warn("     ??  ??   ????   ??  ????   ???    ????  : orderId={}, admin={}", orderId, admin, e);
         }
         return null;
     }
@@ -225,7 +225,7 @@ public class CancelService {
     }
 
     /**
-     * 해당 주문에 진행 중인 취소(요청·승인·완료 처리)가 있으면 요약 반환. 주문 상세와 UI 동기화용.
+     * ?? ??    ??    ?   ???  ???    ?  ?  ?       ??    ??   ??       ??      ?   ?? UI ??  ?   .
      */
     @Transactional(readOnly = true)
     public Optional<OrderCancelSummaryResponse> getActiveCancelForOrder(Long orderId, Long userId) {
@@ -240,7 +240,7 @@ public class CancelService {
     }
 
     /**
-     * 관리자·order-service 집계용. JWT 사용자와 주문 소유자가 다를 때(관리자)에도 동일 주문의 취소 진행 상태를 조회한다.
+     * ?  ?     rder-service    ??? JWT ???? ?      ????? ? ??? ???  ?   )? ?  ??       ???  ??    ??   ??   ???  .
      */
     @Transactional(readOnly = true)
     public Optional<OrderCancelSummaryResponse> getActiveCancelForOrderAdmin(Long orderId) {
@@ -254,7 +254,7 @@ public class CancelService {
                         .build());
     }
 
-    /** 주문 상세 UI·order-service 집계: 진행 중 건 + 요청 유형별 거절 이력 */
+    /**      ?    UI  rder-service    ??     ? ? ?+ ?    ?    ?   ???? ??*/
     @Transactional(readOnly = true)
     public OrderCancelSyncResponse getCancelSyncForOrder(Long orderId, Long userId) {
         Optional<OrderCancelSummaryResponse> active = getActiveCancelForOrder(orderId, userId);
@@ -291,7 +291,7 @@ public class CancelService {
     }
 
     /**
-     * 관리자 목록: 상태·요청 유형(출고 전 취소 / 반품·환불) 조합 필터.
+     * ?  ?        ? ?    ?    ?   (?  ?????  ??/       ??  )       ?   .
      */
     @Transactional(readOnly = true)
     public PageResponse<CancelResponse> getAdminCancels(
@@ -330,7 +330,7 @@ public class CancelService {
 
     @Transactional
     public CancelResponse approveCancel(Long cancelId) {
-        log.info("취소 승인 시도: cancelId={}", cancelId);
+        log.info("?  ???  ????  : cancelId={}", cancelId);
 
         Cancel cancel = cancelRepository.findByIdWithItems(cancelId)
                 .orElseThrow(() -> new CancelDomainException(CancelDomainExceptionCode.CancelNotFoundException));
@@ -368,14 +368,14 @@ public class CancelService {
                 .build();
 
         outboxEventPublisher.publishCancelApprovedEvent(event);
-        log.info("취소 승인 완료: cancelId={}", cancelId);
+        log.info("?  ???  ???   : cancelId={}", cancelId);
 
         return CancelResponse.from(cancel, pricedItemResponses(cancel, orderSnapshot));
     }
 
     @Transactional
     public CancelResponse rejectCancel(Long cancelId, String rejectedReason) {
-        log.info("취소 거부 시도: cancelId={}", cancelId);
+        log.info("?  ??   ? ??  : cancelId={}", cancelId);
 
         Cancel cancel = cancelRepository.findByIdWithItems(cancelId)
                 .orElseThrow(() -> new CancelDomainException(CancelDomainExceptionCode.CancelNotFoundException));
@@ -400,7 +400,7 @@ public class CancelService {
                 .build();
 
         outboxEventPublisher.publishCancelRejectedEvent(event);
-        log.info("취소 거부 완료: cancelId={}", cancelId);
+        log.info("?  ??   ? ?   : cancelId={}", cancelId);
 
         return CancelResponse.from(cancel, pricedItemResponses(cancel, orderPayload));
     }

@@ -12,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class OrderDiscountPricingTest {
 
     @Test
-    @DisplayName("전체 라인 취소 시 단가는 (라인할인후합)/수량과 같다")
+    @DisplayName("?    ??   ?  ?????????(??  ?   ?  ?)/??  ??   ??)
     void fullLine_discountAppliedPerUnit() {
         OrderPayload order = snapshot(
                 new BigDecimal("20000"),
@@ -27,7 +27,7 @@ class OrderDiscountPricingTest {
     }
 
     @Test
-    @DisplayName("부분 수량 취소 시 해당 비중의 할인 후 단가")
+    @DisplayName("?  ????   ?  ?????? ????  ???    ?????")
     void partialQty_matchesRefundCalculatorPortion() {
         OrderPayload order = snapshot(
                 new BigDecimal("30000"),

@@ -20,21 +20,21 @@ import java.util.List;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CreateCancelRequest {
 
-    @NotNull(message = "주문 ID는 필수입니다.")
+    @NotNull(message = "     ID???   ??  ??")
     Long orderId;
 
-    @NotBlank(message = "주문 번호는 필수입니다.")
+    @NotBlank(message = "        ????   ??  ??")
     String orderNumber;
 
-    @NotNull(message = "취소 사유는 필수입니다.")
+    @NotNull(message = "?  ????? ???   ??  ??")
     CancelReason cancelReason;
 
     String cancelDetail;
 
-    /** null이면 출고 전 취소(ORDER_CANCEL)로 처리 */
+    /** null?? ???  ?????  ??ORDER_CANCEL) ?   ??*/
     CancelRequestType requestType;
 
-    @NotEmpty(message = "취소 상품은 필수입니다.")
+    @NotEmpty(message = "?  ???  ??? ?   ??  ??")
     @Valid
     List<CancelItemRequest> items;
 }

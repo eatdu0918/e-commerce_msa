@@ -6,8 +6,8 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum CancelRequestType {
-    ORDER_CANCEL("주문 취소"),
-    RETURN_REFUND("반품·환불");
+    ORDER_CANCEL("ORDER_CANCEL"),
+    RETURN_REFUND("RETURN_REFUND");
 
     private final String description;
 }

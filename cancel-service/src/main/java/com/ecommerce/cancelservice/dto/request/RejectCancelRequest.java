@@ -13,6 +13,6 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class RejectCancelRequest {
 
-    @NotBlank(message = "거부 사유는 필수입니다.")
+    @NotBlank(message = "   ? ??? ???   ??  ??")
     String rejectedReason;
 }

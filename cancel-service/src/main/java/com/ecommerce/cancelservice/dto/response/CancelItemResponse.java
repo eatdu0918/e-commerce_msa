@@ -34,7 +34,7 @@ public class CancelItemResponse {
                 .build();
     }
 
-    /** 할인 반영 단가로 응답을 맞출 때(표시·스냅샷 일관성). */
+    /** ?       ????? ??   ??   ??????   ??  ???????. */
     public static CancelItemResponse fromWithUnitPrice(CancelItem cancelItem, BigDecimal unitPrice) {
         BigDecimal safeUnit = unitPrice != null ? unitPrice : cancelItem.getUnitPrice();
         BigDecimal total = safeUnit

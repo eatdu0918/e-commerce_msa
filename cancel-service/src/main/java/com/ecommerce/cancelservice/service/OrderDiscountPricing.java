@@ -8,8 +8,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 주문 금액(할인 전/후)과 주문 라인 합계를 기준으로 취소 품목 단가·환불액을 맞춘다.
- * {@link RefundAmountCalculator}와 동일한 비중·비율 규칙을 공유한다.
+ *          ??    ??????     ??   ??    ?   ???   ?  ????   ??? ??  ??      ???
+ * {@link RefundAmountCalculator}?? ??  ????    ?? ??   ????  ? ??  .
  */
 final class OrderDiscountPricing {
 
@@ -17,7 +17,7 @@ final class OrderDiscountPricing {
     }
 
     /**
-     * PG 승인액이 주문 합계보다 작으면 실결제 기준으로 본다.
+     * PG ?  ???        ??    ? ???    ???  ??   ???      ??
      */
     static BigDecimal effectiveFinalAmount(OrderPayload order) {
         if (order == null) {
@@ -60,7 +60,7 @@ final class OrderDiscountPricing {
     }
 
     /**
-     * 취소(반품) 라인에 대한 할인 반영 단가. 주문 스냅샷으로 산출할 수 없으면 {@code fallbackUnitPrice}.
+     * ?  ??    ? ??  ???????       ?????.      ??  ?    ??   ??????   ?{@code fallbackUnitPrice}.
      */
     static BigDecimal discountedUnitPriceForCancelQuantity(
             OrderPayload order,
