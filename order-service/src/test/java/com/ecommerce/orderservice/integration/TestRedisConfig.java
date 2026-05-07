@@ -15,8 +15,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * 통합 테스트용 Redis Mock 설정
- * 실제 Redis 연결 없이 테스트 가능하도록 Mock 제공
+ * ???? ??? ?    Redis Mock ??  
+ * ??   Redis ?    ??   ??? ??   ?  ?    Mock ??  
  */
 @TestConfiguration
 public class TestRedisConfig {

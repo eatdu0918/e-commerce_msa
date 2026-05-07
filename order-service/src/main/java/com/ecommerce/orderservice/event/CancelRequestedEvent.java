@@ -19,7 +19,7 @@ public class CancelRequestedEvent {
     String orderNumber;
     Long userId;
     String cancelReason;
-    /** {@code ORDER_CANCEL} | {@code RETURN_REFUND}, null 이면 출고 전 취소로 간주 */
+    /** {@code ORDER_CANCEL} | {@code RETURN_REFUND}, null ?? ???  ?????  ?  ?    ?*/
     String requestType;
     List<CancelItemEvent> items;
 

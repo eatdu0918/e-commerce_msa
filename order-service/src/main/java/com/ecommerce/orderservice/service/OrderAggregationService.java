@@ -9,7 +9,7 @@ import com.ecommerce.orderservice.client.dto.PaymentInfo;
 import com.ecommerce.orderservice.client.dto.ProductInfo;
 import com.ecommerce.orderservice.dto.OrderProgressStatusResolver;
 import com.ecommerce.orderservice.dto.response.*;
-import com.ecommerce.orderservice.response.ApiResponse;
+import com.ecommerce.common.response.ApiResponse;
 import com.ecommerce.orderservice.enums.OrderStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,8 +48,8 @@ public class OrderAggregationService {
     }
 
     /**
-     * 단건 주문 조회를 목록·상세와 동일하게 결제·스킵 플래그 반영 progressStatus까지 채운다.
-     * (cancel-service 등에서 DB 상태만 보면 배송완료 표시와 어긋나는 경우 방지)
+     * ??           ?  ?      ?   ?? ??  ??      ?  ??   ???  ?   ??progressStatus   ?  ? ???
+     * (cancel-service ?   ??DB ?    ?  ???   ??    ??  ?? ??  ??      ??   ?)
      */
     public OrderResponse getMyOrderEnriched(Long orderId, Long userId) {
         OrderResponse order = orderService.getOrder(orderId, userId);
@@ -57,7 +57,7 @@ public class OrderAggregationService {
     }
 
     public OrderDetailResponse getOrderDetail(Long orderId, Long userId) {
-        log.info("주문 상세 통합 조회: orderId={}, userId={}", orderId, userId);
+        log.info("     ?    ????    ?? orderId={}, userId={}", orderId, userId);
 
         OrderResponse order = orderService.getOrder(orderId, userId);
         PaymentInfo paymentInfo = fetchPaymentInfo(orderId);
@@ -79,7 +79,7 @@ public class OrderAggregationService {
     }
 
     public OrderDetailResponse getOrderDetailAdmin(Long orderId) {
-        log.info("관리자 주문 상세 통합 조회: orderId={}", orderId);
+        log.info("?  ?         ?    ????    ?? orderId={}", orderId);
 
         OrderResponse order = orderService.getOrderById(orderId);
         PaymentInfo paymentInfo = fetchPaymentInfo(orderId);
@@ -171,7 +171,7 @@ public class OrderAggregationService {
             ApiResponse<ProductInfo> response = productServiceClient.getProduct(productId);
             return response != null && response.isSuccess() ? response.getData() : null;
         } catch (Exception e) {
-            log.warn("상품 정보 조회 실패: productId={}, error={}", productId, e.getMessage());
+            log.warn("?  ? ?       ????  : productId={}, error={}", productId, e.getMessage());
             return null;
         }
     }
@@ -181,7 +181,7 @@ public class OrderAggregationService {
             ApiResponse<PaymentInfo> response = paymentServiceClient.getPaymentByOrderId(orderId);
             return response != null && response.isSuccess() ? response.getData() : null;
         } catch (Exception e) {
-            log.warn("결제 정보 조회 실패: orderId={}, error={}", orderId, e.getMessage());
+            log.warn("   ???       ????  : orderId={}, error={}", orderId, e.getMessage());
             return null;
         }
     }
@@ -193,7 +193,7 @@ public class OrderAggregationService {
                 return response.getData();
             }
         } catch (Exception e) {
-            log.warn("취소 동기화 조회 실패: orderId={}, error={}", orderId, e.getMessage());
+            log.warn("?  ????  ??   ????  : orderId={}, error={}", orderId, e.getMessage());
         }
         return null;
     }
@@ -206,7 +206,7 @@ public class OrderAggregationService {
                 return response.getData();
             }
         } catch (Exception e) {
-            log.warn("관리자용 취소 동기화 조회 실패: orderId={}, error={}", orderId, e.getMessage());
+            log.warn("?  ?   ???  ????  ??   ????  : orderId={}, error={}", orderId, e.getMessage());
         }
         return null;
     }
@@ -243,8 +243,8 @@ public class OrderAggregationService {
     }
 
     /**
-     * DB에 할인이 비어 있는데 실제 승인 금액이 상품 합계보다 작으면, API 응답상 할인·최종금액을 맞춤(과거 데이터·사가 지연).
-     * 취소/환불로 결제 상태가 바뀐 뒤에도 동일 금액 필드가 유지되므로 COMPLETED뿐 아니라 CANCELLED·REFUNDED에서도 맞춘다.
+     * DB???   ????  ???  ????   ?  ??    ???  ? ??    ? ???    ? API ?   ???      ?      ??   ???   ??   ?      ?    ??.
+     * ?  ????   ?   ???          ????  ????       ??       ? ???? ?COMPLETED???   ??CANCELLED  EFUNDED? ? ??   ???
      */
     private OrderResponse reconcileOrderFinancialsFromPayment(OrderResponse order, PaymentInfo payment) {
         if (payment == null || payment.getAmount() == null) {
@@ -277,7 +277,7 @@ public class OrderAggregationService {
     }
 
     /**
-     * {@link PaymentInfo#getAmount()}가 주문 합계 대비 할인 추론에 쓸 수 있는 상태인지 판별.
+     * {@link PaymentInfo#getAmount()}         ??  ??????    ?   ????????   ?   ? ? ? ? ?
      */
     private static boolean isPaymentAmountComparableToOrderTotal(String payStatus) {
         String s = payStatus.trim().toUpperCase(Locale.ROOT);

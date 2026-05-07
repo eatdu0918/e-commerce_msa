@@ -1,7 +1,7 @@
 package com.ecommerce.orderservice.enums;
 
 /**
- * cancel-service Kafka 이벤트의 취소 유형과 동기화 (ORDER_CANCEL / RETURN_REFUND).
+ * cancel-service Kafka ??  ?    ?  ???   ????  ??(ORDER_CANCEL / RETURN_REFUND).
  */
 public enum CancelRequestKind {
     ORDER_CANCEL,

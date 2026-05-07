@@ -3,7 +3,7 @@ package com.ecommerce.orderservice.dto;
 import com.ecommerce.orderservice.enums.OrderStatus;
 
 /**
- * 주문 DB 상태와 결제 완료 여부를 바탕으로, 목록·상세·스테퍼에서 동일하게 쓰는 표시용 상태.
+ *      DB ?   ??    ???    ?????  ? ??  ,       ?    ??  ??  ????  ??   ?    ??  ???   .
  */
 public final class OrderProgressStatusResolver {
 
@@ -18,8 +18,8 @@ public final class OrderProgressStatusResolver {
     }
 
     /**
-     * cancel-service 기준 진행 중 취소와 주문 DB를 맞춰 표시한다.
-     * 승인·완료 후 주문 서비스 Kafka 반영 전에도 상세·목록에서 취소 완료로 보이게 한다.
+     * cancel-service    ?     ? ??  ???      DB??   ????  ??  .
+     * ?  ?  ?    ??     ??  ??Kafka    ???   ???      ?  ? ?  ?  ???    ?   ?  ???  .
      */
     public static OrderStatus resolveForDisplayWithActiveCancel(
             OrderStatus orderStatus,
@@ -28,8 +28,8 @@ public final class OrderProgressStatusResolver {
             boolean skipConfirmAndPreparing,
             boolean skipShippingAndDelivered) {
         /*
-         * 결제가 취소·환불되었는데 주문 엔티티가 아직 CANCEL_REQUESTED인 경우(Kafka 지연 등).
-         * 사용자 상세·목록에서 «취소 요청 중»이 아닌 «주문 취소»로 맞춘다.
+         *    ?  ? ?  ?  ??  ?? ??         ?  ?? ? ?    CANCEL_REQUESTED??   ??Kafka    ????.
+         * ??????      ?  ? ?     ?   ?       ?   ?       ? ??  ?   ?   ???
          */
         if (orderStatus == OrderStatus.CANCEL_REQUESTED && isPaymentCancelledOrRefunded(paymentStatus)) {
             return OrderStatus.CANCELLED;
@@ -48,7 +48,7 @@ public final class OrderProgressStatusResolver {
     }
 
     /**
-     * 체크아웃에서 단계 생략을 선택했고 결제가 완료된 경우, 사가·DB 반영 전에도 목록·상세·관리자 표시 상태를 맞춘다.
+     *     ?   ? ?  ??  ???  ???   ??  ?   ?  ? ?   ??   ?? ???  B    ???   ??      ?      ??    ??   ?   ??   ???
      */
     private static OrderStatus applyCheckoutSkipToProgress(
             OrderStatus progress,
@@ -92,8 +92,8 @@ public final class OrderProgressStatusResolver {
     }
 
     /**
-     * 관리자 배송·준비 단계 진행 불가: 진행 중 취소(요청/승인/완료) 또는 결제 취소·환불 완료.
-     * cancel-service의 active 요약은 REJECTED를 반환하지 않음.
+     * ?  ?       ?     ????  ?    ??  ?:     ? ??  ???   /?  ???   ) ? ?     ???  ?  ??   ?   .
+     * cancel-service??active ?   ?? REJECTED??   ???? ??  .
      */
     public static boolean blocksAdminFulfillmentAdvance(String paymentStatus, String activeCancelStatus) {
         if (activeCancelStatus != null && !activeCancelStatus.isBlank()) {

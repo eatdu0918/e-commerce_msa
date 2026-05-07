@@ -4,13 +4,13 @@ import com.ecommerce.orderservice.config.SecurityConfig;
 import com.ecommerce.orderservice.dto.response.OrderDetailResponse;
 import com.ecommerce.orderservice.dto.response.OrderItemResponse;
 import com.ecommerce.orderservice.dto.response.OrderResponse;
-import com.ecommerce.orderservice.dto.response.PageResponse;
+import com.ecommerce.common.response.PageResponse;
 import com.ecommerce.orderservice.enums.OrderStatus;
-import com.ecommerce.orderservice.enums.UserRole;
+import com.ecommerce.common.enums.UserRole;
 import com.ecommerce.orderservice.exception.OrderDomainException;
 import com.ecommerce.orderservice.exception.OrderDomainExceptionCode;
-import com.ecommerce.orderservice.security.CustomUserDetails;
-import com.ecommerce.orderservice.security.jwt.JwtAuthenticationFilter;
+import com.ecommerce.common.security.CustomUserDetails;
+import com.ecommerce.common.security.JwtAuthenticationFilter;
 import com.ecommerce.orderservice.service.OrderAggregationService;
 import com.ecommerce.orderservice.service.OrderService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -69,11 +69,11 @@ class AdminOrderControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/admin/orders - 전체 주문 목록 조회")
+    @DisplayName("GET /api/admin/orders - ?             ?   ??)
     class GetAllOrdersTest {
 
         @Test
-        @DisplayName("전체 주문 목록 조회 성공")
+        @DisplayName("?             ?   ???   ")
         void getAllOrders_success() throws Exception {
             // given
             OrderResponse order = createOrderResponse(1L, OrderStatus.CONFIRMED);
@@ -99,7 +99,7 @@ class AdminOrderControllerTest {
         }
 
         @Test
-        @DisplayName("상태별 주문 목록 조회 성공")
+        @DisplayName("?    ?         ?   ???   ")
         void getAllOrders_withStatus() throws Exception {
             // given
             OrderResponse order = createOrderResponse(1L, OrderStatus.PENDING);
@@ -126,7 +126,7 @@ class AdminOrderControllerTest {
         }
 
         @Test
-        @DisplayName("전체 주문 목록 조회 - 빈 목록")
+        @DisplayName("?             ?   ??- ??    ?)
         void getAllOrders_empty() throws Exception {
             // given
             PageResponse<OrderResponse> pageResponse = PageResponse.<OrderResponse>builder()
@@ -151,11 +151,11 @@ class AdminOrderControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/admin/orders/{orderId} - 주문 상세 조회")
+    @DisplayName("GET /api/admin/orders/{orderId} -      ?       ??)
     class GetOrderTest {
 
         @Test
-        @DisplayName("주문 상세 조회 성공")
+        @DisplayName("     ?       ???   ")
         void getOrder_success() throws Exception {
             // given
             OrderResponse response = createOrderResponse(1L, OrderStatus.CONFIRMED);
@@ -171,7 +171,7 @@ class AdminOrderControllerTest {
         }
 
         @Test
-        @DisplayName("주문 상세 조회 실패 - 존재하지 않음")
+        @DisplayName("     ?       ????   -    ???? ??  ")
         void getOrder_notFound() throws Exception {
             // given
             when(orderAggregationService.getOrderByIdForAdmin(999L))
@@ -184,11 +184,11 @@ class AdminOrderControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/admin/orders/{orderId}/detail - 주문 상세 통합 조회")
+    @DisplayName("GET /api/admin/orders/{orderId}/detail -      ?    ????    ??)
     class GetOrderDetailTest {
 
         @Test
-        @DisplayName("주문 상세 통합 조회 성공")
+        @DisplayName("     ?    ????    ???   ")
         void getOrderDetail_success() throws Exception {
             // given
             OrderDetailResponse response = createOrderDetailResponse(1L, OrderStatus.CONFIRMED);
@@ -204,7 +204,7 @@ class AdminOrderControllerTest {
         }
 
         @Test
-        @DisplayName("주문 상세 통합 조회 실패 - 존재하지 않음")
+        @DisplayName("     ?    ????    ????   -    ???? ??  ")
         void getOrderDetail_notFound() throws Exception {
             // given
             when(orderAggregationService.getOrderDetailAdmin(999L))
@@ -217,11 +217,11 @@ class AdminOrderControllerTest {
     }
 
     @Nested
-    @DisplayName("PUT /api/admin/orders/{orderId}/status - 주문 상태 변경")
+    @DisplayName("PUT /api/admin/orders/{orderId}/status -      ?        ?)
     class UpdateOrderStatusTest {
 
         @Test
-        @DisplayName("주문 상태 변경 성공")
+        @DisplayName("     ?        ??   ")
         void updateOrderStatus_success() throws Exception {
             // given
             OrderResponse response = createOrderResponse(1L, OrderStatus.SHIPPING);
@@ -240,12 +240,12 @@ class AdminOrderControllerTest {
                             .content(requestBody))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.message").value("주문 상태가 변경되었습니다."))
+                    .andExpect(jsonPath("$.message").value("     ?              ??  ??  ."))
                     .andExpect(jsonPath("$.data.status").value("SHIPPING"));
         }
 
         @Test
-        @DisplayName("주문 상태 변경 실패 - 필수 값 누락")
+        @DisplayName("     ?        ???   - ?     ??   ")
         void updateOrderStatus_validation_fail() throws Exception {
             // given
             String requestBody = """
@@ -261,7 +261,7 @@ class AdminOrderControllerTest {
         }
 
         @Test
-        @DisplayName("주문 상태 변경 실패 - 존재하지 않음")
+        @DisplayName("     ?        ???   -    ???? ??  ")
         void updateOrderStatus_notFound() throws Exception {
             // given
             when(orderService.updateOrderStatus(999L, OrderStatus.SHIPPING))
@@ -281,7 +281,7 @@ class AdminOrderControllerTest {
         }
 
         @Test
-        @DisplayName("주문 상태 변경 실패 - 변경 불가 상태")
+        @DisplayName("     ?        ???   -     ??  ? ?   ")
         void updateOrderStatus_cannotUpdate() throws Exception {
             // given
             when(orderService.updateOrderStatus(1L, OrderStatus.SHIPPING))
@@ -305,7 +305,7 @@ class AdminOrderControllerTest {
         OrderItemResponse item = OrderItemResponse.builder()
                 .id(1L)
                 .productId(1L)
-                .productName("테스트 상품")
+                .productName("??? ???  ?")
                 .unitPrice(new BigDecimal("10000"))
                 .quantity(2)
                 .totalPrice(new BigDecimal("20000"))
@@ -320,8 +320,8 @@ class AdminOrderControllerTest {
                 .totalAmount(new BigDecimal("20000"))
                 .discountAmount(BigDecimal.ZERO)
                 .finalAmount(new BigDecimal("20000"))
-                .shippingAddress("서울시 강남구")
-                .recipientName("홍길동")
+                .shippingAddress("??  ??      ?)
+                .recipientName("??  ??)
                 .recipientPhone("010-1234-5678")
                 .items(List.of(item))
                 .createdAt(LocalDateTime.now())
@@ -340,8 +340,8 @@ class AdminOrderControllerTest {
                 .totalAmount(new BigDecimal("20000"))
                 .discountAmount(BigDecimal.ZERO)
                 .finalAmount(new BigDecimal("20000"))
-                .shippingAddress("서울시 강남구")
-                .recipientName("홍길동")
+                .shippingAddress("??  ??      ?)
+                .recipientName("??  ??)
                 .recipientPhone("010-1234-5678")
                 .items(List.of())
                 .createdAt(LocalDateTime.now())

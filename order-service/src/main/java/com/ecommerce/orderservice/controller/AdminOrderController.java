@@ -1,11 +1,11 @@
 package com.ecommerce.orderservice.controller;
 
+import com.ecommerce.common.response.ApiResponse;
+import com.ecommerce.common.response.PageResponse;
 import com.ecommerce.orderservice.dto.request.UpdateOrderStatusRequest;
 import com.ecommerce.orderservice.dto.response.OrderDetailResponse;
 import com.ecommerce.orderservice.dto.response.OrderResponse;
-import com.ecommerce.orderservice.dto.response.PageResponse;
 import com.ecommerce.orderservice.enums.OrderStatus;
-import com.ecommerce.orderservice.response.ApiResponse;
 import com.ecommerce.orderservice.service.OrderAggregationService;
 import com.ecommerce.orderservice.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,7 +18,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "Admin Order", description = "관리자 주문 관리 API")
+@Tag(name = "Admin Order", description = "             ?API")
 @RestController
 @RequestMapping("/api/admin/orders")
 @RequiredArgsConstructor
@@ -27,7 +27,7 @@ public class AdminOrderController {
     private final OrderService orderService;
     private final OrderAggregationService orderAggregationService;
 
-    @Operation(summary = "전체 주문 목록 조회")
+    @Operation(summary = "?              ")
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<OrderResponse>>> getAllOrders(
             @RequestParam(required = false) OrderStatus status,
@@ -41,26 +41,26 @@ public class AdminOrderController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @Operation(summary = "주문 상세 조회")
+    @Operation(summary = "    ?      ")
     @GetMapping("/{orderId}")
     public ResponseEntity<ApiResponse<OrderResponse>> getOrder(@PathVariable Long orderId) {
         OrderResponse response = orderAggregationService.getOrderByIdForAdmin(orderId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @Operation(summary = "주문 상세 통합 조회 (상품/결제 정보 포함)")
+    @Operation(summary = "    ?   ?       (?  /    ?   ?  )")
     @GetMapping("/{orderId}/detail")
     public ResponseEntity<ApiResponse<OrderDetailResponse>> getOrderDetail(@PathVariable Long orderId) {
         OrderDetailResponse response = orderAggregationService.getOrderDetailAdmin(orderId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @Operation(summary = "주문 상태 변경")
+    @Operation(summary = "    ?      ?)
     @PutMapping("/{orderId}/status")
     public ResponseEntity<ApiResponse<OrderResponse>> updateOrderStatus(
             @PathVariable Long orderId,
             @Valid @RequestBody UpdateOrderStatusRequest request) {
         OrderResponse response = orderService.updateOrderStatus(orderId, request.getStatus());
-        return ResponseEntity.ok(ApiResponse.success(response, "주문 상태가 변경되었습니다."));
+        return ResponseEntity.ok(ApiResponse.success(response, "    ?          ?  ?  ."));
     }
 }

@@ -38,7 +38,7 @@ class OutboxEventPublisherTest {
     OutboxEventPublisher outboxEventPublisher;
 
     @Test
-    @DisplayName("OrderCreatedEvent 발행 성공")
+    @DisplayName("OrderCreatedEvent     ??   ")
     void publishOrderCreatedEvent_success() {
         // given
         OrderCreatedEvent event = createOrderCreatedEvent();
@@ -63,7 +63,7 @@ class OutboxEventPublisherTest {
     }
 
     @Test
-    @DisplayName("OrderCancelledEvent 발행 성공")
+    @DisplayName("OrderCancelledEvent     ??   ")
     void publishOrderCancelledEvent_success() {
         // given
         OrderCancelledEvent event = createOrderCancelledEvent();
@@ -87,7 +87,7 @@ class OutboxEventPublisherTest {
     }
 
     @Test
-    @DisplayName("페이로드가 JSON 형식으로 저장됨")
+    @DisplayName("??        ? JSON ?   ??   ???  ?)
     void publishEvent_payloadIsValidJson() throws JsonProcessingException {
         // given
         OrderCreatedEvent event = createOrderCreatedEvent();
@@ -111,7 +111,7 @@ class OutboxEventPublisherTest {
     }
 
     @Test
-    @DisplayName("직렬화 실패 시 RuntimeException 발생")
+    @DisplayName("   ?????   ??RuntimeException     ?)
     void publishEvent_serializationFails_throwsException() throws JsonProcessingException {
         // given
         OrderCreatedEvent event = createOrderCreatedEvent();
@@ -127,7 +127,7 @@ class OutboxEventPublisherTest {
         // when & then
         assertThatThrownBy(() -> publisherWithMockMapper.publishOrderCreatedEvent(event))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("이벤트 직렬화 실패");
+                .hasMessageContaining("??  ??   ?????  ");
     }
 
     private OrderCreatedEvent createOrderCreatedEvent() {
@@ -141,7 +141,7 @@ class OutboxEventPublisherTest {
                 .items(List.of(
                         OrderCreatedEvent.OrderItemEvent.builder()
                                 .productId(10L)
-                                .productName("테스트 상품")
+                                .productName("??? ???  ?")
                                 .quantity(2)
                                 .unitPrice(new BigDecimal("25000"))
                                 .build()

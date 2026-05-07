@@ -29,7 +29,7 @@ public class OrderEventConsumer {
     @KafkaListener(topics = "stock-decreased", groupId = "order-service")
     public void handleStockDecreased(StockDecreasedEvent event) {
         log.info("Received stock-decreased event: orderId={}", event.getOrderId());
-        // 재고 차감 성공 - discount-service에서 후속 처리
+        // ????    ??    - discount-service? ?  ?       ??
     }
 
     @KafkaListener(topics = "stock-decrease-failed", groupId = "order-service")
@@ -45,8 +45,8 @@ public class OrderEventConsumer {
             if (order.canCancel()) {
                 order.cancel();
 
-                // 재고는 product-service 내부에서 이미 롤백됨
-                // 쿠폰/결제가 진행됐을 수 있으므로 order-cancelled 이벤트 발행
+                // ?????product-service ?? ?? ?  ?? ?     ??
+                // ?   ?   ?  ?     ? ?  ????      ?order-cancelled ??  ??    ?
                 OrderCancelledEvent cancelledEvent = OrderCancelledEvent.builder()
                         .eventId(UUID.randomUUID().toString())
                         .orderId(order.getId())
@@ -57,7 +57,7 @@ public class OrderEventConsumer {
                         .build();
 
                 orderEventProducer.sendOrderCancelledEvent(cancelledEvent);
-                log.info("주문 취소 완료 (재고 부족): orderId={}", event.getOrderId());
+                log.info("     ?  ???    (?????   ?: orderId={}", event.getOrderId());
             }
         });
 
@@ -83,7 +83,7 @@ public class OrderEventConsumer {
                         event.getCouponRuleValue());
             }
             order.markPaidAndApplyFulfillmentFastForward();
-            log.info("주문 확정·배송 단계 반영: orderId={}, status={}, finalAmount={}",
+            log.info("     ?          ??  ?   ?? orderId={}, status={}, finalAmount={}",
                     order.getId(), order.getStatus(), order.getFinalAmount());
         });
 
@@ -120,7 +120,7 @@ public class OrderEventConsumer {
                         .build();
 
                 orderEventProducer.sendOrderCancelledEvent(cancelledEvent);
-                log.info("주문 취소 완료 (쿠폰 적용 실패): orderId={}", event.getOrderId());
+                log.info("     ?  ???    (?   ??    ??  ): orderId={}", event.getOrderId());
             }
         });
 
@@ -128,12 +128,12 @@ public class OrderEventConsumer {
     }
 
     /**
-     * 결제 실패 시 보상 트랜잭션: 주문 취소 + order-cancelled 이벤트 발행
-     * → product-service: 재고 복원, discount-service: 쿠폰 복원
+     *    ????   ??    ??   ????      ?  ??+ order-cancelled ??  ??    ?
+     * ??product-service: ????   ?? discount-service: ?   ?   ??
      */
     /**
-     * PG/REST 등으로 결제가 먼저 완료된 뒤 Saga(coupon-used)보다 빨리 반영될 때
-     * 주문 상태를 주문 상세 UI와 일치시키기 위한 보정 처리.
+     * PG/REST ?    ?   ?  ? ?  ? ?   ????Saga(coupon-used)  ????? ??   ?????
+     *      ?   ??     ?    UI?? ??  ??   ??       ??   ??
      */
     @KafkaListener(topics = "payment-completed", groupId = "order-service")
     @Transactional
@@ -149,7 +149,7 @@ public class OrderEventConsumer {
             order.reconcileDiscountFromPaidAmountIfUnset(event.getAmount());
             order.markPaidAndApplyFulfillmentFastForward();
             if (before != order.getStatus()) {
-                log.info("결제 완료 후 주문 상태 반영: orderId={}, before={}, after={}",
+                log.info("   ???    ??     ?       ?? orderId={}, before={}, after={}",
                         order.getId(), before, order.getStatus());
             }
         });
@@ -187,7 +187,7 @@ public class OrderEventConsumer {
                         .build();
 
                 orderEventProducer.sendOrderCancelledEvent(cancelledEvent);
-                log.info("주문 취소 완료 (결제 실패): orderId={}", event.getOrderId());
+                log.info("     ?  ???    (   ????  ): orderId={}", event.getOrderId());
             }
         });
 
@@ -195,7 +195,7 @@ public class OrderEventConsumer {
     }
 
     /**
-     * 고객 취소 신청 접수 — 주문 상태를 취소 요청 중으로 표시 (상세·재신청 방지와 동기화)
+     * ?   ??  ???    ?    ??     ?   ???  ???       ?  ???   (?    ???  ?   ??? ??  ??
      */
     @KafkaListener(topics = "cancel-requested", groupId = "order-service")
     @Transactional
@@ -208,12 +208,12 @@ public class OrderEventConsumer {
 
         orderRepository.findByIdWithItems(event.getOrderId()).ifPresent(order -> {
             if (event.getUserId() != null && !event.getUserId().equals(order.getUserId())) {
-                log.warn("cancel-requested 사용자 불일치로 무시: orderId={}, orderUserId={}, eventUserId={}",
+                log.warn("cancel-requested ??????  ?  ?   ?  ?? orderId={}, orderUserId={}, eventUserId={}",
                         event.getOrderId(), order.getUserId(), event.getUserId());
             } else {
                 CancelRequestKind kind = CancelRequestKind.fromEventPayload(event.getRequestType());
                 order.markCancelRequested(kind);
-                log.info("주문 취소 요청 상태 반영: orderId={}, status={}", order.getId(), order.getStatus());
+                log.info("     ?  ???    ?       ?? orderId={}, status={}", order.getId(), order.getStatus());
             }
         });
 
@@ -221,7 +221,7 @@ public class OrderEventConsumer {
     }
 
     /**
-     * 취소 거부 시 취소 요청 표시 해제 후 주문 정상 처리 재개
+     * ?  ??   ? ???  ???    ??   ??   ??     ?       ???? ?
      */
     @KafkaListener(topics = "cancel-rejected", groupId = "order-service")
     @Transactional
@@ -234,11 +234,11 @@ public class OrderEventConsumer {
 
         orderRepository.findByIdWithItems(event.getOrderId()).ifPresent(order -> {
             if (event.getUserId() != null && !event.getUserId().equals(order.getUserId())) {
-                log.warn("cancel-rejected 사용자 불일치로 무시: orderId={}, orderUserId={}, eventUserId={}",
+                log.warn("cancel-rejected ??????  ?  ?   ?  ?? orderId={}, orderUserId={}, eventUserId={}",
                         event.getOrderId(), order.getUserId(), event.getUserId());
             } else {
                 order.restoreAfterCancelRejected();
-                log.info("취소 거부 후 주문 상태 복귀: orderId={}, status={}", order.getId(), order.getStatus());
+                log.info("?  ??   ? ??     ?       ?: orderId={}, status={}", order.getId(), order.getStatus());
             }
         });
 
@@ -246,8 +246,8 @@ public class OrderEventConsumer {
     }
 
     /**
-     * 취소 승인 시 보상 트랜잭션: 주문 취소 + order-cancelled 이벤트 발행
-     * → product-service: 재고 복원, discount-service: 쿠폰 복원, payment-service: 결제 취소
+     * ?  ???  ????    ??   ????      ?  ??+ order-cancelled ??  ??    ?
+     * ??product-service: ????   ?? discount-service: ?   ?   ?? payment-service:    ???  ??
      */
     @KafkaListener(topics = "cancel-approved", groupId = "order-service")
     @Transactional
@@ -279,7 +279,7 @@ public class OrderEventConsumer {
                         .build();
 
                 orderEventProducer.sendOrderCancelledEvent(cancelledEvent);
-                log.info("주문 취소 완료 (취소 승인): orderId={}, cancelId={}",
+                log.info("     ?  ???    (?  ???  ??: orderId={}, cancelId={}",
                         event.getOrderId(), event.getCancelId());
             }
         });
@@ -289,7 +289,7 @@ public class OrderEventConsumer {
 
     private boolean isDuplicate(String eventId, String eventType) {
         if (eventId != null && processedEventRepository.existsByEventId(eventId)) {
-            log.warn("중복 이벤트 무시: eventId={}, eventType={}", eventId, eventType);
+            log.warn("   ????  ???  ?? eventId={}, eventType={}", eventId, eventType);
             return true;
         }
         return false;

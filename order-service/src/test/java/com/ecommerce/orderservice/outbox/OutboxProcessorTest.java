@@ -36,7 +36,7 @@ class OutboxProcessorTest {
     OutboxProcessor outboxProcessor;
 
     @Test
-    @DisplayName("PENDING 상태의 이벤트 처리 성공")
+    @DisplayName("PENDING ?   ????  ??   ???   ")
     void processOutboxEvents_success() {
         // given
         OutboxEvent event = createTestEvent(1L, OutboxStatus.PENDING);
@@ -57,7 +57,7 @@ class OutboxProcessorTest {
     }
 
     @Test
-    @DisplayName("PENDING 이벤트가 없으면 처리하지 않음")
+    @DisplayName("PENDING ??  ? ? ??   ?   ???? ??  ")
     void processOutboxEvents_noEvents() {
         // given
         when(outboxEventRepository.findByStatusWithLimit(OutboxStatus.PENDING, 100))
@@ -71,7 +71,7 @@ class OutboxProcessorTest {
     }
 
     @Test
-    @DisplayName("Kafka 발행 예외 발생 시 이벤트 FAILED 처리")
+    @DisplayName("Kafka     ???       ?????  ??FAILED    ??)
     void processOutboxEvents_kafkaException_marksFailed() {
         // given
         OutboxEvent event = createTestEvent(1L, OutboxStatus.PENDING);
@@ -91,7 +91,7 @@ class OutboxProcessorTest {
     }
 
     @Test
-    @DisplayName("여러 이벤트 배치 처리")
+    @DisplayName("??????  ??   ??   ??)
     void processOutboxEvents_multipleEvents() {
         // given
         OutboxEvent event1 = createTestEvent(1L, OutboxStatus.PENDING);
@@ -113,7 +113,7 @@ class OutboxProcessorTest {
     }
 
     @Test
-    @DisplayName("처리된 이벤트 정리 - 7일 이전 이벤트 삭제")
+    @DisplayName("   ?????  ???    - 7????   ??  ??????)
     void cleanupProcessedEvents_deletesOldEvents() {
         // given
         when(outboxEventRepository.deleteProcessedEventsBefore(eq(OutboxStatus.PROCESSED), any(LocalDateTime.class)))
@@ -127,11 +127,11 @@ class OutboxProcessorTest {
     }
 
     @Test
-    @DisplayName("실패한 이벤트 재시도 - 재시도 가능한 경우 PENDING으로 변경")
+    @DisplayName("??  ????  ???????- ?????   ?  ?   ??PENDING??       ?)
     void retryFailedEvents_retryableEvents() {
         // given
         OutboxEvent event = createTestEvent(1L, OutboxStatus.FAILED);
-        // retryCount = 0 (재시도 가능)
+        // retryCount = 0 (?????   ??
 
         when(outboxEventRepository.findByStatusOrderByCreatedAtAsc(OutboxStatus.FAILED))
                 .thenReturn(List.of(event));
@@ -144,11 +144,11 @@ class OutboxProcessorTest {
     }
 
     @Test
-    @DisplayName("실패한 이벤트 재시도 - 최대 재시도 횟수 초과 시 FAILED 유지")
+    @DisplayName("??  ????  ???????-    ? ???????   ?  ????FAILED ? ?")
     void retryFailedEvents_maxRetryExceeded() {
         // given
         OutboxEvent event = createTestEvent(1L, OutboxStatus.FAILED);
-        // 최대 재시도 횟수(3)에 도달
+        //    ? ???????  (3)???   
         ReflectionTestUtils.setField(event, "retryCount", 3);
 
         when(outboxEventRepository.findByStatusOrderByCreatedAtAsc(OutboxStatus.FAILED))
@@ -162,7 +162,7 @@ class OutboxProcessorTest {
     }
 
     @Test
-    @DisplayName("실패한 이벤트가 없으면 재시도 처리 안함")
+    @DisplayName("??  ????  ? ? ??   ??????   ????  ")
     void retryFailedEvents_noFailedEvents() {
         // given
         when(outboxEventRepository.findByStatusOrderByCreatedAtAsc(OutboxStatus.FAILED))
@@ -175,7 +175,7 @@ class OutboxProcessorTest {
     }
 
     @Test
-    @DisplayName("부분 실패 처리 - 일부 이벤트만 실패")
+    @DisplayName("?  ????      ??- ??? ??  ?    ??  ")
     void processOutboxEvents_partialFailure() {
         // given
         OutboxEvent event1 = createTestEvent(1L, OutboxStatus.PENDING);
@@ -185,7 +185,7 @@ class OutboxProcessorTest {
         when(outboxEventRepository.findByStatusWithLimit(OutboxStatus.PENDING, 100))
                 .thenReturn(events);
 
-        // 첫 번째는 성공, 두 번째는 실패
+        //  ?   ????   , ??   ?????  
         when(kafkaTemplate.send(eq("order-created"), eq("ORD-1"), anyString()))
                 .thenReturn(CompletableFuture.completedFuture(mock(SendResult.class)));
         when(kafkaTemplate.send(eq("order-created"), eq("ORD-2"), anyString()))

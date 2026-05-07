@@ -8,7 +8,7 @@ import com.ecommerce.orderservice.dto.OrderProgressStatusResolver;
 import com.ecommerce.orderservice.dto.request.CreateOrderRequest;
 import com.ecommerce.orderservice.dto.request.OrderItemRequest;
 import com.ecommerce.orderservice.dto.response.OrderResponse;
-import com.ecommerce.orderservice.dto.response.PageResponse;
+import com.ecommerce.common.response.PageResponse;
 import com.ecommerce.orderservice.entity.Order;
 import com.ecommerce.orderservice.entity.OrderItem;
 import com.ecommerce.orderservice.enums.OrderStatus;
@@ -18,7 +18,7 @@ import com.ecommerce.orderservice.exception.OrderDomainException;
 import com.ecommerce.orderservice.exception.OrderDomainExceptionCode;
 import com.ecommerce.orderservice.outbox.OutboxEventPublisher;
 import com.ecommerce.orderservice.repository.OrderRepository;
-import com.ecommerce.orderservice.response.ApiResponse;
+import com.ecommerce.common.response.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -42,7 +42,7 @@ public class OrderService {
 
     @Transactional
     public OrderResponse createOrder(Long userId, CreateOrderRequest request) {
-        log.info("주문 생성 시도: userId={}", userId);
+        log.info("     ??   ??  : userId={}", userId);
 
         if (request.getItems() == null || request.getItems().isEmpty()) {
             throw new OrderDomainException(OrderDomainExceptionCode.EmptyOrderItemsException);
@@ -76,7 +76,7 @@ public class OrderService {
         }
 
         Order savedOrder = orderRepository.save(order);
-        log.info("주문 생성 완료 (PENDING): orderId={}, orderNumber={}",
+        log.info("     ??   ?    (PENDING): orderId={}, orderNumber={}",
                 savedOrder.getId(), savedOrder.getOrderNumber());
 
         OrderCreatedEvent event = createOrderCreatedEvent(savedOrder);
@@ -128,7 +128,7 @@ public class OrderService {
 
     @Transactional
     public OrderResponse cancelOrder(Long orderId, Long userId) {
-        log.info("주문 취소 시도: orderId={}, userId={}", orderId, userId);
+        log.info("     ?  ????  : orderId={}, userId={}", orderId, userId);
 
         Order order = orderRepository.findByIdAndUserIdWithItems(orderId, userId)
                 .orElseThrow(() -> new OrderDomainException(OrderDomainExceptionCode.OrderNotFoundException));
@@ -156,7 +156,7 @@ public class OrderService {
                 .build();
 
         outboxEventPublisher.publishOrderCancelledEvent(event);
-        log.info("주문 취소 완료: orderId={}", orderId);
+        log.info("     ?  ???   : orderId={}", orderId);
 
         return OrderResponse.from(order);
     }
@@ -184,7 +184,7 @@ public class OrderService {
 
     @Transactional
     public OrderResponse updateOrderStatus(Long orderId, OrderStatus newStatus) {
-        log.info("주문 상태 변경 시도: orderId={}, newStatus={}", orderId, newStatus);
+        log.info("     ?        ???  : orderId={}, newStatus={}", orderId, newStatus);
 
         Order order = orderRepository.findByIdWithItems(orderId)
                 .orElseThrow(() -> new OrderDomainException(OrderDomainExceptionCode.OrderNotFoundException));
@@ -200,15 +200,15 @@ public class OrderService {
         validateAdminFulfillmentTransition(order, newStatus);
 
         order.updateStatus(newStatus);
-        log.info("주문 상태 변경 완료: orderId={}, status={}", orderId, newStatus);
+        log.info("     ?        ??   : orderId={}, status={}", orderId, newStatus);
 
         return OrderResponse.from(order);
     }
 
     /**
-     * 관리자 배송·준비 단계: 기본은 한 단계씩 전환.
-     * 체크아웃에서 «주문 확인·상품 준비 생략» 선택 주문은 관리자가 상품 준비를 건너뛰고 배송 중으로 맞출 수 있다.
-     * «배송 단계까지 생략» 선택 주문은 중간 상태에서 배송 완료로 한 번에 맞출 수 있다.
+     * ?  ?       ?     ????  ?    ??? ????  ???   .
+     *     ?   ? ?     ? ??    ?  ?    ????   ??        ?? ?  ?       ?  ?    ?? ?   ? ?   ?   ??   ?  ?   ??????  .
+     *        ??    ?? ??   ??        ??     ??   ? ?     ???    ???    ?   ??????  .
      */
     private void validateAdminFulfillmentTransition(Order order, OrderStatus next) {
         OrderStatus current = order.getStatus();
@@ -237,8 +237,8 @@ public class OrderService {
             }
         }
         /*
-         * 관리자 배송 완료 확정: 출고 이후 단계(CONFIRMED~)에서 한 번에 DELIVERED로 마무리 가능.
-         * PENDING(주문 미확정)은 제외.
+         * ?  ?       ???    ?   : ?  ????   ??  ?CONFIRMED~)? ?  ??    ?DELIVERED ?    ??   ??
+         * PENDING(        ????? ??  .
          */
         if (next == OrderStatus.DELIVERED
                 && (current == OrderStatus.CONFIRMED
@@ -264,7 +264,7 @@ public class OrderService {
                 return response.getData().getStatus();
             }
         } catch (Exception e) {
-            log.warn("관리자 배송 단계 검증용 결제 조회 실패: orderId={}, error={}", orderId, e.getMessage());
+            log.warn("?  ?       ????  ?      ??   ??   ????  : orderId={}, error={}", orderId, e.getMessage());
         }
         return null;
     }
@@ -277,7 +277,7 @@ public class OrderService {
                 return response.getData().getStatus();
             }
         } catch (Exception e) {
-            log.warn("관리자 배송 단계 검증용 취소 요약 조회 실패: orderId={}, error={}", orderId, e.getMessage());
+            log.warn("?  ?       ????  ?      ???  ???       ????  : orderId={}, error={}", orderId, e.getMessage());
         }
         return null;
     }

@@ -1,6 +1,6 @@
 package com.ecommerce.orderservice.exception;
 
-import com.ecommerce.orderservice.response.ApiResponse;
+import com.ecommerce.common.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -27,7 +27,7 @@ public class GlobalExceptionHandler {
         String errorMessage = e.getBindingResult().getFieldErrors().stream()
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
                 .findFirst()
-                .orElse("유효성 검사 실패");
+                .orElse("?   ??   ????  ");
 
         log.error("Validation error: {}", errorMessage);
         return ResponseEntity
@@ -45,7 +45,7 @@ public class GlobalExceptionHandler {
                 .internalServerError()
                 .body(ApiResponse.<Void>builder()
                         .success(false)
-                        .error(ApiResponse.Error.of("INTERNAL_ERROR", "서버 오류가 발생했습니다."))
+                        .error(ApiResponse.Error.of("INTERNAL_ERROR", "??   ??          ??  ??  ."))
                         .build());
     }
 }

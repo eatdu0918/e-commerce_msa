@@ -2,7 +2,7 @@ package com.ecommerce.orderservice.client;
 
 import com.ecommerce.orderservice.client.dto.PaymentInfo;
 import com.ecommerce.orderservice.config.FeignConfig;
-import com.ecommerce.orderservice.response.ApiResponse;
+import com.ecommerce.common.response.ApiResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

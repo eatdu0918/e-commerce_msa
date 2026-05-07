@@ -14,6 +14,6 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UpdateOrderStatusRequest {
 
-    @NotNull(message = "주문 상태는 필수입니다.")
+    @NotNull(message = "     ?   ???   ??  ??")
     OrderStatus status;
 }

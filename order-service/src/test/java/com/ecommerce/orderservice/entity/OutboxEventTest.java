@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class OutboxEventTest {
 
     @Test
-    @DisplayName("OutboxEvent 생성 성공")
+    @DisplayName("OutboxEvent ??   ?   ")
     void create_success() {
         // given
         String aggregateType = "Order";
@@ -32,7 +32,7 @@ class OutboxEventTest {
     }
 
     @Test
-    @DisplayName("markAsProcessed - 상태를 PROCESSED로 변경")
+    @DisplayName("markAsProcessed - ?   ??PROCESSED ?    ?)
     void markAsProcessed_changesStatusToProcessed() {
         // given
         OutboxEvent event = createTestEvent();
@@ -46,7 +46,7 @@ class OutboxEventTest {
     }
 
     @Test
-    @DisplayName("markAsFailed - 상태를 FAILED로 변경하고 retryCount 증가")
+    @DisplayName("markAsFailed - ?   ??FAILED ?     ? ? ?retryCount    ?")
     void markAsFailed_changesStatusToFailedAndIncrementsRetryCount() {
         // given
         OutboxEvent event = createTestEvent();
@@ -61,7 +61,7 @@ class OutboxEventTest {
     }
 
     @Test
-    @DisplayName("retry - 상태를 PENDING으로 변경")
+    @DisplayName("retry - ?   ??PENDING??       ?)
     void retry_changesStatusToPending() {
         // given
         OutboxEvent event = createTestEvent();
@@ -76,7 +76,7 @@ class OutboxEventTest {
     }
 
     @Test
-    @DisplayName("canRetry - retryCount가 maxRetryCount 미만이면 true")
+    @DisplayName("canRetry - retryCount    maxRetryCount     ?? ??true")
     void canRetry_returnsTrueWhenBelowMaxRetry() {
         // given
         OutboxEvent event = createTestEvent();
@@ -87,13 +87,13 @@ class OutboxEventTest {
     }
 
     @Test
-    @DisplayName("canRetry - retryCount가 maxRetryCount 이상이면 false")
+    @DisplayName("canRetry - retryCount    maxRetryCount ??  ?? ??false")
     void canRetry_returnsFalseWhenAtOrAboveMaxRetry() {
         // given
         OutboxEvent event = createTestEvent();
         int maxRetryCount = 3;
 
-        // retryCount를 maxRetryCount까지 증가
+        // retryCount??maxRetryCount   ?    ?
         event.markAsFailed();
         event.markAsFailed();
         event.markAsFailed();
@@ -103,7 +103,7 @@ class OutboxEventTest {
     }
 
     @Test
-    @DisplayName("여러 번 실패 후 재시도 가능 여부 확인")
+    @DisplayName("???? ???   ???????   ????? ?   ")
     void canRetry_afterMultipleFailures() {
         // given
         OutboxEvent event = createTestEvent();

@@ -11,26 +11,26 @@ import org.springframework.http.HttpStatus;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public enum OrderDomainExceptionCode {
 
-    // Order 관련 예외
-    OrderNotFoundException(HttpStatus.NOT_FOUND, "주문을 찾을 수 없습니다."),
-    OrderCannotBeCancelledException(HttpStatus.BAD_REQUEST, "취소할 수 없는 주문 상태입니다."),
-    OrderCannotBeUpdatedException(HttpStatus.BAD_REQUEST, "상태를 변경할 수 없는 주문입니다."),
-    OrderAlreadyCancelledException(HttpStatus.BAD_REQUEST, "이미 취소된 주문입니다."),
-    OrderAlreadyCompletedException(HttpStatus.BAD_REQUEST, "이미 완료된 주문입니다."),
-    InvalidOrderStatusException(HttpStatus.BAD_REQUEST, "유효하지 않은 주문 상태입니다."),
-    OrderStatusTransitionNotAllowedException(HttpStatus.BAD_REQUEST, "허용되지 않는 주문 상태 전환입니다. 단계 순서를 확인해 주세요."),
+    // Order ?  ????  
+    OrderNotFoundException(HttpStatus.NOT_FOUND, "    ??   ??????  ??  ."),
+    OrderCannotBeCancelledException(HttpStatus.BAD_REQUEST, "?  ???????        ?   ??  ??"),
+    OrderCannotBeUpdatedException(HttpStatus.BAD_REQUEST, "?   ??     ? ?????       ??  ??"),
+    OrderAlreadyCancelledException(HttpStatus.BAD_REQUEST, "?? ? ?  ???    ??  ??"),
+    OrderAlreadyCompletedException(HttpStatus.BAD_REQUEST, "?? ? ?   ??    ??  ??"),
+    InvalidOrderStatusException(HttpStatus.BAD_REQUEST, "?   ??? ???      ?   ??  ??"),
+    OrderStatusTransitionNotAllowedException(HttpStatus.BAD_REQUEST, "??  ??? ??        ?    ?   ??  ?? ??  ???  ???   ??    ??"),
     OrderFulfillmentBlockedByCancelOrRefundException(HttpStatus.BAD_REQUEST,
-            "취소 또는 환불 처리 중인 주문은 배송 단계를 변경할 수 없습니다."),
-    EmptyOrderItemsException(HttpStatus.BAD_REQUEST, "주문 상품이 비어있습니다."),
+            "?  ??? ?  ??      ??   ??    ??    ????    ?     ? ?????  ??  ."),
+    EmptyOrderItemsException(HttpStatus.BAD_REQUEST, "     ?  ?????  ??  ??  ."),
 
-    // OrderItem 관련 예외
-    InvalidQuantityException(HttpStatus.BAD_REQUEST, "유효하지 않은 수량입니다."),
+    // OrderItem ?  ????  
+    InvalidQuantityException(HttpStatus.BAD_REQUEST, "?   ??? ??? ??  ??  ??"),
 
-    // JWT 관련 예외
-    InvalidTokenException(HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다."),
-    ExpiredTokenException(HttpStatus.UNAUTHORIZED, "만료된 토큰입니다."),
-    BlacklistedTokenException(HttpStatus.UNAUTHORIZED, "무효화된 토큰입니다."),
-    AccessDeniedException(HttpStatus.FORBIDDEN, "접근 권한이 없습니다.");
+    // JWT ?  ????  
+    InvalidTokenException(HttpStatus.UNAUTHORIZED, "?   ??? ??? ?   ??  ??"),
+    ExpiredTokenException(HttpStatus.UNAUTHORIZED, "    ???   ??  ??"),
+    BlacklistedTokenException(HttpStatus.UNAUTHORIZED, "?  ??    ?   ??  ??"),
+    AccessDeniedException(HttpStatus.FORBIDDEN, "?        ????  ??  .");
 
     final HttpStatus status;
     final String message;

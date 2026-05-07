@@ -19,19 +19,19 @@ import java.math.BigDecimal;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class OrderItemRequest {
 
-    @NotNull(message = "상품 ID는 필수입니다.")
+    @NotNull(message = "?  ? ID???   ??  ??")
     Long productId;
 
-    @NotBlank(message = "상품명은 필수입니다.")
+    @NotBlank(message = "?  ?   ? ?   ??  ??")
     String productName;
 
     String imageUrl;
 
-    @NotNull(message = "단가는 필수입니다.")
-    @Positive(message = "단가는 0보다 커야 합니다.")
+    @NotNull(message = "??????   ??  ??")
+    @Positive(message = "?????0  ????   ???  ??")
     BigDecimal unitPrice;
 
-    @NotNull(message = "수량은 필수입니다.")
-    @Positive(message = "수량은 0보다 커야 합니다.")
+    @NotNull(message = "??  ?? ?   ??  ??")
+    @Positive(message = "??  ?? 0  ????   ???  ??")
     Integer quantity;
 }

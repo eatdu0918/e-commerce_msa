@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class OrderProgressStatusResolverTest {
 
     @Test
-    @DisplayName("결제 완료 + 첫 단계 생략: 표시 상태는 SHIPPING")
+    @DisplayName("   ???    +  ???  ???  : ??   ?   ??SHIPPING")
     void skipConfirm_preparing_showsShippingWhenPaid() {
         OrderStatus r = OrderProgressStatusResolver.resolveForDisplayWithActiveCancel(
                 OrderStatus.PENDING, "COMPLETED", null, true, false);
@@ -17,7 +17,7 @@ class OrderProgressStatusResolverTest {
     }
 
     @Test
-    @DisplayName("결제 완료 + 두 단계 생략: 표시 상태는 DELIVERED")
+    @DisplayName("   ???    + ????  ???  : ??   ?   ??DELIVERED")
     void skipAll_showsDeliveredWhenPaid() {
         OrderStatus r = OrderProgressStatusResolver.resolveForDisplayWithActiveCancel(
                 OrderStatus.CONFIRMED, "COMPLETED", null, true, true);
@@ -25,7 +25,7 @@ class OrderProgressStatusResolverTest {
     }
 
     @Test
-    @DisplayName("취소 요청 중이면 단계 생략 보정 없이 CANCEL_REQUESTED")
+    @DisplayName("?  ???       ?  ???  ???      ????   CANCEL_REQUESTED")
     void activeCancelRequested_takesPrecedence() {
         OrderStatus r = OrderProgressStatusResolver.resolveForDisplayWithActiveCancel(
                 OrderStatus.CONFIRMED, "COMPLETED", "REQUESTED", true, true);
@@ -33,7 +33,7 @@ class OrderProgressStatusResolverTest {
     }
 
     @Test
-    @DisplayName("결제 미완료면 단계 생략 보정 미적용")
+    @DisplayName("   ??   ?  ??  ??  ???      ??   ???)
     void unpaid_noSkipElevation() {
         OrderStatus r = OrderProgressStatusResolver.resolveForDisplayWithActiveCancel(
                 OrderStatus.PENDING, "PENDING", null, true, true);

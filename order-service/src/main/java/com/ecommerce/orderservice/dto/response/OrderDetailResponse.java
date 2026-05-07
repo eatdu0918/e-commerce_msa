@@ -41,29 +41,29 @@ public class OrderDetailResponse {
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
 
-    /** {@link OrderResponse#getProgressStatus()} 와 동일 규칙 */
+    /** {@link OrderResponse#getProgressStatus()} ?? ??      ??*/
     OrderStatus progressStatus;
 
     /**
-     * cancel-service 기준 진행 중 취소 상태(REQUESTED/APPROVED/COMPLETED). 없으면 null.
-     * 주문 DB 갱신(Kafka) 지연 시에도 취소 요청 버튼 숨김에 사용.
+     * cancel-service    ?     ? ??  ???   (REQUESTED/APPROVED/COMPLETED). ??   ?null.
+     *      DB    ??Kafka)    ????  ???  ???       ???????????
      */
     String activeCancelStatus;
 
-    /** 진행 중 취소·반품 요청 건 ID(관리자 승인·거절 UI 연동). 없으면 null. */
+    /**     ? ??  ?      ??     ?ID(?  ?    ?  ?     ??UI ?   ). ??   ?null. */
     Long activeCancelId;
 
-    /** 진행 중인 취소·반품 건의 요청 유형({@code ORDER_CANCEL} | {@code RETURN_REFUND}). 없으면 null. */
+    /**     ?   ???  ?      ?   ???    ?   ({@code ORDER_CANCEL} | {@code RETURN_REFUND}). ??   ?null. */
     String activeCancelRequestType;
 
     /**
-     * 출고 전 주문 취소(ORDER_CANCEL)가 거절된 이력이 있으면 true. 동일 유형 재요청·버튼 비활성화용.
-     * 주문 취소 거절 후에도 반품·환불(RETURN_REFUND) 요청은 가능.
+     * ?  ????     ?  ??ORDER_CANCEL)       ????? ?????   ?true. ??   ?    ???  ?   ???? ??   ??
+     *      ?  ??   ???   ??      ??  (RETURN_REFUND) ?   ??    ??
      */
     @Builder.Default
     boolean hasRejectedOrderCancelRequest = false;
 
-    /** 반품·환불(RETURN_REFUND)가 거절된 이력이 있으면 true. */
+    /**       ??  (RETURN_REFUND)       ????? ?????   ?true. */
     @Builder.Default
     boolean hasRejectedReturnRefundRequest = false;
 

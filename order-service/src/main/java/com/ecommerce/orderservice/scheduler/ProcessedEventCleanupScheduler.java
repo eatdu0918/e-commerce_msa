@@ -22,7 +22,7 @@ public class ProcessedEventCleanupScheduler {
         LocalDateTime cutoff = LocalDateTime.now().minusDays(90);
         int deletedCount = processedEventRepository.deleteByProcessedAtBefore(cutoff);
         if (deletedCount > 0) {
-            log.info("ProcessedEvent 정리 완료: {}건 삭제 (기준일: {})", deletedCount, cutoff);
+            log.info("ProcessedEvent ?    ?   : {} ?????(   ??? {})", deletedCount, cutoff);
         }
     }
 }

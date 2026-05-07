@@ -7,8 +7,8 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
 /**
- * 통합 테스트 기본 설정 클래스
- * H2 인메모리 DB + EmbeddedKafka를 사용하여 테스트
+ * ???? ??? ??   ????   ?? ???
+ * H2 ?      ??DB + EmbeddedKafka???????   ??? ??
  */
 @SpringBootTest
 @ActiveProfiles("integration-test")
@@ -36,6 +36,6 @@ import org.springframework.test.context.ActiveProfiles;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public abstract class IntegrationTestBase {
 
-    // EmbeddedKafka의 bootstrap-servers는 application-integration-test.yml에서
-    // ${spring.embedded.kafka.brokers}로 자동 주입됨
+    // EmbeddedKafka??bootstrap-servers??application-integration-test.yml? ? 
+    // ${spring.embedded.kafka.brokers} ?? ?     ???
 }
