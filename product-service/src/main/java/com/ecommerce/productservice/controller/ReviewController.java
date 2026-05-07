@@ -2,10 +2,10 @@ package com.ecommerce.productservice.controller;
 
 import com.ecommerce.productservice.dto.request.CreateReviewRequest;
 import com.ecommerce.productservice.dto.request.UpdateReviewRequest;
-import com.ecommerce.productservice.dto.response.PageResponse;
+import com.ecommerce.common.response.PageResponse;
 import com.ecommerce.productservice.dto.response.ReviewResponse;
-import com.ecommerce.productservice.response.ApiResponse;
-import com.ecommerce.productservice.security.CustomUserDetails;
+import com.ecommerce.common.response.ApiResponse;
+import com.ecommerce.common.security.CustomUserDetails;
 import com.ecommerce.productservice.service.ReviewService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +28,7 @@ public class ReviewController {
     public ApiResponse<PageResponse<ReviewResponse>> getProductReviews(
             @PathVariable Long productId,
             @PageableDefault(size = 5, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        log.info("GET /api/reviews/products/{} - 상품 리뷰 목록 조회", productId);
+        log.info("GET /api/reviews/products/{} - ?  ? ?        ?   ??, productId);
         return ApiResponse.success(reviewService.getProductReviews(productId, pageable));
     }
 
@@ -36,7 +36,7 @@ public class ReviewController {
     public ApiResponse<PageResponse<ReviewResponse>> getMyReviews(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        log.info("GET /api/reviews/my - 내 리뷰 목록 조회, userId={}", userDetails.getUserId());
+        log.info("GET /api/reviews/my - ???        ?   ?? userId={}", userDetails.getUserId());
         return ApiResponse.success(reviewService.getMyReviews(userDetails.getUserId(), pageable));
     }
 
@@ -44,7 +44,7 @@ public class ReviewController {
     public ApiResponse<ReviewResponse> createReview(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody CreateReviewRequest request) {
-        log.info("POST /api/reviews - 리뷰 등록, userId={}, productId={}", userDetails.getUserId(), request.getProductId());
+        log.info("POST /api/reviews - ?    ?   , userId={}, productId={}", userDetails.getUserId(), request.getProductId());
         return ApiResponse.success(reviewService.createReview(userDetails.getUserId(), userDetails.getEmail(), request));
     }
 
@@ -53,7 +53,7 @@ public class ReviewController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long reviewId,
             @Valid @RequestBody UpdateReviewRequest request) {
-        log.info("PUT /api/reviews/{} - 리뷰 수정, userId={}", reviewId, userDetails.getUserId());
+        log.info("PUT /api/reviews/{} - ?    ??  , userId={}", reviewId, userDetails.getUserId());
         return ApiResponse.success(reviewService.updateReview(userDetails.getUserId(), reviewId, request));
     }
 
@@ -61,7 +61,7 @@ public class ReviewController {
     public ApiResponse<Void> deleteReview(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long reviewId) {
-        log.info("DELETE /api/reviews/{} - 리뷰 삭제, userId={}", reviewId, userDetails.getUserId());
+        log.info("DELETE /api/reviews/{} - ?    ???? userId={}", reviewId, userDetails.getUserId());
         reviewService.deleteReview(userDetails.getUserId(), reviewId);
         return ApiResponse.ok();
     }

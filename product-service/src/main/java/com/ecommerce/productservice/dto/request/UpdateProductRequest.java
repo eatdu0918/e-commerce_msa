@@ -15,11 +15,11 @@ import java.math.BigDecimal;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UpdateProductRequest {
 
-    @NotBlank(message = "상품명은 필수입니다.")
-    @Size(max = 255, message = "상품명은 255자 이하여야 합니다.")
+    @NotBlank(message = "?  ?   ? ?   ??  ??")
+    @Size(max = 255, message = "?  ?   ? 255????  ?? ???  ??")
     String name;
 
-    @Size(max = 255, message = "한글 상품명은 255자 이하여야 합니다.")
+    @Size(max = 255, message = "??? ?  ?   ? 255????  ?? ???  ??")
     String nameKo;
 
     String description;
@@ -28,12 +28,12 @@ public class UpdateProductRequest {
 
     String imageUrl;
 
-    @NotNull(message = "가격은 필수입니다.")
-    @DecimalMin(value = "0", message = "가격은 0 이상이어야 합니다.")
+    @NotNull(message = "      ? ?   ??  ??")
+    @DecimalMin(value = "0", message = "      ? 0 ??  ??  ????  ??")
     BigDecimal price;
 
-    @NotNull(message = "재고 수량은 필수입니다.")
-    @Min(value = 0, message = "재고 수량은 0 이상이어야 합니다.")
+    @NotNull(message = "??????  ?? ?   ??  ??")
+    @Min(value = 0, message = "??????  ?? 0 ??  ??  ????  ??")
     Integer stockQuantity;
 
     Long categoryId;

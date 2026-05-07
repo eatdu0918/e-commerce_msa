@@ -2,8 +2,8 @@ package com.ecommerce.productservice.controller;
 
 import com.ecommerce.productservice.dto.request.AddWishlistRequest;
 import com.ecommerce.productservice.dto.response.WishlistItemResponse;
-import com.ecommerce.productservice.response.ApiResponse;
-import com.ecommerce.productservice.security.CustomUserDetails;
+import com.ecommerce.common.response.ApiResponse;
+import com.ecommerce.common.security.CustomUserDetails;
 import com.ecommerce.productservice.service.WishlistService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +27,7 @@ public class WishlistController {
     public ApiResponse<List<WishlistItemResponse>> getWishlist(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestHeader(value = "Accept-Language", required = false) String acceptLanguage) {
-        log.info("GET /api/wishlist - 찜 목록 조회: userId={}", userDetails.getUserId());
+        log.info("GET /api/wishlist -  ?    ?   ?? userId={}", userDetails.getUserId());
         List<WishlistItemResponse> response = wishlistService.getWishlist(userDetails.getUserId(), acceptLanguage);
         return ApiResponse.success(response);
     }
@@ -38,7 +38,7 @@ public class WishlistController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody AddWishlistRequest request,
             @RequestHeader(value = "Accept-Language", required = false) String acceptLanguage) {
-        log.info("POST /api/wishlist - 찜 추가: userId={}", userDetails.getUserId());
+        log.info("POST /api/wishlist -  ??  ?: userId={}", userDetails.getUserId());
         WishlistItemResponse response = wishlistService.addToWishlist(userDetails.getUserId(), request,
                 acceptLanguage);
         return ApiResponse.success(response);
@@ -49,7 +49,7 @@ public class WishlistController {
     public ApiResponse<Void> removeFromWishlist(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long productId) {
-        log.info("DELETE /api/wishlist/{} - 찜 삭제: userId={}", productId, userDetails.getUserId());
+        log.info("DELETE /api/wishlist/{} -  ????? userId={}", productId, userDetails.getUserId());
         wishlistService.removeFromWishlist(userDetails.getUserId(), productId);
         return ApiResponse.ok();
     }
@@ -59,7 +59,7 @@ public class WishlistController {
     public ApiResponse<Boolean> isInWishlist(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable Long productId) {
-        log.info("GET /api/wishlist/check/{} - 찜 여부 확인: userId={}", productId, userDetails.getUserId());
+        log.info("GET /api/wishlist/check/{} -  ???? ?   : userId={}", productId, userDetails.getUserId());
         boolean isInWishlist = wishlistService.isInWishlist(userDetails.getUserId(), productId);
         return ApiResponse.success(isInWishlist);
     }
@@ -67,7 +67,7 @@ public class WishlistController {
     @GetMapping("/count")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<Integer> getWishlistCount(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        log.info("GET /api/wishlist/count - 찜 개수 조회: userId={}", userDetails.getUserId());
+        log.info("GET /api/wishlist/count -  ?   ??   ?? userId={}", userDetails.getUserId());
         int count = wishlistService.getWishlistCount(userDetails.getUserId());
         return ApiResponse.success(count);
     }
@@ -75,7 +75,7 @@ public class WishlistController {
     @DeleteMapping
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<Void> clearWishlist(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        log.info("DELETE /api/wishlist - 찜 목록 비우기: userId={}", userDetails.getUserId());
+        log.info("DELETE /api/wishlist -  ?    ??? ?? ? userId={}", userDetails.getUserId());
         wishlistService.clearWishlist(userDetails.getUserId());
         return ApiResponse.ok();
     }

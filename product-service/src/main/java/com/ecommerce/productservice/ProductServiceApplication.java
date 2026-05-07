@@ -1,6 +1,6 @@
 package com.ecommerce.productservice;
 
-import com.ecommerce.productservice.security.jwt.JwtProperties;
+import com.ecommerce.common.security.JwtProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;

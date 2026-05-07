@@ -27,7 +27,7 @@ public class OutboxEventPublisher {
                 KafkaConfig.TOPIC_STOCK_DECREASED,
                 event
         );
-        log.info("Outbox 이벤트 저장 완료: StockDecreasedEvent, orderId={}", event.getOrderId());
+        log.info("Outbox ??  ???????   : StockDecreasedEvent, orderId={}", event.getOrderId());
     }
 
     public void publishStockDecreaseFailedEvent(StockDecreaseFailedEvent event) {
@@ -38,7 +38,7 @@ public class OutboxEventPublisher {
                 KafkaConfig.TOPIC_STOCK_DECREASE_FAILED,
                 event
         );
-        log.info("Outbox 이벤트 저장 완료: StockDecreaseFailedEvent, orderId={}", event.getOrderId());
+        log.info("Outbox ??  ???????   : StockDecreaseFailedEvent, orderId={}", event.getOrderId());
     }
 
     private void saveOutboxEvent(String aggregateType, String aggregateId,
@@ -54,8 +54,8 @@ public class OutboxEventPublisher {
             );
             outboxEventRepository.save(outboxEvent);
         } catch (JsonProcessingException e) {
-            log.error("Outbox 이벤트 직렬화 실패: eventType={}", eventType, e);
-            throw new RuntimeException("이벤트 직렬화 실패", e);
+            log.error("Outbox ??  ??   ?????  : eventType={}", eventType, e);
+            throw new RuntimeException("??  ??   ?????  ", e);
         }
     }
 }

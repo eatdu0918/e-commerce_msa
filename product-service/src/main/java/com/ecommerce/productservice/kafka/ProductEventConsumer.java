@@ -38,7 +38,7 @@ public class ProductEventConsumer {
         try {
             OrderCreatedEvent event = objectMapper.readValue(message, OrderCreatedEvent.class);
             
-            // 1. 멱등성 체크
+            // 1.     ??    ?
             if (isDuplicate(event.getEventId(), "order-created")) {
                 log.info("Duplicate event detected: eventId={}", event.getEventId());
                 return;
@@ -47,7 +47,7 @@ public class ProductEventConsumer {
             log.info("Starting inventory processing for order: orderId={}, pieces={}", 
                     event.getOrderId(), event.getItems().size());
 
-            // 2. 상품별로 수량 집계 (동일 상품 ID 중복 시 합산)
+            // 2. ?  ?    ???      ??(??   ?  ? ID    ??????  )
             Map<Long, Integer> aggregatedItems = event.getItems().stream()
                     .collect(Collectors.groupingBy(
                             OrderCreatedEvent.OrderItemEvent::getProductId,
@@ -56,7 +56,7 @@ public class ProductEventConsumer {
 
             List<StockDecreasedEvent.StockItemEvent> decreasedItemsCount = new ArrayList<>();
 
-            // 3. 재고 차감 처리
+            // 3. ????    ?   ??
             for (Map.Entry<Long, Integer> entry : aggregatedItems.entrySet()) {
                 Long productId = entry.getKey();
                 Integer totalQuantity = entry.getValue();
@@ -71,10 +71,10 @@ public class ProductEventConsumer {
                         .build());
             }
 
-            // 4. 이벤트 처리 완료 마킹 (unique constraint를 통한 동시성 제어)
+            // 4. ??  ??   ???        ?(unique constraint?????  ??  ????  )
             markProcessed(event.getEventId(), "order-created");
 
-            // 5. 성공 이벤트 발행 (동일 트랜재션 내에서 아웃박스 테이블에 저장)
+            // 5. ?    ??  ??    ?(??   ?   ??????  ???      ????? ?   ?????
             StockDecreasedEvent successEvent = StockDecreasedEvent.builder()
                     .eventId(event.getEventId())
                     .orderId(event.getOrderId())
@@ -90,7 +90,7 @@ public class ProductEventConsumer {
 
         } catch (Exception e) {
             log.error("Error during order processing. Transaction will be rolled back. error={}", e.getMessage(), e);
-            // 런타임 예외를 던져 트랜잭션 롤백 유도
+            // ? ?????  ????   ?   ????    ??   
             throw new RuntimeException("Inventory processing error: " + e.getMessage(), e);
         }
     }
@@ -151,7 +151,7 @@ public class ProductEventConsumer {
     private boolean isDuplicate(String eventId, String eventType) {
         boolean exists = processedEventRepository.existsByEventId(eventId);
         if (exists) {
-            log.warn("중복 이벤트 무시: eventId={}, eventType={}", eventId, eventType);
+            log.warn("   ????  ???  ?? eventId={}, eventType={}", eventId, eventType);
         }
         return exists;
     }
@@ -159,6 +159,6 @@ public class ProductEventConsumer {
     private void markProcessed(String eventId, String eventType) {
         ProcessedEvent processedEvent = ProcessedEvent.create(eventId, eventType);
         processedEventRepository.save(processedEvent);
-        log.info("이벤트 처리 완료 기록: eventId={}, eventType={}", eventId, eventType);
+        log.info("??  ??   ???        ? eventId={}, eventType={}", eventId, eventType);
     }
 }

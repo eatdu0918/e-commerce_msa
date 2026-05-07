@@ -27,7 +27,7 @@ public class CategoryService {
     @Transactional
     @CacheEvict(value = "categories", allEntries = true)
     public CategoryResponse createCategory(CreateCategoryRequest request) {
-        log.info("카테고리 등록 시도: name={}", request.getName());
+        log.info("   ?    ???    ??  : name={}", request.getName());
 
         if (categoryRepository.existsByName(request.getName())) {
             throw new ProductDomainException(ProductDomainExceptionCode.DuplicateCategoryNameException);
@@ -47,7 +47,7 @@ public class CategoryService {
                 request.getDescriptionKo());
 
         Category savedCategory = categoryRepository.save(category);
-        log.info("카테고리 등록 완료: categoryId={}", savedCategory.getId());
+        log.info("   ?    ???    ?   : categoryId={}", savedCategory.getId());
 
         return CategoryResponse.from(savedCategory);
     }
@@ -86,7 +86,7 @@ public class CategoryService {
     @Transactional
     @CacheEvict(value = "categories", allEntries = true)
     public CategoryResponse updateCategory(Long categoryId, UpdateCategoryRequest request) {
-        log.info("카테고리 수정 시도: categoryId={}", categoryId);
+        log.info("   ?    ????   ??  : categoryId={}", categoryId);
 
         Category category = getActiveCategory(categoryId);
 
@@ -110,22 +110,22 @@ public class CategoryService {
                 request.getNameKo(),
                 request.getDescriptionKo());
 
-        log.info("카테고리 수정 완료: categoryId={}", categoryId);
+        log.info("   ?    ????   ?   : categoryId={}", categoryId);
         return CategoryResponse.from(category);
     }
 
     @Transactional
     @CacheEvict(value = "categories", allEntries = true)
     public void deleteCategory(Long categoryId) {
-        log.info("카테고리 삭제 시도: categoryId={}", categoryId);
+        log.info("   ?    ????????  : categoryId={}", categoryId);
 
         Category category = getActiveCategory(categoryId);
         category.deactivate();
 
-        // 하위 카테고리도 비활성화
+        // ??      ?    ????? ??   
         deactivateChildren(category);
 
-        log.info("카테고리 삭제 완료: categoryId={}", categoryId);
+        log.info("   ?    ???????   : categoryId={}", categoryId);
     }
 
     private void deactivateChildren(Category category) {

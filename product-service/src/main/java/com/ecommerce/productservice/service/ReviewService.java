@@ -2,7 +2,7 @@ package com.ecommerce.productservice.service;
 
 import com.ecommerce.productservice.dto.request.CreateReviewRequest;
 import com.ecommerce.productservice.dto.request.UpdateReviewRequest;
-import com.ecommerce.productservice.dto.response.PageResponse;
+import com.ecommerce.common.response.PageResponse;
 import com.ecommerce.productservice.dto.response.ReviewResponse;
 import com.ecommerce.productservice.entity.Review;
 import com.ecommerce.productservice.exception.ProductDomainException;
@@ -60,7 +60,7 @@ public class ReviewService {
         );
 
         reviewRepository.save(review);
-        log.info("리뷰 등록 완료 - reviewId={}, productId={}, userId={}", review.getId(), request.getProductId(), userId);
+        log.info("?    ?    ?    - reviewId={}, productId={}, userId={}", review.getId(), request.getProductId(), userId);
         return ReviewResponse.from(review);
     }
 
@@ -74,7 +74,7 @@ public class ReviewService {
         }
 
         review.update(request.getScore(), request.getContent(), request.getImageUrl());
-        log.info("리뷰 수정 완료 - reviewId={}, userId={}", reviewId, userId);
+        log.info("?    ??   ?    - reviewId={}, userId={}", reviewId, userId);
         return ReviewResponse.from(review);
     }
 
@@ -88,6 +88,6 @@ public class ReviewService {
         }
 
         review.delete();
-        log.info("리뷰 삭제 완료 - reviewId={}, userId={}", reviewId, userId);
+        log.info("?    ?????    - reviewId={}, userId={}", reviewId, userId);
     }
 }

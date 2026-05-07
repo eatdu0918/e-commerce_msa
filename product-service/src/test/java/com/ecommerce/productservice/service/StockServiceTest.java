@@ -37,15 +37,15 @@ class StockServiceTest {
 
     @BeforeEach
     void setUp() {
-        testProduct = createTestProduct(PRODUCT_ID, "테스트 상품", INITIAL_STOCK);
+        testProduct = createTestProduct(PRODUCT_ID, "??? ???  ?", INITIAL_STOCK);
     }
 
     @Nested
-    @DisplayName("재고 조회 테스트")
+    @DisplayName("????   ????? ??)
     class GetStockTest {
 
         @Test
-        @DisplayName("재고 조회 성공")
+        @DisplayName("????   ???   ")
         void getStock_success() {
             // given
             when(productRepository.findByIdAndIsActiveTrue(PRODUCT_ID)).thenReturn(Optional.of(testProduct));
@@ -60,7 +60,7 @@ class StockServiceTest {
         }
 
         @Test
-        @DisplayName("재고 조회 실패 - 존재하지 않는 상품")
+        @DisplayName("????   ????   -    ???? ??   ?  ?")
         void getStock_productNotFound_throwsException() {
             // given
             when(productRepository.findByIdAndIsActiveTrue(999L)).thenReturn(Optional.empty());
@@ -68,16 +68,16 @@ class StockServiceTest {
             // when & then
             assertThatThrownBy(() -> stockService.getStock(999L, null))
                     .isInstanceOf(ProductDomainException.class)
-                    .hasMessageContaining("상품을 찾을 수 없습니다");
+                    .hasMessageContaining("?  ???   ??????  ??  ");
         }
     }
 
     @Nested
-    @DisplayName("재고 차감 테스트")
+    @DisplayName("????    ???? ??)
     class DecreaseStockTest {
 
         @Test
-        @DisplayName("재고 차감 성공")
+        @DisplayName("????    ??   ")
         void decreaseStock_success() {
             // given
             int decreaseQuantity = 30;
@@ -95,10 +95,10 @@ class StockServiceTest {
         }
 
         @Test
-        @DisplayName("재고 차감 실패 - 재고 부족")
+        @DisplayName("????    ???   - ?????   ?)
         void decreaseStock_insufficientStock_throwsException() {
             // given
-            int decreaseQuantity = 150; // 재고보다 큼
+            int decreaseQuantity = 150; // ???  ? ????
             StockRequest request = new StockRequest(PRODUCT_ID, decreaseQuantity);
 
             when(productRepository.findByIdAndIsActiveTrue(PRODUCT_ID)).thenReturn(Optional.of(testProduct));
@@ -106,11 +106,11 @@ class StockServiceTest {
             // when & then
             assertThatThrownBy(() -> stockService.decreaseStock(request))
                     .isInstanceOf(ProductDomainException.class)
-                    .hasMessageContaining("재고가 부족합니다");
+                    .hasMessageContaining("???  ? ?       ??  ");
         }
 
         @Test
-        @DisplayName("재고 차감 실패 - 존재하지 않는 상품")
+        @DisplayName("????    ???   -    ???? ??   ?  ?")
         void decreaseStock_productNotFound_throwsException() {
             // given
             StockRequest request = new StockRequest(999L, 10);
@@ -120,11 +120,11 @@ class StockServiceTest {
             // when & then
             assertThatThrownBy(() -> stockService.decreaseStock(request))
                     .isInstanceOf(ProductDomainException.class)
-                    .hasMessageContaining("상품을 찾을 수 없습니다");
+                    .hasMessageContaining("?  ???   ??????  ??  ");
         }
 
         @Test
-        @DisplayName("재고 전량 차감 성공")
+        @DisplayName("?????        ??   ")
         void decreaseStock_allStock_success() {
             // given
             StockRequest request = new StockRequest(PRODUCT_ID, INITIAL_STOCK);
@@ -140,11 +140,11 @@ class StockServiceTest {
     }
 
     @Nested
-    @DisplayName("재고 증가 테스트")
+    @DisplayName("????   ? ??? ??)
     class IncreaseStockTest {
 
         @Test
-        @DisplayName("재고 증가 성공")
+        @DisplayName("????   ? ?   ")
         void increaseStock_success() {
             // given
             int increaseQuantity = 50;
@@ -162,7 +162,7 @@ class StockServiceTest {
         }
 
         @Test
-        @DisplayName("재고 증가 실패 - 존재하지 않는 상품")
+        @DisplayName("????   ? ??   -    ???? ??   ?  ?")
         void increaseStock_productNotFound_throwsException() {
             // given
             StockRequest request = new StockRequest(999L, 50);
@@ -172,16 +172,16 @@ class StockServiceTest {
             // when & then
             assertThatThrownBy(() -> stockService.increaseStock(request))
                     .isInstanceOf(ProductDomainException.class)
-                    .hasMessageContaining("상품을 찾을 수 없습니다");
+                    .hasMessageContaining("?  ???   ??????  ??  ");
         }
     }
 
     @Nested
-    @DisplayName("재고 복구 테스트")
+    @DisplayName("????   ????? ??)
     class RestoreStockTest {
 
         @Test
-        @DisplayName("재고 복구 성공")
+        @DisplayName("????   ???   ")
         void restoreStock_success() {
             // given
             int restoreQuantity = 20;
@@ -195,16 +195,16 @@ class StockServiceTest {
             // then
             assertThat(response).isNotNull();
             assertThat(response.getStockQuantity()).isEqualTo(INITIAL_STOCK + restoreQuantity);
-            assertThat(response.getMessage()).contains("복구");
+            assertThat(response.getMessage()).contains("   ??);
         }
     }
 
     @Nested
-    @DisplayName("재고 확인 테스트")
+    @DisplayName("?????    ??? ??)
     class CheckStockTest {
 
         @Test
-        @DisplayName("재고 확인 - 충분함")
+        @DisplayName("?????    - ?  ???)
         void checkStock_sufficient_returnsTrue() {
             // given
             when(productRepository.findByIdAndIsActiveTrue(PRODUCT_ID)).thenReturn(Optional.of(testProduct));
@@ -217,7 +217,7 @@ class StockServiceTest {
         }
 
         @Test
-        @DisplayName("재고 확인 - 부족함")
+        @DisplayName("?????    - ?      ?)
         void checkStock_insufficient_returnsFalse() {
             // given
             when(productRepository.findByIdAndIsActiveTrue(PRODUCT_ID)).thenReturn(Optional.of(testProduct));
@@ -230,7 +230,7 @@ class StockServiceTest {
         }
 
         @Test
-        @DisplayName("재고 확인 - 정확히 같음")
+        @DisplayName("?????    - ?   ??   ??)
         void checkStock_exact_returnsTrue() {
             // given
             when(productRepository.findByIdAndIsActiveTrue(PRODUCT_ID)).thenReturn(Optional.of(testProduct));
@@ -243,7 +243,7 @@ class StockServiceTest {
         }
 
         @Test
-        @DisplayName("재고 확인 실패 - 존재하지 않는 상품")
+        @DisplayName("?????    ??   -    ???? ??   ?  ?")
         void checkStock_productNotFound_throwsException() {
             // given
             when(productRepository.findByIdAndIsActiveTrue(999L)).thenReturn(Optional.empty());
@@ -251,12 +251,12 @@ class StockServiceTest {
             // when & then
             assertThatThrownBy(() -> stockService.checkStock(999L, 10))
                     .isInstanceOf(ProductDomainException.class)
-                    .hasMessageContaining("상품을 찾을 수 없습니다");
+                    .hasMessageContaining("?  ???   ??????  ??  ");
         }
     }
 
     private Product createTestProduct(Long id, String name, int stockQuantity) {
-        Product product = Product.create(name, "설명", new BigDecimal("10000"), stockQuantity, null, "http://image.url");
+        Product product = Product.create(name, "??  ", new BigDecimal("10000"), stockQuantity, null, "http://image.url");
         ReflectionTestUtils.setField(product, "id", id);
         return product;
     }

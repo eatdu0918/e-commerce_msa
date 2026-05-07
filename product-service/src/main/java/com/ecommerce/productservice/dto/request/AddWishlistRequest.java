@@ -13,6 +13,6 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AddWishlistRequest {
 
-    @NotNull(message = "상품 ID는 필수입니다.")
+    @NotNull(message = "?  ? ID???   ??  ??")
     Long productId;
 }

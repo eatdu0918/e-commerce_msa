@@ -14,11 +14,11 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class StockRequest {
 
-    @NotNull(message = "상품 ID는 필수입니다.")
+    @NotNull(message = "?  ? ID???   ??  ??")
     Long productId;
 
-    @NotNull(message = "수량은 필수입니다.")
-    @Min(value = 1, message = "수량은 1 이상이어야 합니다.")
+    @NotNull(message = "??  ?? ?   ??  ??")
+    @Min(value = 1, message = "??  ?? 1 ??  ??  ????  ??")
     Integer quantity;
 
     public static StockRequest of(Long productId, Integer quantity) {

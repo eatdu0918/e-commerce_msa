@@ -18,7 +18,7 @@ public class KafkaConfig {
     public static final String TOPIC_STOCK_DECREASED = "stock-decreased";
     public static final String TOPIC_STOCK_DECREASE_FAILED = "stock-decrease-failed";
 
-    /** Outbox String 템플릿만 있을 때 기본 KafkaTemplate이 생기지 않아 도메인 이벤트 발행용으로 둡니다. */
+    /** Outbox String ??  ?   ???   ??   ??KafkaTemplate????      ??   ?   ????  ??    ??   ???  ?? */
     @Bean
     @Primary
     public KafkaTemplate<String, Object> kafkaTemplate(KafkaProperties kafkaProperties) {

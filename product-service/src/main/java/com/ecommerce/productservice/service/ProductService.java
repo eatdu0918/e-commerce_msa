@@ -2,7 +2,7 @@ package com.ecommerce.productservice.service;
 
 import com.ecommerce.productservice.dto.request.CreateProductRequest;
 import com.ecommerce.productservice.dto.request.UpdateProductRequest;
-import com.ecommerce.productservice.dto.response.PageResponse;
+import com.ecommerce.common.response.PageResponse;
 import com.ecommerce.productservice.dto.response.ProductResponse;
 import com.ecommerce.productservice.entity.Category;
 import com.ecommerce.productservice.entity.Product;
@@ -31,7 +31,7 @@ public class ProductService {
     @Transactional
     @CacheEvict(value = "products", allEntries = true)
     public ProductResponse createProduct(CreateProductRequest request) {
-        log.info("상품 등록 시도: name={}", request.getName());
+        log.info("?  ? ?    ??  : name={}", request.getName());
 
         if (productRepository.existsByName(request.getName())) {
             throw new ProductDomainException(ProductDomainExceptionCode.DuplicateProductNameException);
@@ -55,7 +55,7 @@ public class ProductService {
                 request.getDescriptionKo());
 
         Product savedProduct = productRepository.save(product);
-        log.info("상품 등록 완료: productId={}, name={}", savedProduct.getId(), savedProduct.getName());
+        log.info("?  ? ?    ?   : productId={}, name={}", savedProduct.getId(), savedProduct.getName());
 
         return ProductResponse.from(savedProduct);
     }
@@ -93,11 +93,11 @@ public class ProductService {
             @CacheEvict(value = "products", allEntries = true)
     })
     public ProductResponse updateProduct(Long productId, UpdateProductRequest request) {
-        log.info("상품 수정 시도: productId={}", productId);
+        log.info("?  ? ??   ??  : productId={}", productId);
 
         Product product = getActiveProduct(productId);
 
-        // 상품명 중복 체크 (자기 자신 제외)
+        // ?  ? ?   ??    ?(? ?  ? ?  ??  )
         if (productRepository.existsByNameAndIdNot(request.getName(), productId)) {
             throw new ProductDomainException(ProductDomainExceptionCode.DuplicateProductNameException);
         }
@@ -119,7 +119,7 @@ public class ProductService {
                 request.getNameKo(),
                 request.getDescriptionKo());
 
-        log.info("상품 수정 완료: productId={}", productId);
+        log.info("?  ? ??   ?   : productId={}", productId);
         return ProductResponse.from(product);
     }
 
@@ -129,12 +129,12 @@ public class ProductService {
             @CacheEvict(value = "products", allEntries = true)
     })
     public void deleteProduct(Long productId) {
-        log.info("상품 삭제 시도: productId={}", productId);
+        log.info("?  ? ??????  : productId={}", productId);
 
         Product product = getActiveProduct(productId);
         product.delete();
 
-        log.info("상품 삭제 완료: productId={}", productId);
+        log.info("?  ? ?????   : productId={}", productId);
     }
 
     public Product getActiveProduct(Long productId) {

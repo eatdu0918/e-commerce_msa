@@ -44,7 +44,7 @@ public class CartService {
                 Product product = productService.getActiveProduct(productId);
                 items.add(buildCartItemResponse(product, quantity, preferKo));
             } catch (Exception e) {
-                log.warn("장바구니 상품 조회 실패 (삭제된 상품 제거): productId={}", productId);
+                log.warn("?  ? ????  ?    ????   (??????  ? ??  ): productId={}", productId);
                 redisTemplate.opsForHash().delete(key, entry.getKey().toString());
             }
         }
@@ -54,7 +54,7 @@ public class CartService {
 
     public CartItemResponse addToCart(Long userId, AddCartItemRequest request, String acceptLanguage) {
         boolean preferKo = CatalogLocaleHelper.preferKorean(acceptLanguage);
-        log.info("장바구니 추가 시도: userId={}, productId={}", userId, request.getProductId());
+        log.info("?  ? ????  ? ??  : userId={}, productId={}", userId, request.getProductId());
 
         Product product = productService.getActiveProduct(request.getProductId());
 
@@ -65,10 +65,10 @@ public class CartService {
         int newQuantity;
         if (existing != null) {
             newQuantity = Integer.parseInt(existing.toString()) + request.getQuantity();
-            log.info("장바구니 수량 증가: productId={}, newQuantity={}", request.getProductId(), newQuantity);
+            log.info("?  ? ?????      ?: productId={}, newQuantity={}", request.getProductId(), newQuantity);
         } else {
             newQuantity = request.getQuantity();
-            log.info("장바구니 추가 완료: productId={}", request.getProductId());
+            log.info("?  ? ????  ? ?   : productId={}", request.getProductId());
         }
 
         redisTemplate.opsForHash().put(key, productIdStr, String.valueOf(newQuantity));
@@ -79,7 +79,7 @@ public class CartService {
     public CartItemResponse updateCartItem(Long userId, Long productId, UpdateCartItemRequest request,
             String acceptLanguage) {
         boolean preferKo = CatalogLocaleHelper.preferKorean(acceptLanguage);
-        log.info("장바구니 수량 수정: userId={}, productId={}", userId, productId);
+        log.info("?  ? ?????   ??  : userId={}, productId={}", userId, productId);
 
         String key = CART_KEY_PREFIX + userId;
         String productIdStr = productId.toString();
@@ -92,12 +92,12 @@ public class CartService {
         redisTemplate.opsForHash().put(key, productIdStr, String.valueOf(request.getQuantity()));
         redisTemplate.expire(key, CART_TTL);
 
-        log.info("장바구니 수량 수정 완료: productId={}, newQuantity={}", productId, request.getQuantity());
+        log.info("?  ? ?????   ??   ?   : productId={}, newQuantity={}", productId, request.getQuantity());
         return buildCartItemResponse(product, request.getQuantity(), preferKo);
     }
 
     public void removeFromCart(Long userId, Long productId) {
-        log.info("장바구니 항목 삭제: userId={}, productId={}", userId, productId);
+        log.info("?  ? ??????????? userId={}, productId={}", userId, productId);
 
         String key = CART_KEY_PREFIX + userId;
         String productIdStr = productId.toString();
@@ -107,13 +107,13 @@ public class CartService {
         }
 
         redisTemplate.opsForHash().delete(key, productIdStr);
-        log.info("장바구니 항목 삭제 완료: productId={}", productId);
+        log.info("?  ? ????????????   : productId={}", productId);
     }
 
     public void clearCart(Long userId) {
-        log.info("장바구니 비우기: userId={}", userId);
+        log.info("?  ? ????? ?? ? userId={}", userId);
         redisTemplate.delete(CART_KEY_PREFIX + userId);
-        log.info("장바구니 비우기 완료: userId={}", userId);
+        log.info("?  ? ????? ?? ??   : userId={}", userId);
     }
 
     public int getCartItemCount(Long userId) {
