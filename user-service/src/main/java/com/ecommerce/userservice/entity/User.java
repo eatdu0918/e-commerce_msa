@@ -1,7 +1,8 @@
 package com.ecommerce.userservice.entity;
 
+import com.ecommerce.common.entity.BaseEntity;
+import com.ecommerce.common.enums.UserRole;
 import com.ecommerce.userservice.enums.Gender;
-import com.ecommerce.userservice.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;

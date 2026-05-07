@@ -8,6 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class TokenRefreshRequest {
 
-    @NotBlank(message = "Refresh Token은 필수입니다.")
+    @NotBlank(message = "Refresh Token?? ?   ??  ??")
     private String refreshToken;
 }

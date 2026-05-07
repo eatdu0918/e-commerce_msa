@@ -7,8 +7,8 @@ import com.ecommerce.userservice.dto.response.UserResponse;
 import com.ecommerce.userservice.enums.Gender;
 import com.ecommerce.userservice.exception.UserDomainException;
 import com.ecommerce.userservice.exception.UserDomainExceptionCode;
-import com.ecommerce.userservice.security.jwt.JwtTokenProvider;
-import com.ecommerce.userservice.service.TokenService;
+import com.ecommerce.common.security.JwtTokenProvider;
+import com.ecommerce.common.service.TokenService;
 import com.ecommerce.userservice.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -50,17 +50,17 @@ class UserControllerTest {
     ObjectMapper objectMapper;
 
     @Nested
-    @DisplayName("POST /api/auth/signup - 회원가입")
+    @DisplayName("POST /api/auth/signup - ???    ??)
     class SignUpTest {
 
         @Test
-        @DisplayName("회원가입 성공")
+        @DisplayName("???    ???   ")
         void signUp_success() throws Exception {
             // given
             SignUpRequest request = SignUpRequest.builder()
                     .email("test@example.com")
                     .password("Password123!")
-                    .name("테스트유저")
+                    .name("??? ?  ???")
                     .phoneNumber("010-1234-5678")
                     .gender(Gender.MALE)
                     .build();
@@ -76,13 +76,13 @@ class UserControllerTest {
         }
 
         @Test
-        @DisplayName("회원가입 실패 - 이메일 형식 오류")
+        @DisplayName("???    ????   - ??  ???    ??  ")
         void signUp_invalidEmail_fail() throws Exception {
             // given
             SignUpRequest request = SignUpRequest.builder()
                     .email("invalid-email")
                     .password("Password123!")
-                    .name("테스트유저")
+                    .name("??? ?  ???")
                     .phoneNumber("010-1234-5678")
                     .gender(Gender.MALE)
                     .build();
@@ -95,13 +95,13 @@ class UserControllerTest {
         }
 
         @Test
-        @DisplayName("회원가입 실패 - 비밀번호 형식 오류")
+        @DisplayName("???    ????   - ?? ?   ???    ??  ")
         void signUp_invalidPassword_fail() throws Exception {
             // given
             SignUpRequest request = SignUpRequest.builder()
                     .email("test@example.com")
                     .password("weak")
-                    .name("테스트유저")
+                    .name("??? ?  ???")
                     .phoneNumber("010-1234-5678")
                     .gender(Gender.MALE)
                     .build();
@@ -114,13 +114,13 @@ class UserControllerTest {
         }
 
         @Test
-        @DisplayName("회원가입 실패 - 중복 이메일")
+        @DisplayName("???    ????   -    ????  ??)
         void signUp_duplicateEmail_fail() throws Exception {
             // given
             SignUpRequest request = SignUpRequest.builder()
                     .email("test@example.com")
                     .password("Password123!")
-                    .name("테스트유저")
+                    .name("??? ?  ???")
                     .phoneNumber("010-1234-5678")
                     .gender(Gender.MALE)
                     .build();
@@ -137,11 +137,11 @@ class UserControllerTest {
     }
 
     @Nested
-    @DisplayName("POST /api/auth/login - 로그인")
+    @DisplayName("POST /api/auth/login -    ???)
     class LoginTest {
 
         @Test
-        @DisplayName("로그인 성공")
+        @DisplayName("   ????   ")
         void login_success() throws Exception {
             // given
             LoginRequest request = LoginRequest.builder()
@@ -171,7 +171,7 @@ class UserControllerTest {
         }
 
         @Test
-        @DisplayName("로그인 실패 - 존재하지 않는 이메일")
+        @DisplayName("   ?????   -    ???? ??   ??  ??)
         void login_emailNotFound_fail() throws Exception {
             // given
             LoginRequest request = LoginRequest.builder()
@@ -190,7 +190,7 @@ class UserControllerTest {
         }
 
         @Test
-        @DisplayName("로그인 실패 - 비밀번호 불일치")
+        @DisplayName("   ?????   - ?? ?   ???  ?  ?)
         void login_invalidPassword_fail() throws Exception {
             // given
             LoginRequest request = LoginRequest.builder()
@@ -210,11 +210,11 @@ class UserControllerTest {
     }
 
     @Nested
-    @DisplayName("POST /api/auth/refresh - 토큰 갱신")
+    @DisplayName("POST /api/auth/refresh - ?       ??)
     class RefreshTokenTest {
 
         @Test
-        @DisplayName("토큰 갱신 성공")
+        @DisplayName("?       ???   ")
         void refreshToken_success() throws Exception {
             // given
             String requestBody = "{\"refreshToken\":\"validRefreshToken\"}";
@@ -237,7 +237,7 @@ class UserControllerTest {
         }
 
         @Test
-        @DisplayName("토큰 갱신 실패 - 유효하지 않은 토큰")
+        @DisplayName("?       ????   - ?   ??? ??? ?   ")
         void refreshToken_invalidToken_fail() throws Exception {
             // given
             String requestBody = "{\"refreshToken\":\"invalidToken\"}";
@@ -254,17 +254,17 @@ class UserControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/auth/findUser/{email} - 이메일로 사용자 조회")
+    @DisplayName("GET /api/auth/findUser/{email} - ??  ??   ?????   ??)
     class FindUserByEmailTest {
 
         @Test
-        @DisplayName("이메일로 사용자 조회 성공")
+        @DisplayName("??  ??   ?????   ???   ")
         void findUserByEmail_success() throws Exception {
             // given
             UserResponse response = UserResponse.builder()
                     .id(1L)
                     .email("test@example.com")
-                    .name("테스트유저")
+                    .name("??? ?  ???")
                     .phoneNumber("010-1234-5678")
                     .role("USER")
                     .isActive(true)
@@ -281,7 +281,7 @@ class UserControllerTest {
         }
 
         @Test
-        @DisplayName("이메일로 사용자 조회 실패 - 존재하지 않음")
+        @DisplayName("??  ??   ?????   ????   -    ???? ??  ")
         void findUserByEmail_notFound_fail() throws Exception {
             // given
             when(userService.findUserByEmail("notexist@example.com"))

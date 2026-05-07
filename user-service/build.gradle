@@ -1,94 +1,34 @@
 plugins {
-	id 'java'
-    id 'org.springframework.boot' version '3.2.11'
-	id 'io.spring.dependency-management' version '1.1.7'
-}
-
-group = 'com.ecommerce'
-version = '0.0.1-SNAPSHOT'
-description = 'user-service'
-
-java {
-	toolchain {
-		languageVersion = JavaLanguageVersion.of(17)
-	}
-}
-
-configurations {
-	compileOnly {
-		extendsFrom annotationProcessor
-	}
-}
-
-repositories {
-	mavenCentral()
+    id 'org.springframework.boot'
 }
 
 dependencies {
+    implementation project(':ecommerce-common')
+
     implementation('org.springframework.boot:spring-boot-starter-web') {
         exclude group: 'org.springframework.boot', module: 'spring-boot-starter-tomcat'
     }
-
     implementation 'org.springframework.boot:spring-boot-starter-undertow'
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'io.micrometer:micrometer-registry-prometheus'
     implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
     implementation 'org.springframework.boot:spring-boot-configuration-processor'
 
-	compileOnly 'org.projectlombok:lombok'
-	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-
+    // DB
     implementation 'mysql:mysql-connector-java:8.0.33'
-
-    // Flyway
     implementation 'org.flywaydb:flyway-core'
     implementation 'org.flywaydb:flyway-mysql'
 
-    // Redis
-    implementation 'org.springframework.session:spring-session-data-redis'     // redis를 session으로 사용할 수 있게
-    implementation 'org.springframework.boot:spring-boot-starter-data-redis'   // redis 연결
-
-    // Spring Session과 Redis를 연동하기 위한 의존성
-    // 이 의존성을 추가하면 Redis를 세션 저장소로 사용할 수 있도록 Spring Session이 자동 구성됩니다.
+    // Redis Session (User specific)
     implementation 'org.springframework.session:spring-session-data-redis'
-    // Spring Data Redis: Redis 클라이언트를 추상화하고 Spring의 데이터 접근 계층과 통합합니다.
-    // 내부적으로 Lettuce(기본) 또는 Jedis 클라이언트를 사용합니다.
-    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
-    // Security
+    // Security Crypto
     implementation 'org.springframework.security:spring-security-crypto'
-    // Spring Security 프레임워크를 통합하기 위한 의존성
-    implementation 'org.springframework.boot:spring-boot-starter-security'
-    // JWT API (인터페이스 및 핵심 클래스)
-    implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
-    // JWT Implementation (실제 런타임 구현체)
-    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
-    // JSON 처리를 위한 Jackson 연동 (데이터 직렬화/역직렬화)
-    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
 
-    // Swagger (SpringDoc OpenAPI)
+    // Swagger
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
-
-    implementation 'jakarta.validation:jakarta.validation-api:3.0.2'
-//    annotationProcessor "com.querydsl:querydsl-apt:5.0.0:jakarta"
-//    annotationProcessor "jakarta.annotation:jakarta.annotation-api"
-//    annotationProcessor "jakarta.persistence:jakarta.persistence-api"
 }
 
 tasks.named('bootJar') {
-	archiveFileName = 'application.jar'
-}
-
-tasks.named('test') {
-	useJUnitPlatform()
-}
-
-tasks.named('compileJava') {
-    options.annotationProcessorPath = configurations.annotationProcessor
+    archiveFileName = 'application.jar'
 }

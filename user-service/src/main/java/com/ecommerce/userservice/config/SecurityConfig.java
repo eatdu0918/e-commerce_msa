@@ -1,7 +1,7 @@
 package com.ecommerce.userservice.config;
 
-import com.ecommerce.userservice.response.ApiResponse;
-import com.ecommerce.userservice.security.jwt.JwtAuthenticationFilter;
+import com.ecommerce.common.response.ApiResponse;
+import com.ecommerce.common.security.JwtAuthenticationFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +25,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    // 인증 불필요 경로
+    // ?    ?   ??    ?
     public static final String[] PUBLIC_PATHS = {
             "/api/auth/signup",
             "/api/auth/login",
@@ -33,7 +33,7 @@ public class SecurityConfig {
             "/api/auth/findUser/**"
     };
 
-    // Swagger 및 정적 리소스
+    // Swagger  ??    ?   ??
     public static final String[] SWAGGER_PATHS = {
             "/public/**",
             "/api/swagger-ui/**",
@@ -59,26 +59,26 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        // Public 엔드포인트
+                        // Public ?   ?????
                         .requestMatchers(PUBLIC_PATHS).permitAll()
-                        // Swagger 및 정적 리소스
+                        // Swagger  ??    ?   ??
                         .requestMatchers(SWAGGER_PATHS).permitAll()
-                        // Admin 전용 엔드포인트
+                        // Admin ?    ?   ?????
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        // 나머지는 인증 필요
+                        // ??     ???    ?   
                         .anyRequest().authenticated()
                 )
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
-                // JWT 필터 추가
+                // JWT ?    ?  ?
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                // 예외 처리
+                // ??      ??
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, authException) -> {
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                             response.setContentType("application/json;charset=UTF-8");
                             ApiResponse<Void> errorResponse = ApiResponse.<Void>builder()
-                                    .error(ApiResponse.Error.of("UNAUTHORIZED", "인증이 필요합니다."))
+                                    .error(ApiResponse.Error.of("UNAUTHORIZED", "?   ???   ??  ??"))
                                     .build();
                             response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
                         })
@@ -86,7 +86,7 @@ public class SecurityConfig {
                             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                             response.setContentType("application/json;charset=UTF-8");
                             ApiResponse<Void> errorResponse = ApiResponse.<Void>builder()
-                                    .error(ApiResponse.Error.of("FORBIDDEN", "접근 권한이 없습니다."))
+                                    .error(ApiResponse.Error.of("FORBIDDEN", "?        ????  ??  ."))
                                     .build();
                             response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
                         })

@@ -1,5 +1,6 @@
 package com.ecommerce.userservice.security;
 
+import com.ecommerce.common.security.CustomUserDetails;
 import com.ecommerce.userservice.entity.User;
 import com.ecommerce.userservice.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,11 @@ public class CustomUserDetailsService implements UserDetailsService {
             throw new UsernameNotFoundException("User is withdrawn: " + email);
         }
 
-        return CustomUserDetails.from(user);
+        return new CustomUserDetails(
+                user.getId(),
+                user.getEmail(),
+                user.getPassword(),
+                user.getRole()
+        );
     }
 }

@@ -1,9 +1,10 @@
 package com.ecommerce.userservice.service;
 
-import com.ecommerce.userservice.dto.response.PageResponse;
+import com.ecommerce.common.enums.UserRole;
+import com.ecommerce.common.response.PageResponse;
+import com.ecommerce.common.service.TokenService;
 import com.ecommerce.userservice.dto.response.UserResponse;
 import com.ecommerce.userservice.entity.User;
-import com.ecommerce.userservice.enums.UserRole;
 import com.ecommerce.userservice.exception.UserDomainException;
 import com.ecommerce.userservice.exception.UserDomainExceptionCode;
 import com.ecommerce.userservice.repository.UserRepository;
@@ -46,10 +47,10 @@ public class AdminService {
 
         user.withdraw();
 
-        // Redis에서 Refresh Token 삭제
+        // Redis? ?  Refresh Token ????
         tokenService.deleteRefreshToken(userId);
 
-        log.info("관리자에 의한 회원 탈퇴 처리: userId={}", userId);
+        log.info("?  ?   ????   ???  ??      ?? userId={}", userId);
     }
 
     @Transactional
@@ -74,10 +75,10 @@ public class AdminService {
 
         user.changeRole(newRole);
 
-        // 권한 변경 시 기존 토큰 무효화를 위해 Refresh Token 삭제
+        //     ?    ???   ???    ?  ?? ? ?    Refresh Token ????
         tokenService.deleteRefreshToken(userId);
 
-        log.info("회원 권한 변경: userId={}, newRole={}", userId, newRole);
+        log.info("???      ?    ? userId={}, newRole={}", userId, newRole);
         return convertToUserResponse(user);
     }
 

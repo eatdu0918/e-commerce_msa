@@ -1,12 +1,12 @@
 package com.ecommerce.userservice.controller;
 
-import com.ecommerce.userservice.dto.response.PageResponse;
+import com.ecommerce.common.response.PageResponse;
 import com.ecommerce.userservice.dto.response.UserResponse;
 import com.ecommerce.userservice.exception.UserDomainException;
 import com.ecommerce.userservice.exception.UserDomainExceptionCode;
-import com.ecommerce.userservice.security.jwt.JwtTokenProvider;
+import com.ecommerce.common.security.JwtTokenProvider;
 import com.ecommerce.userservice.service.AdminService;
-import com.ecommerce.userservice.service.TokenService;
+import com.ecommerce.common.service.TokenService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -45,11 +45,11 @@ class AdminControllerTest {
     TokenService tokenService;
 
     @Nested
-    @DisplayName("GET /api/admin/users - 전체 회원 조회")
+    @DisplayName("GET /api/admin/users - ?    ???     ??)
     class GetAllUsersTest {
 
         @Test
-        @DisplayName("전체 회원 조회 성공")
+        @DisplayName("?    ???     ???   ")
         void getAllUsers_success() throws Exception {
             // given
             UserResponse user1 = createUserResponse(1L, "user1@example.com", "USER");
@@ -77,7 +77,7 @@ class AdminControllerTest {
         }
 
         @Test
-        @DisplayName("전체 회원 조회 - 빈 목록")
+        @DisplayName("?    ???     ??- ??    ?)
         void getAllUsers_empty() throws Exception {
             // given
             PageResponse<UserResponse> emptyResponse = PageResponse.<UserResponse>builder()
@@ -101,7 +101,7 @@ class AdminControllerTest {
         }
 
         @Test
-        @DisplayName("전체 회원 조회 - 페이징 파라미터")
+        @DisplayName("?    ???     ??- ??   ????     ?)
         void getAllUsers_withPaging() throws Exception {
             // given
             PageResponse<UserResponse> pageResponse = PageResponse.<UserResponse>builder()
@@ -126,11 +126,11 @@ class AdminControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/admin/users/{userId} - 회원 상세 조회")
+    @DisplayName("GET /api/admin/users/{userId} - ???  ?       ??)
     class GetUserByIdTest {
 
         @Test
-        @DisplayName("회원 상세 조회 성공")
+        @DisplayName("???  ?       ???   ")
         void getUserById_success() throws Exception {
             // given
             UserResponse response = createUserResponse(1L, "test@example.com", "USER");
@@ -145,7 +145,7 @@ class AdminControllerTest {
         }
 
         @Test
-        @DisplayName("회원 상세 조회 실패 - 존재하지 않는 회원")
+        @DisplayName("???  ?       ????   -    ???? ??   ??? ")
         void getUserById_notFound_fail() throws Exception {
             // given
             when(adminService.getUserById(999L))
@@ -158,11 +158,11 @@ class AdminControllerTest {
     }
 
     @Nested
-    @DisplayName("DELETE /api/admin/users/{userId} - 회원 강제 탈퇴")
+    @DisplayName("DELETE /api/admin/users/{userId} - ???     ????  ")
     class DeleteUserTest {
 
         @Test
-        @DisplayName("회원 강제 탈퇴 성공")
+        @DisplayName("???     ????   ?   ")
         void deleteUser_success() throws Exception {
             // given
             doNothing().when(adminService).deleteUser(1L);
@@ -176,7 +176,7 @@ class AdminControllerTest {
         }
 
         @Test
-        @DisplayName("회원 강제 탈퇴 실패 - 존재하지 않는 회원")
+        @DisplayName("???     ????   ??   -    ???? ??   ??? ")
         void deleteUser_notFound_fail() throws Exception {
             // given
             doThrow(new UserDomainException(UserDomainExceptionCode.UserNotFoundException))
@@ -188,7 +188,7 @@ class AdminControllerTest {
         }
 
         @Test
-        @DisplayName("회원 강제 탈퇴 실패 - 이미 탈퇴한 회원")
+        @DisplayName("???     ????   ??   - ?? ? ??  ????? ")
         void deleteUser_alreadyWithdrawn_fail() throws Exception {
             // given
             doThrow(new UserDomainException(UserDomainExceptionCode.UserAlreadyWithdrawnException))
@@ -201,11 +201,11 @@ class AdminControllerTest {
     }
 
     @Nested
-    @DisplayName("PUT /api/admin/users/{userId}/role - 회원 권한 변경")
+    @DisplayName("PUT /api/admin/users/{userId}/role - ???      ?    ?)
     class ChangeUserRoleTest {
 
         @Test
-        @DisplayName("회원 권한 변경 성공 - USER to ADMIN")
+        @DisplayName("???      ?    ??    - USER to ADMIN")
         void changeUserRole_toAdmin_success() throws Exception {
             // given
             UserResponse response = createUserResponse(1L, "test@example.com", "ADMIN");
@@ -220,7 +220,7 @@ class AdminControllerTest {
         }
 
         @Test
-        @DisplayName("회원 권한 변경 성공 - ADMIN to USER")
+        @DisplayName("???      ?    ??    - ADMIN to USER")
         void changeUserRole_toUser_success() throws Exception {
             // given
             UserResponse response = createUserResponse(1L, "test@example.com", "USER");
@@ -235,7 +235,7 @@ class AdminControllerTest {
         }
 
         @Test
-        @DisplayName("회원 권한 변경 실패 - 존재하지 않는 회원")
+        @DisplayName("???      ?    ???   -    ???? ??   ??? ")
         void changeUserRole_userNotFound_fail() throws Exception {
             // given
             when(adminService.changeUserRole(anyLong(), anyString()))
@@ -248,7 +248,7 @@ class AdminControllerTest {
         }
 
         @Test
-        @DisplayName("회원 권한 변경 실패 - 탈퇴한 회원")
+        @DisplayName("???      ?    ???   - ??  ????? ")
         void changeUserRole_withdrawnUser_fail() throws Exception {
             // given
             when(adminService.changeUserRole(anyLong(), anyString()))
@@ -265,7 +265,7 @@ class AdminControllerTest {
         return UserResponse.builder()
                 .id(id)
                 .email(email)
-                .name("테스트유저")
+                .name("??? ?  ???")
                 .phoneNumber("010-1234-5678")
                 .role(role)
                 .isActive(true)

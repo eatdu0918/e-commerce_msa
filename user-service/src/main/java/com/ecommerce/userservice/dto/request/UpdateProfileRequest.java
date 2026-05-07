@@ -14,16 +14,16 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class UpdateProfileRequest {
 
-    @NotBlank(message = "이름은 필수입니다.")
+    @NotBlank(message = "??  ?? ?   ??  ??")
     String name;
 
-    @NotBlank(message = "휴대폰 번호는 필수입니다.")
+    @NotBlank(message = "?? ???   ????   ??  ??")
     @Pattern(
             regexp = "^01(?:0|1|[6-9])-(?:\\d{3}|\\d{4})-\\d{4}$",
-            message = "올바른 휴대폰 번호 형식이 아닙니다."
+            message = "?? ? ??? ???   ???   ???   ??  ."
     )
     String phoneNumber;
 
-    @NotNull(message = "성별은 필수입니다.")
+    @NotNull(message = "?   ?? ?   ??  ??")
     Gender gender;
 }

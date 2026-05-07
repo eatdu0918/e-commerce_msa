@@ -1,11 +1,11 @@
 package com.ecommerce.userservice.controller;
 
+import com.ecommerce.common.response.ApiResponse;
+import com.ecommerce.common.security.CustomUserDetails;
 import com.ecommerce.userservice.dto.request.*;
 import com.ecommerce.userservice.dto.response.LoginResponse;
 import com.ecommerce.userservice.dto.response.TokenResponse;
 import com.ecommerce.userservice.dto.response.UserResponse;
-import com.ecommerce.userservice.response.ApiResponse;
-import com.ecommerce.userservice.security.CustomUserDetails;
 import com.ecommerce.userservice.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.util.StringUtils;
+import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -29,14 +30,14 @@ public class UserController {
 
     @PostMapping("/signup")
     public ApiResponse<Void> signUp(@Valid @RequestBody SignUpRequest request) {
-        log.info("POST /api/auth/signup - 회원가입 요청");
+        log.info("POST /api/auth/signup - ?    ???  ");
         userService.signUp(request);
         return ApiResponse.ok();
     }
 
     @PostMapping("/login")
     public ApiResponse<LoginResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
-        log.info("POST /api/auth/login - 로그인");
+        log.info("POST /api/auth/login -    ???  ");
         LoginResponse loginResponse = userService.login(loginRequest);
         return ApiResponse.success(loginResponse);
     }
@@ -46,7 +47,7 @@ public class UserController {
     public ApiResponse<Void> logout(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             HttpServletRequest request) {
-        log.info("POST /api/auth/logout - 로그아웃: userId={}", userDetails.getUserId());
+        log.info("POST /api/auth/logout -    ?  : userId={}", userDetails.getUserId());
         String accessToken = extractToken(request);
         userService.logout(userDetails.getUserId(), accessToken);
         return ApiResponse.ok();
@@ -54,21 +55,21 @@ public class UserController {
 
     @PostMapping("/refresh")
     public ApiResponse<TokenResponse> refreshToken(@Valid @RequestBody TokenRefreshRequest request) {
-        log.info("POST /api/auth/refresh - 토큰 갱신");
+        log.info("POST /api/auth/refresh - ?      ");
         TokenResponse tokenResponse = userService.refreshToken(request.getRefreshToken());
         return ApiResponse.success(tokenResponse);
     }
 
     @GetMapping("/findUser/{email}")
     public ApiResponse<UserResponse> findUser(@PathVariable("email") String email) {
-        log.info("GET /api/auth/findUser - 회원정보조회");
+        log.info("GET /api/auth/findUser - ?  ?     ");
         return ApiResponse.success(userService.findUserByEmail(email));
     }
 
     @GetMapping("/me")
     @PreAuthorize("isAuthenticated()")
     public ApiResponse<UserResponse> getMyProfile(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        log.info("GET /api/auth/me - 내 정보 조회: userId={}", userDetails.getUserId());
+        log.info("GET /api/auth/me - ???      : userId={}", userDetails.getUserId());
         return ApiResponse.success(userService.getMyProfile(userDetails.getUserId()));
     }
 
@@ -77,7 +78,7 @@ public class UserController {
     public ApiResponse<UserResponse> updateProfile(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody UpdateProfileRequest request) {
-        log.info("PUT /api/auth/profile - 프로필 수정: userId={}", userDetails.getUserId());
+        log.info("PUT /api/auth/profile - ?  ???  : userId={}", userDetails.getUserId());
         return ApiResponse.success(userService.updateProfile(userDetails.getUserId(), request));
     }
 
@@ -86,7 +87,7 @@ public class UserController {
     public ApiResponse<Void> changePassword(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody ChangePasswordRequest request) {
-        log.info("PUT /api/auth/change-password - 비밀번호 변경: userId={}", userDetails.getUserId());
+        log.info("PUT /api/auth/change-password -   ?       ? userId={}", userDetails.getUserId());
         userService.changePassword(userDetails.getUserId(), request);
         return ApiResponse.ok();
     }
@@ -96,7 +97,7 @@ public class UserController {
     public ApiResponse<Void> withdraw(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody WithdrawRequest request) {
-        log.info("DELETE /api/auth/withdraw - 회원 탈퇴: userId={}", userDetails.getUserId());
+        log.info("DELETE /api/auth/withdraw - ?   ?  : userId={}", userDetails.getUserId());
         userService.withdraw(userDetails.getUserId(), request);
         return ApiResponse.ok();
     }
