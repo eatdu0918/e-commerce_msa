@@ -1,15 +1,15 @@
 package com.ecommerce.refundservice.controller;
 
 import com.ecommerce.refundservice.config.SecurityConfig;
-import com.ecommerce.refundservice.dto.response.PageResponse;
+import com.ecommerce.common.response.PageResponse;
 import com.ecommerce.refundservice.dto.response.RefundResponse;
 import com.ecommerce.refundservice.enums.RefundReason;
 import com.ecommerce.refundservice.enums.RefundStatus;
-import com.ecommerce.refundservice.enums.UserRole;
+import com.ecommerce.common.enums.UserRole;
 import com.ecommerce.refundservice.exception.RefundDomainException;
 import com.ecommerce.refundservice.exception.RefundDomainExceptionCode;
-import com.ecommerce.refundservice.security.CustomUserDetails;
-import com.ecommerce.refundservice.security.jwt.JwtAuthenticationFilter;
+import com.ecommerce.common.security.CustomUserDetails;
+import com.ecommerce.common.security.JwtAuthenticationFilter;
 import com.ecommerce.refundservice.service.RefundService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -64,11 +64,11 @@ class AdminRefundControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/admin/refunds - 전체 환불 목록 조회")
+    @DisplayName("GET /api/admin/refunds - ?    ??       ?   ??)
     class GetAllRefundsTest {
 
         @Test
-        @DisplayName("전체 환불 목록 조회 성공")
+        @DisplayName("?    ??       ?   ???   ")
         void getAllRefunds_success() throws Exception {
             // given
             RefundResponse refund = createRefundResponse(1L, RefundStatus.COMPLETED);
@@ -94,7 +94,7 @@ class AdminRefundControllerTest {
         }
 
         @Test
-        @DisplayName("상태별 환불 목록 조회 성공")
+        @DisplayName("?    ???       ?   ???   ")
         void getAllRefunds_withStatus() throws Exception {
             // given
             RefundResponse refund = createRefundResponse(1L, RefundStatus.PENDING);
@@ -121,7 +121,7 @@ class AdminRefundControllerTest {
         }
 
         @Test
-        @DisplayName("전체 환불 목록 조회 - 빈 목록")
+        @DisplayName("?    ??       ?   ??- ??    ?)
         void getAllRefunds_empty() throws Exception {
             // given
             PageResponse<RefundResponse> pageResponse = PageResponse.<RefundResponse>builder()
@@ -146,11 +146,11 @@ class AdminRefundControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/admin/refunds/{refundId} - 환불 상세 조회")
+    @DisplayName("GET /api/admin/refunds/{refundId} - ??   ?       ??)
     class GetRefundTest {
 
         @Test
-        @DisplayName("환불 상세 조회 성공")
+        @DisplayName("??   ?       ???   ")
         void getRefund_success() throws Exception {
             // given
             RefundResponse response = createRefundResponse(1L, RefundStatus.COMPLETED);
@@ -166,7 +166,7 @@ class AdminRefundControllerTest {
         }
 
         @Test
-        @DisplayName("환불 상세 조회 실패 - 존재하지 않음")
+        @DisplayName("??   ?       ????   -    ???? ??  ")
         void getRefund_notFound() throws Exception {
             // given
             when(refundService.getRefundById(999L))
@@ -179,11 +179,11 @@ class AdminRefundControllerTest {
     }
 
     @Nested
-    @DisplayName("PUT /api/admin/refunds/{refundId}/retry - 환불 재시도")
+    @DisplayName("PUT /api/admin/refunds/{refundId}/retry - ??   ?????)
     class RetryRefundTest {
 
         @Test
-        @DisplayName("환불 재시도 성공")
+        @DisplayName("??   ??????   ")
         void retryRefund_success() throws Exception {
             // given
             RefundResponse response = createRefundResponse(1L, RefundStatus.COMPLETED);
@@ -194,12 +194,12 @@ class AdminRefundControllerTest {
             mockMvc.perform(put("/api/admin/refunds/1/retry"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.message").value("환불 재시도가 요청되었습니다."))
+                    .andExpect(jsonPath("$.message").value("??   ???? ? ?   ?? ???  ??"))
                     .andExpect(jsonPath("$.data.status").value("COMPLETED"));
         }
 
         @Test
-        @DisplayName("환불 재시도 실패 - 존재하지 않음")
+        @DisplayName("??   ???????   -    ???? ??  ")
         void retryRefund_notFound() throws Exception {
             // given
             when(refundService.retryRefund(999L))
@@ -211,7 +211,7 @@ class AdminRefundControllerTest {
         }
 
         @Test
-        @DisplayName("환불 재시도 실패 - 유효하지 않은 상태")
+        @DisplayName("??   ???????   - ?   ??? ??? ?   ")
         void retryRefund_invalidStatus() throws Exception {
             // given
             when(refundService.retryRefund(1L))
@@ -224,11 +224,11 @@ class AdminRefundControllerTest {
     }
 
     @Nested
-    @DisplayName("PUT /api/admin/refunds/{refundId}/status - 환불 상태 변경")
+    @DisplayName("PUT /api/admin/refunds/{refundId}/status - ??   ?        ?)
     class UpdateRefundStatusTest {
 
         @Test
-        @DisplayName("환불 상태 변경 성공")
+        @DisplayName("??   ?        ??   ")
         void updateRefundStatus_success() throws Exception {
             // given
             RefundResponse response = createRefundResponse(1L, RefundStatus.PROCESSING);
@@ -247,12 +247,12 @@ class AdminRefundControllerTest {
                             .content(requestBody))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.message").value("환불 상태가 변경되었습니다."))
+                    .andExpect(jsonPath("$.message").value("??   ?              ??  ??  ."))
                     .andExpect(jsonPath("$.data.status").value("PROCESSING"));
         }
 
         @Test
-        @DisplayName("환불 상태 변경 실패 - 필수 값 누락")
+        @DisplayName("??   ?        ???   - ?     ??   ")
         void updateRefundStatus_validation_fail() throws Exception {
             // given
             String requestBody = """
@@ -268,7 +268,7 @@ class AdminRefundControllerTest {
         }
 
         @Test
-        @DisplayName("환불 상태 변경 실패 - 존재하지 않음")
+        @DisplayName("??   ?        ???   -    ???? ??  ")
         void updateRefundStatus_notFound() throws Exception {
             // given
             when(refundService.updateRefundStatus(999L, RefundStatus.PROCESSING))
@@ -300,7 +300,7 @@ class AdminRefundControllerTest {
                 .statusDescription(status.getDescription())
                 .refundReason(RefundReason.ORDER_CANCEL)
                 .refundReasonDescription(RefundReason.ORDER_CANCEL.getDescription())
-                .refundDetail("주문 취소로 인한 환불")
+                .refundDetail("     ?  ?  ??    ??  ")
                 .amount(new BigDecimal("50000"))
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())

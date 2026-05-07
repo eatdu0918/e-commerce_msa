@@ -1,6 +1,6 @@
 package com.ecommerce.refundservice.service;
 
-import com.ecommerce.refundservice.dto.response.PageResponse;
+import com.ecommerce.common.response.PageResponse;
 import com.ecommerce.refundservice.dto.response.RefundResponse;
 import com.ecommerce.refundservice.entity.Refund;
 import com.ecommerce.refundservice.enums.RefundReason;
@@ -58,11 +58,11 @@ class RefundServiceTest {
     }
 
     @Nested
-    @DisplayName("환불 조회")
+    @DisplayName("??      ??)
     class GetRefundTest {
 
         @Test
-        @DisplayName("환불 단건 조회 성공 (사용자)")
+        @DisplayName("??   ??      ???    (?????")
         void getRefund_success() {
             // given
             when(refundRepository.findByIdAndUserId(REFUND_ID, USER_ID))
@@ -78,7 +78,7 @@ class RefundServiceTest {
         }
 
         @Test
-        @DisplayName("환불 조회 실패 - 존재하지 않음")
+        @DisplayName("??      ????   -    ???? ??  ")
         void getRefund_notFound_throwsException() {
             // given
             when(refundRepository.findByIdAndUserId(999L, USER_ID))
@@ -87,11 +87,11 @@ class RefundServiceTest {
             // when & then
             assertThatThrownBy(() -> refundService.getRefund(999L, USER_ID))
                     .isInstanceOf(RefundDomainException.class)
-                    .hasMessageContaining("환불을 찾을 수 없습니다");
+                    .hasMessageContaining("??  ??   ??????  ??  ");
         }
 
         @Test
-        @DisplayName("내 환불 목록 조회")
+        @DisplayName("????       ?   ??)
         void getMyRefunds_success() {
             // given
             Pageable pageable = PageRequest.of(0, 10);
@@ -108,7 +108,7 @@ class RefundServiceTest {
         }
 
         @Test
-        @DisplayName("취소별 환불 조회 성공")
+        @DisplayName("?  ?  ???      ???   ")
         void getRefundByCancelId_success() {
             // given
             when(refundRepository.findByCancelId(CANCEL_ID)).thenReturn(Optional.of(testRefund));
@@ -122,7 +122,7 @@ class RefundServiceTest {
         }
 
         @Test
-        @DisplayName("취소별 환불 조회 실패 - 존재하지 않음")
+        @DisplayName("?  ?  ???      ????   -    ???? ??  ")
         void getRefundByCancelId_notFound_throwsException() {
             // given
             when(refundRepository.findByCancelId(999L)).thenReturn(Optional.empty());
@@ -130,11 +130,11 @@ class RefundServiceTest {
             // when & then
             assertThatThrownBy(() -> refundService.getRefundByCancelId(999L, USER_ID))
                     .isInstanceOf(RefundDomainException.class)
-                    .hasMessageContaining("환불을 찾을 수 없습니다");
+                    .hasMessageContaining("??  ??   ??????  ??  ");
         }
 
         @Test
-        @DisplayName("전체 환불 목록 조회")
+        @DisplayName("?    ??       ?   ??)
         void getAllRefunds_success() {
             // given
             Pageable pageable = PageRequest.of(0, 10);
@@ -151,7 +151,7 @@ class RefundServiceTest {
         }
 
         @Test
-        @DisplayName("상태별 환불 목록 조회")
+        @DisplayName("?    ???       ?   ??)
         void getRefundsByStatus_success() {
             // given
             Pageable pageable = PageRequest.of(0, 10);
@@ -168,7 +168,7 @@ class RefundServiceTest {
         }
 
         @Test
-        @DisplayName("관리자 환불 단건 조회 성공")
+        @DisplayName("?  ?    ??   ??      ???   ")
         void getRefundById_success() {
             // given
             when(refundRepository.findById(REFUND_ID)).thenReturn(Optional.of(testRefund));
@@ -182,7 +182,7 @@ class RefundServiceTest {
         }
 
         @Test
-        @DisplayName("관리자 환불 조회 실패 - 존재하지 않음")
+        @DisplayName("?  ?    ??      ????   -    ???? ??  ")
         void getRefundById_notFound_throwsException() {
             // given
             when(refundRepository.findById(999L)).thenReturn(Optional.empty());
@@ -190,16 +190,16 @@ class RefundServiceTest {
             // when & then
             assertThatThrownBy(() -> refundService.getRefundById(999L))
                     .isInstanceOf(RefundDomainException.class)
-                    .hasMessageContaining("환불을 찾을 수 없습니다");
+                    .hasMessageContaining("??  ??   ??????  ??  ");
         }
     }
 
     @Nested
-    @DisplayName("환불 재시도")
+    @DisplayName("??   ?????)
     class RetryRefundTest {
 
         @Test
-        @DisplayName("환불 재시도 성공")
+        @DisplayName("??   ??????   ")
         void retryRefund_success() {
             // given
             Refund failedRefund = createTestRefund(REFUND_ID, RefundStatus.FAILED);
@@ -217,7 +217,7 @@ class RefundServiceTest {
         }
 
         @Test
-        @DisplayName("환불 재시도 실패 - 존재하지 않음")
+        @DisplayName("??   ???????   -    ???? ??  ")
         void retryRefund_notFound_throwsException() {
             // given
             when(refundRepository.findById(999L)).thenReturn(Optional.empty());
@@ -225,11 +225,11 @@ class RefundServiceTest {
             // when & then
             assertThatThrownBy(() -> refundService.retryRefund(999L))
                     .isInstanceOf(RefundDomainException.class)
-                    .hasMessageContaining("환불을 찾을 수 없습니다");
+                    .hasMessageContaining("??  ??   ??????  ??  ");
         }
 
         @Test
-        @DisplayName("환불 재시도 실패 - 재시도 불가 상태")
+        @DisplayName("??   ???????   - ??????  ? ?   ")
         void retryRefund_invalidStatus_throwsException() {
             // given
             Refund completedRefund = createTestRefund(2L, RefundStatus.COMPLETED);
@@ -239,16 +239,16 @@ class RefundServiceTest {
             // when & then
             assertThatThrownBy(() -> refundService.retryRefund(2L))
                     .isInstanceOf(RefundDomainException.class)
-                    .hasMessageContaining("유효하지 않은 환불 상태입니다");
+                    .hasMessageContaining("?   ??? ??? ??   ?   ??  ??);
         }
     }
 
     @Nested
-    @DisplayName("환불 상태 변경")
+    @DisplayName("??   ?        ?)
     class UpdateRefundStatusTest {
 
         @Test
-        @DisplayName("환불 상태 변경 성공")
+        @DisplayName("??   ?        ??   ")
         void updateRefundStatus_success() {
             // given
             when(refundRepository.findById(REFUND_ID)).thenReturn(Optional.of(testRefund));
@@ -262,7 +262,7 @@ class RefundServiceTest {
         }
 
         @Test
-        @DisplayName("환불 상태 변경 실패 - 존재하지 않음")
+        @DisplayName("??   ?        ???   -    ???? ??  ")
         void updateRefundStatus_notFound_throwsException() {
             // given
             when(refundRepository.findById(999L)).thenReturn(Optional.empty());
@@ -270,14 +270,14 @@ class RefundServiceTest {
             // when & then
             assertThatThrownBy(() -> refundService.updateRefundStatus(999L, RefundStatus.PROCESSING))
                     .isInstanceOf(RefundDomainException.class)
-                    .hasMessageContaining("환불을 찾을 수 없습니다");
+                    .hasMessageContaining("??  ??   ??????  ??  ");
         }
     }
 
     private Refund createTestRefund(Long id, RefundStatus status) {
         Refund refund = Refund.create(
                 ORDER_ID, CANCEL_ID, PAYMENT_ID, USER_ID,
-                RefundReason.ORDER_CANCEL, "주문 취소로 인한 환불",
+                RefundReason.ORDER_CANCEL, "     ?  ?  ??    ??  ",
                 new BigDecimal("50000")
         );
         ReflectionTestUtils.setField(refund, "id", id);

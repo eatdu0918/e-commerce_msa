@@ -27,7 +27,7 @@ public class OutboxEventPublisher {
                 KafkaConfig.TOPIC_REFUND_COMPLETED,
                 event
         );
-        log.info("Outbox 이벤트 저장 완료: RefundCompletedEvent, refundId={}", event.getRefundId());
+        log.info("Outbox ??  ???????   : RefundCompletedEvent, refundId={}", event.getRefundId());
     }
 
     public void publishRefundFailedEvent(RefundFailedEvent event) {
@@ -38,7 +38,7 @@ public class OutboxEventPublisher {
                 KafkaConfig.TOPIC_REFUND_FAILED,
                 event
         );
-        log.info("Outbox 이벤트 저장 완료: RefundFailedEvent, refundId={}", event.getRefundId());
+        log.info("Outbox ??  ???????   : RefundFailedEvent, refundId={}", event.getRefundId());
     }
 
     private void saveOutboxEvent(String aggregateType, String aggregateId,
@@ -54,8 +54,8 @@ public class OutboxEventPublisher {
             );
             outboxEventRepository.save(outboxEvent);
         } catch (JsonProcessingException e) {
-            log.error("Outbox 이벤트 직렬화 실패: eventType={}", eventType, e);
-            throw new RuntimeException("이벤트 직렬화 실패", e);
+            log.error("Outbox ??  ??   ?????  : eventType={}", eventType, e);
+            throw new RuntimeException("??  ??   ?????  ", e);
         }
     }
 }

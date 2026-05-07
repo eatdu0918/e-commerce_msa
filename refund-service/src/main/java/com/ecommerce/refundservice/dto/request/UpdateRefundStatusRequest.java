@@ -14,6 +14,6 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UpdateRefundStatusRequest {
 
-    @NotNull(message = "환불 상태는 필수입니다.")
+    @NotNull(message = "??   ?   ???   ??  ??")
     RefundStatus status;
 }

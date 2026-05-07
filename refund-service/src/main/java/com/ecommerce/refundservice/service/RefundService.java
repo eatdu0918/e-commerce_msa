@@ -1,6 +1,6 @@
 package com.ecommerce.refundservice.service;
 
-import com.ecommerce.refundservice.dto.response.PageResponse;
+import com.ecommerce.common.response.PageResponse;
 import com.ecommerce.refundservice.dto.response.RefundResponse;
 import com.ecommerce.refundservice.entity.Refund;
 import com.ecommerce.refundservice.enums.RefundStatus;
@@ -71,7 +71,7 @@ public class RefundService {
 
     @Transactional
     public RefundResponse retryRefund(Long refundId) {
-        log.info("환불 재시도: refundId={}", refundId);
+        log.info("??   ????? refundId={}", refundId);
 
         Refund refund = refundRepository.findById(refundId)
                 .orElseThrow(() -> new RefundDomainException(RefundDomainExceptionCode.RefundNotFoundException));
@@ -96,7 +96,7 @@ public class RefundService {
                     .build();
 
             refundEventProducer.sendRefundCompletedEvent(completedEvent);
-            log.info("환불 재시도 성공: refundId={}", refundId);
+            log.info("??   ??????   : refundId={}", refundId);
 
         } catch (Exception e) {
             refund.fail(e.getMessage());
@@ -114,7 +114,7 @@ public class RefundService {
                     .build();
 
             refundEventProducer.sendRefundFailedEvent(failedEvent);
-            log.error("환불 재시도 실패: refundId={}", refundId, e);
+            log.error("??   ???????  : refundId={}", refundId, e);
         }
 
         return RefundResponse.from(refund);
@@ -122,13 +122,13 @@ public class RefundService {
 
     @Transactional
     public RefundResponse updateRefundStatus(Long refundId, RefundStatus newStatus) {
-        log.info("환불 상태 변경 시도: refundId={}, newStatus={}", refundId, newStatus);
+        log.info("??   ?        ???  : refundId={}, newStatus={}", refundId, newStatus);
 
         Refund refund = refundRepository.findById(refundId)
                 .orElseThrow(() -> new RefundDomainException(RefundDomainExceptionCode.RefundNotFoundException));
 
         refund.updateStatus(newStatus);
-        log.info("환불 상태 변경 완료: refundId={}, status={}", refundId, newStatus);
+        log.info("??   ?        ??   : refundId={}, status={}", refundId, newStatus);
 
         return RefundResponse.from(refund);
     }

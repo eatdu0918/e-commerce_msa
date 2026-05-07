@@ -45,7 +45,7 @@ public class RefundEventConsumer {
                                         0L,
                                         event.getUserId(),
                                         RefundReason.ORDER_CANCEL,
-                                        "취소 승인에 의한 자동 환불",
+                                        "?  ???  ?????   ? ?  ??  ",
                                         totalAmount);
 
                         refund.process();
@@ -78,7 +78,7 @@ public class RefundEventConsumer {
                                         0L,
                                         event.getUserId(),
                                         RefundReason.ORDER_CANCEL,
-                                        "취소 승인에 의한 자동 환불",
+                                        "?  ???  ?????   ? ?  ??  ",
                                         BigDecimal.ZERO);
                         refund.fail(e.getMessage());
                         Refund savedRefund = refundRepository.save(refund);
@@ -115,7 +115,7 @@ public class RefundEventConsumer {
 
         private boolean isDuplicate(String eventId, String eventType) {
                 if (eventId != null && processedEventRepository.existsByEventId(eventId)) {
-                        log.warn("중복 이벤트 무시: eventId={}, eventType={}", eventId, eventType);
+                        log.warn("   ????  ???  ?? eventId={}, eventType={}", eventId, eventType);
                         return true;
                 }
                 return false;

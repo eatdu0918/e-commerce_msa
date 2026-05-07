@@ -6,11 +6,11 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum RefundReason {
-    ORDER_CANCEL("주문 취소"),
-    PRODUCT_DEFECT("상품 불량"),
-    WRONG_PRODUCT("오배송"),
-    CHANGE_OF_MIND("단순 변심"),
-    OTHER("기타");
+    ORDER_CANCEL("     ?  ??),
+    PRODUCT_DEFECT("?  ? ?  ??),
+    WRONG_PRODUCT("??  ??),
+    CHANGE_OF_MIND("??      ??),
+    OTHER("   ?");
 
     private final String description;
 }
