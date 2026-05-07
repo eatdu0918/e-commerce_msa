@@ -6,8 +6,8 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum CouponType {
-    PERCENTAGE("정률 할인"),
-    FIXED_AMOUNT("정액 할인");
+    PERCENTAGE("?    ?   "),
+    FIXED_AMOUNT("?    ?   ");
 
     private final String description;
 }

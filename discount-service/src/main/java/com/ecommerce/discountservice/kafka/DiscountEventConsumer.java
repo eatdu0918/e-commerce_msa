@@ -141,7 +141,7 @@ public class DiscountEventConsumer {
 
     private boolean isDuplicate(String eventId, String eventType) {
         if (eventId != null && processedEventRepository.existsByEventId(eventId)) {
-            log.warn("중복 이벤트 무시: eventId={}, eventType={}", eventId, eventType);
+            log.warn("   ????  ???  ?? eventId={}, eventType={}", eventId, eventType);
             return true;
         }
         return false;

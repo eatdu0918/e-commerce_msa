@@ -3,8 +3,8 @@ package com.ecommerce.discountservice.controller;
 import com.ecommerce.discountservice.dto.request.CalculateDiscountRequest;
 import com.ecommerce.discountservice.dto.response.DiscountCalculationResponse;
 import com.ecommerce.discountservice.dto.response.UserCouponResponse;
-import com.ecommerce.discountservice.response.ApiResponse;
-import com.ecommerce.discountservice.security.CustomUserDetails;
+import com.ecommerce.common.response.ApiResponse;
+import com.ecommerce.common.security.CustomUserDetails;
 import com.ecommerce.discountservice.service.CouponService;
 import com.ecommerce.discountservice.service.DiscountCalculationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Tag(name = "Coupon", description = "쿠폰 API")
+@Tag(name = "Coupon", description = "?   ?API")
 @RestController
 @RequestMapping("/api/coupons")
 @RequiredArgsConstructor
@@ -26,7 +26,7 @@ public class CouponController {
     private final CouponService couponService;
     private final DiscountCalculationService discountCalculationService;
 
-    @Operation(summary = "내 쿠폰 목록 조회")
+    @Operation(summary = "???   ?    ?   ??)
     @GetMapping
     public ResponseEntity<ApiResponse<List<UserCouponResponse>>> getMyCoupons(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -34,7 +34,7 @@ public class CouponController {
         return ResponseEntity.ok(ApiResponse.success(coupons));
     }
 
-    @Operation(summary = "사용 가능한 쿠폰 목록 조회")
+    @Operation(summary = "????   ?  ??   ?    ?   ??)
     @GetMapping("/available")
     public ResponseEntity<ApiResponse<List<UserCouponResponse>>> getAvailableCoupons(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -42,16 +42,16 @@ public class CouponController {
         return ResponseEntity.ok(ApiResponse.success(coupons));
     }
 
-    @Operation(summary = "쿠폰 발급받기")
+    @Operation(summary = "?   ?   ?  ?  ")
     @PostMapping("/claim/{code}")
     public ResponseEntity<ApiResponse<UserCouponResponse>> claimCoupon(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable String code) {
         UserCouponResponse response = couponService.claimCoupon(userDetails.getUserId(), code);
-        return ResponseEntity.ok(ApiResponse.success(response, "쿠폰이 발급되었습니다."));
+        return ResponseEntity.ok(ApiResponse.success(response, "?   ??   ??? ???  ??"));
     }
 
-    @Operation(summary = "할인 금액 계산")
+    @Operation(summary = "?        ??   ?)
     @PostMapping("/calculate")
     public ResponseEntity<ApiResponse<DiscountCalculationResponse>> calculateDiscount(
             @AuthenticationPrincipal CustomUserDetails userDetails,

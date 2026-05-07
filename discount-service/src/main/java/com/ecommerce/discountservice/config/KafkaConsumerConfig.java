@@ -21,8 +21,8 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
- * TypeId 헤더 없이 JSON만 오는 메시지와 JsonSerializer(헤더 포함) 메시지 모두
- * 토픽당 단일 DTO로 역직렬화한다.
+ * TypeId ??   ??   JSON ???      ?  ??? JsonSerializer(??   ?? ?    ?  ?     ?
+ * ?   ????   DTO ??? ?????  .
  */
 @Configuration
 public class KafkaConsumerConfig {

@@ -23,7 +23,7 @@ public class DiscountCalculationService {
 
     @Transactional(readOnly = true)
     public DiscountCalculationResponse calculateDiscount(Long userId, CalculateDiscountRequest request) {
-        log.info("할인 계산 시도: userId={}, userCouponId={}, orderAmount={}",
+        log.info("?    ?   ???  : userId={}, userCouponId={}, orderAmount={}",
                 userId, request.getUserCouponId(), request.getOrderAmount());
 
         UserCoupon userCoupon = userCouponRepository.findByIdAndUserId(request.getUserCouponId(), userId)
@@ -34,7 +34,7 @@ public class DiscountCalculationService {
                     userCoupon.getId(),
                     userCoupon.getCoupon().getId(),
                     request.getOrderAmount(),
-                    "사용할 수 없는 쿠폰입니다."
+                    "?????????   ?   ??  ??"
             );
         }
 
@@ -46,13 +46,13 @@ public class DiscountCalculationService {
                     userCoupon.getId(),
                     coupon.getId(),
                     request.getOrderAmount(),
-                    String.format("최소 주문 금액(%s원) 이상이어야 합니다.", coupon.getMinOrderAmount())
+                    String.format("   ??         ?%s?? ??  ??  ????  ??", coupon.getMinOrderAmount())
             );
         }
 
         BigDecimal discountAmount = coupon.calculateDiscount(request.getOrderAmount());
 
-        log.info("할인 계산 완료: discountAmount={}", discountAmount);
+        log.info("?    ?   ??   : discountAmount={}", discountAmount);
 
         return DiscountCalculationResponse.applicable(
                 userCoupon.getId(),

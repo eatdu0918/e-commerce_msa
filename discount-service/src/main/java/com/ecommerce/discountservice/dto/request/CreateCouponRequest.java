@@ -19,19 +19,19 @@ import java.time.LocalDateTime;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class CreateCouponRequest {
 
-    @NotBlank(message = "쿠폰 코드는 필수입니다.")
+    @NotBlank(message = "?   ??   ???   ??  ??")
     String code;
 
-    @NotBlank(message = "쿠폰 이름은 필수입니다.")
+    @NotBlank(message = "?   ???  ?? ?   ??  ??")
     String name;
 
     String description;
 
-    @NotNull(message = "쿠폰 타입은 필수입니다.")
+    @NotNull(message = "?   ?????? ?   ??  ??")
     CouponType couponType;
 
-    @NotNull(message = "할인 값은 필수입니다.")
-    @Positive(message = "할인 값은 0보다 커야 합니다.")
+    @NotNull(message = "?      ?? ?   ??  ??")
+    @Positive(message = "?      ?? 0  ????   ???  ??")
     BigDecimal discountValue;
 
     BigDecimal minOrderAmount;
@@ -40,9 +40,9 @@ public class CreateCouponRequest {
 
     Integer totalQuantity;
 
-    @NotNull(message = "유효 시작일은 필수입니다.")
+    @NotNull(message = "?    ??  ??? ?   ??  ??")
     LocalDateTime validFrom;
 
-    @NotNull(message = "유효 종료일은 필수입니다.")
+    @NotNull(message = "?    ?   ??? ?   ??  ??")
     LocalDateTime validUntil;
 }

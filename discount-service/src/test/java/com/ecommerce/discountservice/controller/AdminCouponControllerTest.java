@@ -2,13 +2,13 @@ package com.ecommerce.discountservice.controller;
 
 import com.ecommerce.discountservice.dto.response.BulkGrantCouponResponse;
 import com.ecommerce.discountservice.dto.response.CouponResponse;
-import com.ecommerce.discountservice.dto.response.PageResponse;
+import com.ecommerce.common.response.PageResponse;
 import com.ecommerce.discountservice.enums.CouponType;
 import com.ecommerce.discountservice.exception.DiscountDomainException;
 import com.ecommerce.discountservice.exception.DiscountDomainExceptionCode;
-import com.ecommerce.discountservice.security.jwt.JwtTokenProvider;
+import com.ecommerce.common.security.JwtTokenProvider;
 import com.ecommerce.discountservice.service.CouponService;
-import com.ecommerce.discountservice.service.TokenService;
+import com.ecommerce.common.service.TokenService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -52,22 +52,22 @@ class AdminCouponControllerTest {
     TokenService tokenService;
 
     @Nested
-    @DisplayName("POST /api/admin/coupons - 쿠폰 생성")
+    @DisplayName("POST /api/admin/coupons - ?   ???  ")
     class CreateCouponTest {
 
         @Test
-        @DisplayName("쿠폰 생성 성공")
+        @DisplayName("?   ???   ?   ")
         void createCoupon_success() throws Exception {
             // given
-            CouponResponse response = createCouponResponse(1L, "SAVE10", "10% 할인");
+            CouponResponse response = createCouponResponse(1L, "SAVE10", "10% ?   ");
 
             when(couponService.createCoupon(any())).thenReturn(response);
 
             String requestBody = """
                     {
                         "code": "SAVE10",
-                        "name": "10% 할인",
-                        "description": "전 상품 10% 할인",
+                        "name": "10% ?   ",
+                        "description": "???  ? 10% ?   ",
                         "couponType": "PERCENTAGE",
                         "discountValue": 10,
                         "minOrderAmount": 10000,
@@ -88,7 +88,7 @@ class AdminCouponControllerTest {
         }
 
         @Test
-        @DisplayName("쿠폰 생성 실패 - 중복 코드")
+        @DisplayName("?   ???   ??   -    ???   ?)
         void createCoupon_duplicateCode() throws Exception {
             // given
             when(couponService.createCoupon(any()))
@@ -97,7 +97,7 @@ class AdminCouponControllerTest {
             String requestBody = """
                     {
                         "code": "SAVE10",
-                        "name": "10% 할인",
+                        "name": "10% ?   ",
                         "couponType": "PERCENTAGE",
                         "discountValue": 10,
                         "validFrom": "2024-01-01T00:00:00",
@@ -113,12 +113,12 @@ class AdminCouponControllerTest {
         }
 
         @Test
-        @DisplayName("쿠폰 생성 실패 - 필수 값 누락")
+        @DisplayName("?   ???   ??   - ?     ??   ")
         void createCoupon_validation_fail() throws Exception {
             // given
             String requestBody = """
                     {
-                        "name": "10% 할인"
+                        "name": "10% ?   "
                     }
                     """;
 
@@ -131,11 +131,11 @@ class AdminCouponControllerTest {
     }
 
     @Nested
-    @DisplayName("POST /api/admin/coupons/bulk-grant - 쿠폰 일괄 발급")
+    @DisplayName("POST /api/admin/coupons/bulk-grant - ?   ???      ??)
     class BulkGrantCouponTest {
 
         @Test
-        @DisplayName("일괄 발급 성공")
+        @DisplayName("??      ???   ")
         void bulkGrantCoupon_success() throws Exception {
             BulkGrantCouponResponse response = BulkGrantCouponResponse.builder()
                     .couponCode("WELCOME10")
@@ -163,7 +163,7 @@ class AdminCouponControllerTest {
         }
 
         @Test
-        @DisplayName("일괄 발급 실패 - userIds 비어 있음")
+        @DisplayName("??      ????   - userIds ??  ???  ")
         void bulkGrantCoupon_validation_emptyUserIds() throws Exception {
             String requestBody = """
                     {
@@ -180,15 +180,15 @@ class AdminCouponControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/admin/coupons - 전체 쿠폰 목록 조회")
+    @DisplayName("GET /api/admin/coupons - ?    ?   ?    ?   ??)
     class GetAllCouponsTest {
 
         @Test
-        @DisplayName("전체 쿠폰 목록 조회 성공")
+        @DisplayName("?    ?   ?    ?   ???   ")
         void getAllCoupons_success() throws Exception {
             // given
-            CouponResponse coupon1 = createCouponResponse(1L, "SAVE10", "10% 할인");
-            CouponResponse coupon2 = createCouponResponse(2L, "SAVE3000", "3000원 할인");
+            CouponResponse coupon1 = createCouponResponse(1L, "SAVE10", "10% ?   ");
+            CouponResponse coupon2 = createCouponResponse(2L, "SAVE3000", "3000???   ");
 
             PageResponse<CouponResponse> pageResponse = PageResponse.<CouponResponse>builder()
                     .content(List.of(coupon1, coupon2))
@@ -213,14 +213,14 @@ class AdminCouponControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/admin/coupons/{couponId} - 쿠폰 상세 조회")
+    @DisplayName("GET /api/admin/coupons/{couponId} - ?   ??       ??)
     class GetCouponTest {
 
         @Test
-        @DisplayName("쿠폰 상세 조회 성공")
+        @DisplayName("?   ??       ???   ")
         void getCoupon_success() throws Exception {
             // given
-            CouponResponse response = createCouponResponse(1L, "SAVE10", "10% 할인");
+            CouponResponse response = createCouponResponse(1L, "SAVE10", "10% ?   ");
 
             when(couponService.getCoupon(1L)).thenReturn(response);
 
@@ -233,7 +233,7 @@ class AdminCouponControllerTest {
         }
 
         @Test
-        @DisplayName("쿠폰 상세 조회 실패 - 존재하지 않음")
+        @DisplayName("?   ??       ????   -    ???? ??  ")
         void getCoupon_notFound() throws Exception {
             // given
             when(couponService.getCoupon(999L))
@@ -246,21 +246,21 @@ class AdminCouponControllerTest {
     }
 
     @Nested
-    @DisplayName("PUT /api/admin/coupons/{couponId} - 쿠폰 수정")
+    @DisplayName("PUT /api/admin/coupons/{couponId} - ?   ???  ")
     class UpdateCouponTest {
 
         @Test
-        @DisplayName("쿠폰 수정 성공")
+        @DisplayName("?   ???   ?   ")
         void updateCoupon_success() throws Exception {
             // given
-            CouponResponse response = createCouponResponse(1L, "SAVE10", "업데이트된 쿠폰");
+            CouponResponse response = createCouponResponse(1L, "SAVE10", "??  ??  ???   ?);
 
             when(couponService.updateCoupon(anyLong(), any())).thenReturn(response);
 
             String requestBody = """
                     {
-                        "name": "업데이트된 쿠폰",
-                        "description": "수정된 설명",
+                        "name": "??  ??  ???   ?,
+                        "description": "??  ????  ",
                         "couponType": "PERCENTAGE",
                         "discountValue": 15,
                         "minOrderAmount": 15000,
@@ -281,7 +281,7 @@ class AdminCouponControllerTest {
         }
 
         @Test
-        @DisplayName("쿠폰 수정 실패 - 존재하지 않음")
+        @DisplayName("?   ???   ??   -    ???? ??  ")
         void updateCoupon_notFound() throws Exception {
             // given
             when(couponService.updateCoupon(anyLong(), any()))
@@ -289,7 +289,7 @@ class AdminCouponControllerTest {
 
             String requestBody = """
                     {
-                        "name": "업데이트된 쿠폰",
+                        "name": "??  ??  ???   ?,
                         "couponType": "PERCENTAGE",
                         "discountValue": 15,
                         "validFrom": "2024-01-01T00:00:00",
@@ -307,11 +307,11 @@ class AdminCouponControllerTest {
     }
 
     @Nested
-    @DisplayName("DELETE /api/admin/coupons/{couponId} - 쿠폰 삭제")
+    @DisplayName("DELETE /api/admin/coupons/{couponId} - ?   ?????)
     class DeleteCouponTest {
 
         @Test
-        @DisplayName("쿠폰 삭제 성공")
+        @DisplayName("?   ??????   ")
         void deleteCoupon_success() throws Exception {
             // given
             doNothing().when(couponService).deleteCoupon(1L);
@@ -325,7 +325,7 @@ class AdminCouponControllerTest {
         }
 
         @Test
-        @DisplayName("쿠폰 삭제 실패 - 존재하지 않음")
+        @DisplayName("?   ???????   -    ???? ??  ")
         void deleteCoupon_notFound() throws Exception {
             // given
             doThrow(new DiscountDomainException(DiscountDomainExceptionCode.CouponNotFoundException))
@@ -342,7 +342,7 @@ class AdminCouponControllerTest {
                 .id(id)
                 .code(code)
                 .name(name)
-                .description("테스트 쿠폰")
+                .description("??? ???   ?)
                 .couponType(CouponType.PERCENTAGE)
                 .discountValue(new BigDecimal("10"))
                 .minOrderAmount(new BigDecimal("10000"))

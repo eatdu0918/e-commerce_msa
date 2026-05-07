@@ -5,7 +5,7 @@ import com.ecommerce.discountservice.dto.request.CreateCouponRequest;
 import com.ecommerce.discountservice.dto.request.UpdateCouponRequest;
 import com.ecommerce.discountservice.dto.response.BulkGrantCouponResponse;
 import com.ecommerce.discountservice.dto.response.CouponResponse;
-import com.ecommerce.discountservice.dto.response.PageResponse;
+import com.ecommerce.common.response.PageResponse;
 import com.ecommerce.discountservice.dto.response.UserCouponResponse;
 import com.ecommerce.discountservice.entity.Coupon;
 import com.ecommerce.discountservice.entity.UserCoupon;
@@ -33,7 +33,7 @@ public class CouponService {
 
     @Transactional
     public CouponResponse createCoupon(CreateCouponRequest request) {
-        log.info("쿠폰 생성 시도: code={}", request.getCode());
+        log.info("?   ???   ??  : code={}", request.getCode());
 
         if (couponRepository.existsByCode(request.getCode())) {
             throw new DiscountDomainException(DiscountDomainExceptionCode.CouponAlreadyExistsException);
@@ -53,7 +53,7 @@ public class CouponService {
         );
 
         Coupon savedCoupon = couponRepository.save(coupon);
-        log.info("쿠폰 생성 완료: couponId={}, code={}", savedCoupon.getId(), savedCoupon.getCode());
+        log.info("?   ???   ?   : couponId={}, code={}", savedCoupon.getId(), savedCoupon.getCode());
 
         return CouponResponse.from(savedCoupon);
     }
@@ -81,7 +81,7 @@ public class CouponService {
 
     @Transactional
     public CouponResponse updateCoupon(Long couponId, UpdateCouponRequest request) {
-        log.info("쿠폰 수정 시도: couponId={}", couponId);
+        log.info("?   ???   ??  : couponId={}", couponId);
 
         Coupon coupon = couponRepository.findById(couponId)
                 .orElseThrow(() -> new DiscountDomainException(DiscountDomainExceptionCode.CouponNotFoundException));
@@ -99,24 +99,24 @@ public class CouponService {
                 request.getIsActive()
         );
 
-        log.info("쿠폰 수정 완료: couponId={}", couponId);
+        log.info("?   ???   ?   : couponId={}", couponId);
         return CouponResponse.from(coupon);
     }
 
     @Transactional
     public void deleteCoupon(Long couponId) {
-        log.info("쿠폰 삭제 시도: couponId={}", couponId);
+        log.info("?   ???????  : couponId={}", couponId);
 
         Coupon coupon = couponRepository.findById(couponId)
                 .orElseThrow(() -> new DiscountDomainException(DiscountDomainExceptionCode.CouponNotFoundException));
 
         coupon.deactivate();
-        log.info("쿠폰 삭제(비활성화) 완료: couponId={}", couponId);
+        log.info("?   ??????? ??   ) ?   : couponId={}", couponId);
     }
 
     @Transactional
     public UserCouponResponse claimCoupon(Long userId, String couponCode) {
-        log.info("쿠폰 발급 시도: userId={}, code={}", userId, couponCode);
+        log.info("?   ?   ????  : userId={}, code={}", userId, couponCode);
 
         Coupon coupon = couponRepository.findByCodeAndIsActiveTrue(couponCode)
                 .orElseThrow(() -> new DiscountDomainException(DiscountDomainExceptionCode.CouponNotFoundException));
@@ -138,7 +138,7 @@ public class CouponService {
         UserCoupon userCoupon = UserCoupon.create(userId, coupon);
         UserCoupon savedUserCoupon = userCouponRepository.save(userCoupon);
 
-        log.info("쿠폰 발급 완료: userCouponId={}, userId={}, couponId={}",
+        log.info("?   ?   ???   : userCouponId={}, userId={}, couponId={}",
                 savedUserCoupon.getId(), userId, coupon.getId());
 
         return UserCouponResponse.from(savedUserCoupon);
@@ -149,7 +149,7 @@ public class CouponService {
         String couponCode = request.getCouponCode();
         List<Long> userIds = request.getUserIds().stream().distinct().toList();
 
-        log.info("쿠폰 일괄 발급 시도: code={}, userCount={}", couponCode, userIds.size());
+        log.info("?   ???      ????  : code={}, userCount={}", couponCode, userIds.size());
 
         Coupon coupon = couponRepository.findByCodeAndIsActiveTrue(couponCode)
                 .orElseThrow(() -> new DiscountDomainException(DiscountDomainExceptionCode.CouponNotFoundException));
@@ -167,7 +167,7 @@ public class CouponService {
                 continue;
             }
             if (!coupon.hasAvailableQuantity()) {
-                log.warn("쿠폰 수량 소진으로 일괄 발급 중단: code={}", couponCode);
+                log.warn("?   ???   ??? ??   ??      ??   ?? code={}", couponCode);
                 break;
             }
             coupon.incrementIssuedQuantity();
@@ -175,7 +175,7 @@ public class CouponService {
             granted++;
         }
 
-        log.info("쿠폰 일괄 발급 완료: code={}, granted={}, skipped={}", couponCode, granted, skipped);
+        log.info("?   ???      ???   : code={}, granted={}, skipped={}", couponCode, granted, skipped);
 
         return BulkGrantCouponResponse.builder()
                 .couponCode(couponCode)
@@ -209,7 +209,7 @@ public class CouponService {
 
     @Transactional
     public void useCoupon(Long userCouponId, Long orderId) {
-        log.info("쿠폰 사용 처리: userCouponId={}, orderId={}", userCouponId, orderId);
+        log.info("?   ?????   ?? userCouponId={}, orderId={}", userCouponId, orderId);
 
         UserCoupon userCoupon = userCouponRepository.findById(userCouponId)
                 .orElseThrow(() -> new DiscountDomainException(DiscountDomainExceptionCode.UserCouponNotFoundException));
@@ -219,16 +219,16 @@ public class CouponService {
         }
 
         userCoupon.use(orderId);
-        log.info("쿠폰 사용 완료: userCouponId={}, orderId={}", userCouponId, orderId);
+        log.info("?   ??????   : userCouponId={}, orderId={}", userCouponId, orderId);
     }
 
     @Transactional
     public void restoreCoupon(Long orderId) {
-        log.info("쿠폰 복원 시도: orderId={}", orderId);
+        log.info("?   ?   ????  : orderId={}", orderId);
 
         userCouponRepository.findByOrderId(orderId).ifPresent(userCoupon -> {
             userCoupon.restore();
-            log.info("쿠폰 복원 완료: userCouponId={}, orderId={}", userCoupon.getId(), orderId);
+            log.info("?   ?   ???   : userCouponId={}, orderId={}", userCoupon.getId(), orderId);
         });
     }
 }

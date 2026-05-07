@@ -44,11 +44,11 @@ class DiscountCalculationServiceTest {
 
     @BeforeEach
     void setUp() {
-        percentageCoupon = createTestCoupon(COUPON_ID, "PERCENT10", "10% 할인",
+        percentageCoupon = createTestCoupon(COUPON_ID, "PERCENT10", "10% ?   ",
                 CouponType.PERCENTAGE, new BigDecimal("10"),
                 new BigDecimal("10000"), new BigDecimal("5000"));
 
-        fixedAmountCoupon = createTestCoupon(COUPON_ID + 1, "FIXED3000", "3000원 할인",
+        fixedAmountCoupon = createTestCoupon(COUPON_ID + 1, "FIXED3000", "3000???   ",
                 CouponType.FIXED_AMOUNT, new BigDecimal("3000"),
                 new BigDecimal("15000"), null);
 
@@ -56,11 +56,11 @@ class DiscountCalculationServiceTest {
     }
 
     @Nested
-    @DisplayName("정률 할인 계산")
+    @DisplayName("?    ?    ?   ?)
     class PercentageDiscountTest {
 
         @Test
-        @DisplayName("정률 할인 계산 성공")
+        @DisplayName("?    ?    ?   ??   ")
         void calculateDiscount_percentage_success() {
             // given
             BigDecimal orderAmount = new BigDecimal("50000");
@@ -79,7 +79,7 @@ class DiscountCalculationServiceTest {
         }
 
         @Test
-        @DisplayName("정률 할인 - 최대 할인 금액 적용")
+        @DisplayName("?    ?    -    ? ?        ??   ")
         void calculateDiscount_percentage_maxDiscountApplied() {
             // given
             BigDecimal orderAmount = new BigDecimal("100000");
@@ -93,18 +93,18 @@ class DiscountCalculationServiceTest {
 
             // then
             assertThat(response.getIsApplicable()).isTrue();
-            // 100000 * 10% = 10000 이지만 maxDiscountAmount가 5000이므로 5000 적용
+            // 100000 * 10% = 10000 ??? ?maxDiscountAmount    5000?? ? ?5000 ?   
             assertThat(response.getDiscountAmount()).isEqualByComparingTo(new BigDecimal("5000"));
             assertThat(response.getFinalAmount()).isEqualByComparingTo(new BigDecimal("95000"));
         }
     }
 
     @Nested
-    @DisplayName("정액 할인 계산")
+    @DisplayName("?    ?    ?   ?)
     class FixedAmountDiscountTest {
 
         @Test
-        @DisplayName("정액 할인 계산 성공")
+        @DisplayName("?    ?    ?   ??   ")
         void calculateDiscount_fixedAmount_success() {
             // given
             UserCoupon fixedUserCoupon = createTestUserCoupon(2L, USER_ID, fixedAmountCoupon);
@@ -125,11 +125,11 @@ class DiscountCalculationServiceTest {
     }
 
     @Nested
-    @DisplayName("할인 적용 불가")
+    @DisplayName("?    ?    ?  ?")
     class NotApplicableTest {
 
         @Test
-        @DisplayName("할인 계산 실패 - 사용자 쿠폰 없음")
+        @DisplayName("?    ?   ???   - ??????   ???  ")
         void calculateDiscount_userCouponNotFound_throwsException() {
             // given
             CalculateDiscountRequest request = new CalculateDiscountRequest(999L, new BigDecimal("50000"));
@@ -140,14 +140,14 @@ class DiscountCalculationServiceTest {
             // when & then
             assertThatThrownBy(() -> discountCalculationService.calculateDiscount(USER_ID, request))
                     .isInstanceOf(DiscountDomainException.class)
-                    .hasMessageContaining("사용자 쿠폰을 찾을 수 없습니다");
+                    .hasMessageContaining("??????   ??   ??????  ??  ");
         }
 
         @Test
-        @DisplayName("할인 적용 불가 - 최소 주문 금액 미달")
+        @DisplayName("?    ?    ?  ? -    ??         ?   ??)
         void calculateDiscount_minOrderAmountNotMet() {
             // given
-            BigDecimal orderAmount = new BigDecimal("5000"); // 최소 주문 금액 10000원 미달
+            BigDecimal orderAmount = new BigDecimal("5000"); //    ??         ?10000??   ??
             CalculateDiscountRequest request = new CalculateDiscountRequest(USER_COUPON_ID, orderAmount);
 
             when(userCouponRepository.findByIdAndUserId(USER_COUPON_ID, USER_ID))
@@ -159,14 +159,14 @@ class DiscountCalculationServiceTest {
             // then
             assertThat(response.getIsApplicable()).isFalse();
             assertThat(response.getDiscountAmount()).isEqualByComparingTo(BigDecimal.ZERO);
-            assertThat(response.getMessage()).contains("최소 주문 금액");
+            assertThat(response.getMessage()).contains("   ??         ?);
         }
 
         @Test
-        @DisplayName("할인 적용 불가 - 쿠폰 이미 사용됨")
+        @DisplayName("?    ?    ?  ? - ?   ??? ? ?????)
         void calculateDiscount_couponAlreadyUsed() {
             // given
-            userCoupon.use(500L); // 쿠폰을 이미 사용 상태로 변경
+            userCoupon.use(500L); // ?   ???? ? ?????    ?    ?
             BigDecimal orderAmount = new BigDecimal("50000");
             CalculateDiscountRequest request = new CalculateDiscountRequest(USER_COUPON_ID, orderAmount);
 
@@ -179,14 +179,14 @@ class DiscountCalculationServiceTest {
             // then
             assertThat(response.getIsApplicable()).isFalse();
             assertThat(response.getDiscountAmount()).isEqualByComparingTo(BigDecimal.ZERO);
-            assertThat(response.getMessage()).contains("사용할 수 없는 쿠폰");
+            assertThat(response.getMessage()).contains("?????????   ?   ?);
         }
 
         @Test
-        @DisplayName("할인 적용 불가 - 만료된 쿠폰")
+        @DisplayName("?    ?    ?  ? -     ???   ?)
         void calculateDiscount_expiredCoupon() {
             // given
-            Coupon expiredCoupon = createTestCoupon(20L, "EXPIRED", "만료 쿠폰",
+            Coupon expiredCoupon = createTestCoupon(20L, "EXPIRED", "    ??   ?,
                     CouponType.PERCENTAGE, new BigDecimal("10"),
                     new BigDecimal("10000"), new BigDecimal("5000"));
             ReflectionTestUtils.setField(expiredCoupon, "validFrom", LocalDateTime.now().minusDays(30));
@@ -203,7 +203,7 @@ class DiscountCalculationServiceTest {
 
             // then
             assertThat(response.getIsApplicable()).isFalse();
-            assertThat(response.getMessage()).contains("사용할 수 없는 쿠폰");
+            assertThat(response.getMessage()).contains("?????????   ?   ?);
         }
     }
 
@@ -211,7 +211,7 @@ class DiscountCalculationServiceTest {
                                      BigDecimal discountValue, BigDecimal minOrderAmount,
                                      BigDecimal maxDiscountAmount) {
         Coupon coupon = Coupon.create(
-                code, name, "테스트 쿠폰", type, discountValue,
+                code, name, "??? ???   ?, type, discountValue,
                 minOrderAmount, maxDiscountAmount,
                 100, LocalDateTime.now().minusDays(1), LocalDateTime.now().plusDays(30)
         );

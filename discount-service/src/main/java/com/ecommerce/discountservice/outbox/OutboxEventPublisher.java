@@ -28,7 +28,7 @@ public class OutboxEventPublisher {
                 KafkaConfig.TOPIC_COUPON_USED,
                 event
         );
-        log.info("Outbox 이벤트 저장 완료: CouponUsedEvent, orderId={}", event.getOrderId());
+        log.info("Outbox ??  ???????   : CouponUsedEvent, orderId={}", event.getOrderId());
     }
 
     public void publishCouponUseFailedEvent(CouponUseFailedEvent event) {
@@ -39,7 +39,7 @@ public class OutboxEventPublisher {
                 KafkaConfig.TOPIC_COUPON_USE_FAILED,
                 event
         );
-        log.info("Outbox 이벤트 저장 완료: CouponUseFailedEvent, orderId={}", event.getOrderId());
+        log.info("Outbox ??  ???????   : CouponUseFailedEvent, orderId={}", event.getOrderId());
     }
 
     public void publishCouponRestoredEvent(CouponRestoredEvent event) {
@@ -50,7 +50,7 @@ public class OutboxEventPublisher {
                 KafkaConfig.TOPIC_COUPON_RESTORED,
                 event
         );
-        log.info("Outbox 이벤트 저장 완료: CouponRestoredEvent, orderId={}", event.getOrderId());
+        log.info("Outbox ??  ???????   : CouponRestoredEvent, orderId={}", event.getOrderId());
     }
 
     private void saveOutboxEvent(String aggregateType, String aggregateId,
@@ -66,8 +66,8 @@ public class OutboxEventPublisher {
             );
             outboxEventRepository.save(outboxEvent);
         } catch (JsonProcessingException e) {
-            log.error("Outbox 이벤트 직렬화 실패: eventType={}", eventType, e);
-            throw new RuntimeException("이벤트 직렬화 실패", e);
+            log.error("Outbox ??  ??   ?????  : eventType={}", eventType, e);
+            throw new RuntimeException("??  ??   ?????  ", e);
         }
     }
 }

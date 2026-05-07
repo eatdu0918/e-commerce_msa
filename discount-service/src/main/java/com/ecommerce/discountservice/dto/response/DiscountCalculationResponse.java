@@ -33,12 +33,12 @@ public class DiscountCalculationResponse {
                 .discountAmount(discountAmount)
                 .finalAmount(orderAmount.subtract(discountAmount))
                 .isApplicable(true)
-                .message("쿠폰 적용 가능")
+                .message("    ?     ??)
                 .build();
     }
 
     public static DiscountCalculationResponse notApplicable(Long userCouponId, Long couponId,
-                                                            BigDecimal orderAmount, String reason) {
+                                                             BigDecimal orderAmount, String reason) {
         return DiscountCalculationResponse.builder()
                 .userCouponId(userCouponId)
                 .couponId(couponId)

@@ -4,14 +4,14 @@ import com.ecommerce.discountservice.dto.response.DiscountCalculationResponse;
 import com.ecommerce.discountservice.dto.response.UserCouponResponse;
 import com.ecommerce.discountservice.enums.CouponStatus;
 import com.ecommerce.discountservice.enums.CouponType;
-import com.ecommerce.discountservice.enums.UserRole;
-import com.ecommerce.discountservice.security.CustomUserDetails;
+import com.ecommerce.common.enums.UserRole;
+import com.ecommerce.common.security.CustomUserDetails;
 import com.ecommerce.discountservice.exception.DiscountDomainException;
 import com.ecommerce.discountservice.exception.DiscountDomainExceptionCode;
-import com.ecommerce.discountservice.security.jwt.JwtTokenProvider;
+import com.ecommerce.common.security.JwtTokenProvider;
 import com.ecommerce.discountservice.service.CouponService;
 import com.ecommerce.discountservice.service.DiscountCalculationService;
-import com.ecommerce.discountservice.service.TokenService;
+import com.ecommerce.common.service.TokenService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -80,11 +80,11 @@ class CouponControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/coupons - 내 쿠폰 목록 조회")
+    @DisplayName("GET /api/coupons - ???   ?    ?   ??)
     class GetMyCouponsTest {
 
         @Test
-        @DisplayName("내 쿠폰 목록 조회 성공")
+        @DisplayName("???   ?    ?   ???   ")
         void getMyCoupons_success() throws Exception {
             // given
             UserCouponResponse coupon1 = createUserCouponResponse(1L, 100L, "SAVE10");
@@ -101,7 +101,7 @@ class CouponControllerTest {
         }
 
         @Test
-        @DisplayName("내 쿠폰 목록 조회 - 빈 목록")
+        @DisplayName("???   ?    ?   ??- ??    ?)
         void getMyCoupons_empty() throws Exception {
             // given
             when(couponService.getUserCoupons(anyLong())).thenReturn(List.of());
@@ -116,11 +116,11 @@ class CouponControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/coupons/available - 사용 가능한 쿠폰 조회")
+    @DisplayName("GET /api/coupons/available - ????   ?  ??   ?   ??)
     class GetAvailableCouponsTest {
 
         @Test
-        @DisplayName("사용 가능한 쿠폰 목록 조회 성공")
+        @DisplayName("????   ?  ??   ?    ?   ???   ")
         void getAvailableCoupons_success() throws Exception {
             // given
             UserCouponResponse availableCoupon = createUserCouponResponse(1L, 100L, "SAVE10");
@@ -137,11 +137,11 @@ class CouponControllerTest {
     }
 
     @Nested
-    @DisplayName("POST /api/coupons/claim/{code} - 쿠폰 발급")
+    @DisplayName("POST /api/coupons/claim/{code} - ?   ?   ??)
     class ClaimCouponTest {
 
         @Test
-        @DisplayName("쿠폰 발급 성공")
+        @DisplayName("?   ?   ???   ")
         void claimCoupon_success() throws Exception {
             // given
             UserCouponResponse response = createUserCouponResponse(1L, 100L, "SAVE10");
@@ -157,7 +157,7 @@ class CouponControllerTest {
         }
 
         @Test
-        @DisplayName("쿠폰 발급 실패 - 쿠폰 없음")
+        @DisplayName("?   ?   ????   - ?   ???  ")
         void claimCoupon_notFound() throws Exception {
             // given
             when(couponService.claimCoupon(anyLong(), anyString()))
@@ -170,7 +170,7 @@ class CouponControllerTest {
         }
 
         @Test
-        @DisplayName("쿠폰 발급 실패 - 이미 발급받음")
+        @DisplayName("?   ?   ????   - ?? ?    ?  ?  ")
         void claimCoupon_alreadyClaimed() throws Exception {
             // given
             when(couponService.claimCoupon(anyLong(), anyString()))
@@ -183,7 +183,7 @@ class CouponControllerTest {
         }
 
         @Test
-        @DisplayName("쿠폰 발급 실패 - 수량 소진")
+        @DisplayName("?   ?   ????   - ??   ??? ")
         void claimCoupon_outOfStock() throws Exception {
             // given
             when(couponService.claimCoupon(anyLong(), anyString()))
@@ -197,15 +197,15 @@ class CouponControllerTest {
     }
 
     @Nested
-    @DisplayName("POST /api/coupons/calculate - 할인 금액 계산")
+    @DisplayName("POST /api/coupons/calculate - ?        ??   ?)
     class CalculateDiscountTest {
 
         @Test
-        @DisplayName("할인 금액 계산 성공")
+        @DisplayName("?        ??   ??   ")
         void calculateDiscount_success() throws Exception {
             // given
             DiscountCalculationResponse response = DiscountCalculationResponse.applicable(
-                    1L, 10L, "10% 할인", new BigDecimal("50000"), new BigDecimal("5000")
+                    1L, 10L, "10% ?   ", new BigDecimal("50000"), new BigDecimal("5000")
             );
 
             when(discountCalculationService.calculateDiscount(anyLong(), any())).thenReturn(response);
@@ -229,11 +229,11 @@ class CouponControllerTest {
         }
 
         @Test
-        @DisplayName("할인 금액 계산 - 적용 불가")
+        @DisplayName("?        ??   ?- ?    ?  ?")
         void calculateDiscount_notApplicable() throws Exception {
             // given
             DiscountCalculationResponse response = DiscountCalculationResponse.notApplicable(
-                    1L, 10L, new BigDecimal("5000"), "최소 주문 금액(10000원) 이상이어야 합니다."
+                    1L, 10L, new BigDecimal("5000"), "   ??         ?10000?? ??  ??  ????  ??"
             );
 
             when(discountCalculationService.calculateDiscount(anyLong(), any())).thenReturn(response);
@@ -262,7 +262,7 @@ class CouponControllerTest {
                 .userId(userId)
                 .couponId(10L)
                 .couponCode(couponCode)
-                .couponName("테스트 쿠폰")
+                .couponName("??? ???   ?)
                 .couponType(CouponType.PERCENTAGE)
                 .discountValue(new BigDecimal("10"))
                 .status(CouponStatus.AVAILABLE)
