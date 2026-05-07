@@ -1,10 +1,10 @@
 package com.ecommerce.paymentservice.controller;
 
 import com.ecommerce.paymentservice.dto.request.CreatePaymentRequest;
-import com.ecommerce.paymentservice.dto.response.PageResponse;
+import com.ecommerce.common.response.PageResponse;
 import com.ecommerce.paymentservice.dto.response.PaymentResponse;
-import com.ecommerce.paymentservice.response.ApiResponse;
-import com.ecommerce.paymentservice.security.CustomUserDetails;
+import com.ecommerce.common.response.ApiResponse;
+import com.ecommerce.common.security.CustomUserDetails;
 import com.ecommerce.paymentservice.service.PaymentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -17,7 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "Payment", description = "결제 API")
+@Tag(name = "Payment", description = "   ??API")
 @RestController
 @RequestMapping("/api/payments")
 @RequiredArgsConstructor
@@ -25,16 +25,16 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
-    @Operation(summary = "결제 생성")
+    @Operation(summary = "   ????  ")
     @PostMapping
     public ResponseEntity<ApiResponse<PaymentResponse>> createPayment(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody CreatePaymentRequest request) {
         PaymentResponse response = paymentService.createPayment(userDetails.getUserId(), request);
-        return ResponseEntity.ok(ApiResponse.success(response, "결제가 생성되었습니다."));
+        return ResponseEntity.ok(ApiResponse.success(response, "   ?  ? ??  ?? ???  ??"));
     }
 
-    @Operation(summary = "내 결제 목록 조회")
+    @Operation(summary = "??   ??    ?   ??)
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<PaymentResponse>>> getMyPayments(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -43,7 +43,7 @@ public class PaymentController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @Operation(summary = "결제 상세 조회")
+    @Operation(summary = "   ???       ??)
     @GetMapping("/{paymentId}")
     public ResponseEntity<ApiResponse<PaymentResponse>> getPayment(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -52,7 +52,7 @@ public class PaymentController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @Operation(summary = "주문별 결제 조회")
+    @Operation(summary = "     ?   ??   ??)
     @GetMapping("/order/{orderId}")
     public ResponseEntity<ApiResponse<PaymentResponse>> getPaymentByOrderId(
             @AuthenticationPrincipal CustomUserDetails userDetails,

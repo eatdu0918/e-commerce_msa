@@ -44,14 +44,14 @@ public class OutboxProcessor {
                         .get(30, TimeUnit.SECONDS);
 
                 event.markAsProcessed();
-                log.debug("Outbox 이벤트 처리 완료: eventId={}, eventType={}", event.getId(), event.getEventType());
+                log.debug("Outbox ??  ??   ???   : eventId={}, eventType={}", event.getId(), event.getEventType());
 
             } catch (Exception e) {
-                log.error("Outbox 이벤트 처리 실패: eventId={}, eventType={}", event.getId(), event.getEventType(), e);
+                log.error("Outbox ??  ??   ????  : eventId={}, eventType={}", event.getId(), event.getEventType(), e);
                 event.markAsFailed();
 
                 if (!event.canRetry(MAX_RETRY_COUNT)) {
-                    log.warn("Outbox 이벤트 최대 재시도 초과: eventId={}, retryCount={}", event.getId(), event.getRetryCount());
+                    log.warn("Outbox ??  ??   ? ??????  ?? eventId={}, retryCount={}", event.getId(), event.getRetryCount());
                 }
             }
         }
@@ -62,7 +62,7 @@ public class OutboxProcessor {
     public void cleanupProcessedEvents() {
         LocalDateTime cutoffDate = LocalDateTime.now().minusDays(CLEANUP_DAYS);
         int deletedCount = outboxEventRepository.deleteProcessedEventsBefore(OutboxStatus.PROCESSED, cutoffDate);
-        log.info("Outbox 이벤트 정리 완료: 삭제된 이벤트 수={}", deletedCount);
+        log.info("Outbox ??  ???    ?   : ???????  ????{}", deletedCount);
     }
 
     @Scheduled(fixedDelay = 60000)
@@ -73,7 +73,7 @@ public class OutboxProcessor {
         for (OutboxEvent event : failedEvents) {
             if (event.canRetry(MAX_RETRY_COUNT)) {
                 event.retry();
-                log.info("Outbox 이벤트 재시도 대기열 추가: eventId={}, retryCount={}", event.getId(), event.getRetryCount());
+                log.info("Outbox ??  ?????????    ??  ?: eventId={}, retryCount={}", event.getId(), event.getRetryCount());
             }
         }
     }

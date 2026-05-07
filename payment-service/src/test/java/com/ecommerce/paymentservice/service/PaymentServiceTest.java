@@ -1,7 +1,7 @@
 package com.ecommerce.paymentservice.service;
 
 import com.ecommerce.paymentservice.dto.request.CreatePaymentRequest;
-import com.ecommerce.paymentservice.dto.response.PageResponse;
+import com.ecommerce.common.response.PageResponse;
 import com.ecommerce.paymentservice.dto.response.PaymentResponse;
 import com.ecommerce.paymentservice.entity.Payment;
 import com.ecommerce.paymentservice.enums.PaymentMethod;
@@ -58,15 +58,15 @@ class PaymentServiceTest {
     }
 
     @Nested
-    @DisplayName("결제 생성")
+    @DisplayName("   ????  ")
     class CreatePaymentTest {
 
         @Test
-        @DisplayName("결제 생성 성공")
+        @DisplayName("   ????   ?   ")
         void createPayment_success() {
             // given
             CreatePaymentRequest request = new CreatePaymentRequest(
-                    ORDER_ID, ORDER_NUMBER, PaymentMethod.CREDIT_CARD, AMOUNT, "카드 결제"
+                    ORDER_ID, ORDER_NUMBER, PaymentMethod.CREDIT_CARD, AMOUNT, "  ? ?   ??
             );
 
             when(paymentRepository.findByOrderIdAndUserId(ORDER_ID, USER_ID)).thenReturn(Optional.empty());
@@ -91,11 +91,11 @@ class PaymentServiceTest {
         }
 
         @Test
-        @DisplayName("동일 주문 결제 재요청 시 기존 건 반환 (멱등)")
+        @DisplayName("??           ?????  ???   ?? ?   ??(    ?")
         void createPayment_idempotent_returnsExisting() {
             Payment completed = createTestPayment(PAYMENT_ID, ORDER_ID, USER_ID, PaymentStatus.COMPLETED);
             CreatePaymentRequest request = new CreatePaymentRequest(
-                    ORDER_ID, ORDER_NUMBER, PaymentMethod.CREDIT_CARD, AMOUNT, "카드 결제"
+                    ORDER_ID, ORDER_NUMBER, PaymentMethod.CREDIT_CARD, AMOUNT, "  ? ?   ??
             );
 
             when(paymentRepository.findByOrderIdAndUserId(ORDER_ID, USER_ID))
@@ -111,11 +111,11 @@ class PaymentServiceTest {
     }
 
     @Nested
-    @DisplayName("결제 조회")
+    @DisplayName("   ??   ??)
     class GetPaymentTest {
 
         @Test
-        @DisplayName("결제 단건 조회 성공")
+        @DisplayName("   ????      ???   ")
         void getPayment_success() {
             // given
             when(paymentRepository.findByIdAndUserId(PAYMENT_ID, USER_ID))
@@ -131,7 +131,7 @@ class PaymentServiceTest {
         }
 
         @Test
-        @DisplayName("결제 조회 실패 - 존재하지 않음")
+        @DisplayName("   ??   ????   -    ???? ??  ")
         void getPayment_notFound_throwsException() {
             // given
             when(paymentRepository.findByIdAndUserId(999L, USER_ID))
@@ -140,11 +140,11 @@ class PaymentServiceTest {
             // when & then
             assertThatThrownBy(() -> paymentService.getPayment(999L, USER_ID))
                     .isInstanceOf(PaymentDomainException.class)
-                    .hasMessageContaining("결제를 찾을 수 없습니다");
+                    .hasMessageContaining("   ?  ?   ??????  ??  ");
         }
 
         @Test
-        @DisplayName("내 결제 목록 조회")
+        @DisplayName("??   ??    ?   ??)
         void getMyPayments_success() {
             // given
             Pageable pageable = PageRequest.of(0, 10);
@@ -161,7 +161,7 @@ class PaymentServiceTest {
         }
 
         @Test
-        @DisplayName("주문 ID로 결제 조회 성공")
+        @DisplayName("     ID ?   ??   ???   ")
         void getPaymentByOrderId_success() {
             // given
             when(paymentRepository.findByOrderId(ORDER_ID)).thenReturn(Optional.of(testPayment));
@@ -175,7 +175,7 @@ class PaymentServiceTest {
         }
 
         @Test
-        @DisplayName("주문 ID로 결제 조회 실패 - 없음")
+        @DisplayName("     ID ?   ??   ????   - ??  ")
         void getPaymentByOrderId_notFound_throwsException() {
             // given
             when(paymentRepository.findByOrderId(999L)).thenReturn(Optional.empty());
@@ -183,16 +183,16 @@ class PaymentServiceTest {
             // when & then
             assertThatThrownBy(() -> paymentService.getPaymentByOrderId(999L, USER_ID))
                     .isInstanceOf(PaymentDomainException.class)
-                    .hasMessageContaining("결제를 찾을 수 없습니다");
+                    .hasMessageContaining("   ?  ?   ??????  ??  ");
         }
     }
 
     @Nested
-    @DisplayName("관리자 결제 조회")
+    @DisplayName("?  ?       ??   ??)
     class AdminGetPaymentsTest {
 
         @Test
-        @DisplayName("전체 결제 목록 조회")
+        @DisplayName("?       ??    ?   ??)
         void getAllPayments_success() {
             // given
             Pageable pageable = PageRequest.of(0, 10);
@@ -209,7 +209,7 @@ class PaymentServiceTest {
         }
 
         @Test
-        @DisplayName("상태별 결제 목록 조회")
+        @DisplayName("?    ?   ??    ?   ??)
         void getPaymentsByStatus_success() {
             // given
             Pageable pageable = PageRequest.of(0, 10);
@@ -227,7 +227,7 @@ class PaymentServiceTest {
         }
 
         @Test
-        @DisplayName("결제 ID로 조회 (관리자)")
+        @DisplayName("   ??ID ?   ??(?  ?   )")
         void getPaymentById_success() {
             // given
             when(paymentRepository.findById(PAYMENT_ID)).thenReturn(Optional.of(testPayment));
@@ -241,7 +241,7 @@ class PaymentServiceTest {
         }
 
         @Test
-        @DisplayName("결제 ID로 조회 실패 - 없음")
+        @DisplayName("   ??ID ?   ????   - ??  ")
         void getPaymentById_notFound_throwsException() {
             // given
             when(paymentRepository.findById(999L)).thenReturn(Optional.empty());
@@ -249,16 +249,16 @@ class PaymentServiceTest {
             // when & then
             assertThatThrownBy(() -> paymentService.getPaymentById(999L))
                     .isInstanceOf(PaymentDomainException.class)
-                    .hasMessageContaining("결제를 찾을 수 없습니다");
+                    .hasMessageContaining("   ?  ?   ??????  ??  ");
         }
     }
 
     @Nested
-    @DisplayName("결제 상태 변경")
+    @DisplayName("   ???        ?)
     class UpdatePaymentStatusTest {
 
         @Test
-        @DisplayName("결제 상태 변경 성공 - COMPLETED")
+        @DisplayName("   ???        ??    - COMPLETED")
         void updatePaymentStatus_toCompleted_success() {
             // given
             when(paymentRepository.findById(PAYMENT_ID)).thenReturn(Optional.of(testPayment));
@@ -271,7 +271,7 @@ class PaymentServiceTest {
         }
 
         @Test
-        @DisplayName("결제 상태 변경 성공 - CANCELLED")
+        @DisplayName("   ???        ??    - CANCELLED")
         void updatePaymentStatus_toCancelled_success() {
             // given
             when(paymentRepository.findById(PAYMENT_ID)).thenReturn(Optional.of(testPayment));
@@ -284,7 +284,7 @@ class PaymentServiceTest {
         }
 
         @Test
-        @DisplayName("결제 상태 변경 성공 - REFUNDED")
+        @DisplayName("   ???        ??    - REFUNDED")
         void updatePaymentStatus_toRefunded_success() {
             // given
             Payment completedPayment = createTestPayment(PAYMENT_ID, ORDER_ID, USER_ID, PaymentStatus.COMPLETED);
@@ -298,7 +298,7 @@ class PaymentServiceTest {
         }
 
         @Test
-        @DisplayName("결제 상태 변경 실패 - 결제 없음")
+        @DisplayName("   ???        ???   -    ????  ")
         void updatePaymentStatus_notFound_throwsException() {
             // given
             when(paymentRepository.findById(999L)).thenReturn(Optional.empty());
@@ -306,12 +306,12 @@ class PaymentServiceTest {
             // when & then
             assertThatThrownBy(() -> paymentService.updatePaymentStatus(999L, PaymentStatus.COMPLETED))
                     .isInstanceOf(PaymentDomainException.class)
-                    .hasMessageContaining("결제를 찾을 수 없습니다");
+                    .hasMessageContaining("   ?  ?   ??????  ??  ");
         }
     }
 
     private Payment createTestPayment(Long id, Long orderId, Long userId, PaymentStatus status) {
-        Payment payment = Payment.create(orderId, ORDER_NUMBER, userId, PaymentMethod.CREDIT_CARD, AMOUNT, "카드 결제");
+        Payment payment = Payment.create(orderId, ORDER_NUMBER, userId, PaymentMethod.CREDIT_CARD, AMOUNT, "  ? ?   ??);
         ReflectionTestUtils.setField(payment, "id", id);
         ReflectionTestUtils.setField(payment, "status", status);
         ReflectionTestUtils.setField(payment, "paymentNumber", "PAY-TEST123456");

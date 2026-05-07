@@ -1,7 +1,7 @@
 package com.ecommerce.paymentservice.config;
 
-import com.ecommerce.paymentservice.response.ApiResponse;
-import com.ecommerce.paymentservice.security.jwt.JwtAuthenticationFilter;
+import com.ecommerce.common.response.ApiResponse;
+import com.ecommerce.common.security.JwtAuthenticationFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -46,9 +46,9 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(SWAGGER_PATHS).permitAll()
-                        // Admin 전용 API
+                        // Admin ?    API
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        // 나머지는 인증 필요
+                        // ??     ???    ?   
                         .anyRequest().authenticated()
                 )
                 .formLogin(AbstractHttpConfigurer::disable)
@@ -59,7 +59,7 @@ public class SecurityConfig {
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                             response.setContentType("application/json;charset=UTF-8");
                             ApiResponse<Void> errorResponse = ApiResponse.<Void>builder()
-                                    .error(ApiResponse.Error.of("UNAUTHORIZED", "인증이 필요합니다."))
+                                    .error(ApiResponse.Error.of("UNAUTHORIZED", "?   ???   ??  ??"))
                                     .build();
                             response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
                         })
@@ -67,7 +67,7 @@ public class SecurityConfig {
                             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                             response.setContentType("application/json;charset=UTF-8");
                             ApiResponse<Void> errorResponse = ApiResponse.<Void>builder()
-                                    .error(ApiResponse.Error.of("FORBIDDEN", "접근 권한이 없습니다."))
+                                    .error(ApiResponse.Error.of("FORBIDDEN", "?        ????  ??  ."))
                                     .build();
                             response.getWriter().write(objectMapper.writeValueAsString(errorResponse));
                         })

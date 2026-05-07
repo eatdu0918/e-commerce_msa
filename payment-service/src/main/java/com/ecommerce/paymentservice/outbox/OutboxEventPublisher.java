@@ -28,7 +28,7 @@ public class OutboxEventPublisher {
                 KafkaConfig.TOPIC_PAYMENT_COMPLETED,
                 event
         );
-        log.info("Outbox 이벤트 저장 완료: PaymentCompletedEvent, paymentId={}", event.getPaymentId());
+        log.info("Outbox ??  ???????   : PaymentCompletedEvent, paymentId={}", event.getPaymentId());
     }
 
     public void publishPaymentFailedEvent(PaymentFailedEvent event) {
@@ -39,7 +39,7 @@ public class OutboxEventPublisher {
                 KafkaConfig.TOPIC_PAYMENT_FAILED,
                 event
         );
-        log.info("Outbox 이벤트 저장 완료: PaymentFailedEvent, paymentId={}", event.getPaymentId());
+        log.info("Outbox ??  ???????   : PaymentFailedEvent, paymentId={}", event.getPaymentId());
     }
 
     public void publishPaymentCancelledEvent(PaymentCancelledEvent event) {
@@ -50,7 +50,7 @@ public class OutboxEventPublisher {
                 KafkaConfig.TOPIC_PAYMENT_CANCELLED,
                 event
         );
-        log.info("Outbox 이벤트 저장 완료: PaymentCancelledEvent, paymentId={}", event.getPaymentId());
+        log.info("Outbox ??  ???????   : PaymentCancelledEvent, paymentId={}", event.getPaymentId());
     }
 
     private void saveOutboxEvent(String aggregateType, String aggregateId,
@@ -66,8 +66,8 @@ public class OutboxEventPublisher {
             );
             outboxEventRepository.save(outboxEvent);
         } catch (JsonProcessingException e) {
-            log.error("Outbox 이벤트 직렬화 실패: eventType={}", eventType, e);
-            throw new RuntimeException("이벤트 직렬화 실패", e);
+            log.error("Outbox ??  ??   ?????  : eventType={}", eventType, e);
+            throw new RuntimeException("??  ??   ?????  ", e);
         }
     }
 }

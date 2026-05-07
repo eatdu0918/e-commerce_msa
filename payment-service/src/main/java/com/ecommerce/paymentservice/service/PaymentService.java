@@ -1,7 +1,7 @@
 package com.ecommerce.paymentservice.service;
 
 import com.ecommerce.paymentservice.dto.request.CreatePaymentRequest;
-import com.ecommerce.paymentservice.dto.response.PageResponse;
+import com.ecommerce.common.response.PageResponse;
 import com.ecommerce.paymentservice.dto.response.PaymentResponse;
 import com.ecommerce.paymentservice.entity.Payment;
 import com.ecommerce.paymentservice.enums.PaymentStatus;
@@ -30,11 +30,11 @@ public class PaymentService {
 
     @Transactional
     public PaymentResponse createPayment(Long userId, CreatePaymentRequest request) {
-        log.info("결제 생성 시도: userId={}, orderId={}", userId, request.getOrderId());
+        log.info("   ????   ??  : userId={}, orderId={}", userId, request.getOrderId());
 
         return paymentRepository.findByOrderIdAndUserId(request.getOrderId(), userId)
                 .map(existing -> {
-                    log.info("동일 주문 결제가 이미 존재하여 기존 건 반환: paymentId={}, orderId={}",
+                    log.info("??           ?  ? ?? ?    ???      ?? ?   ?? paymentId={}, orderId={}",
                             existing.getId(), request.getOrderId());
                     return PaymentResponse.from(existing);
                 })
@@ -54,12 +54,12 @@ public class PaymentService {
 
         try {
             Payment saved = paymentRepository.save(payment);
-            log.info("결제 생성 완료: paymentId={}, paymentNumber={}",
+            log.info("   ????   ?   : paymentId={}, paymentNumber={}",
                     saved.getId(), saved.getPaymentNumber());
             publishPaymentCompletedOutbox(saved);
             return PaymentResponse.from(saved);
         } catch (DataIntegrityViolationException e) {
-            log.warn("결제 유니크 충돌(동시 요청 가능): orderId={}, message={}",
+            log.warn("   ???   ???   ???   ?       ??: orderId={}, message={}",
                     request.getOrderId(), e.getMessage());
             return paymentRepository.findByOrderIdAndUserId(request.getOrderId(), userId)
                     .map(PaymentResponse::from)
@@ -125,13 +125,13 @@ public class PaymentService {
 
     @Transactional
     public PaymentResponse updatePaymentStatus(Long paymentId, PaymentStatus newStatus) {
-        log.info("결제 상태 변경 시도: paymentId={}, newStatus={}", paymentId, newStatus);
+        log.info("   ???        ???  : paymentId={}, newStatus={}", paymentId, newStatus);
 
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new PaymentDomainException(PaymentDomainExceptionCode.PaymentNotFoundException));
 
         payment.updateStatus(newStatus);
-        log.info("결제 상태 변경 완료: paymentId={}, status={}", paymentId, newStatus);
+        log.info("   ???        ??   : paymentId={}, status={}", paymentId, newStatus);
 
         return PaymentResponse.from(payment);
     }

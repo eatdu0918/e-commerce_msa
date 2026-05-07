@@ -39,7 +39,7 @@ public class PaymentEventConsumer {
 
         paymentRepository.findByOrderId(event.getOrderId()).ifPresent(payment -> {
             if (payment.getStatus() == PaymentStatus.COMPLETED) {
-                log.info("이미 완료된 결제, Outbox/Kafka 재발행 생략: paymentId={}, orderId={}",
+                log.info("?? ? ?   ??   ?? Outbox/Kafka ?? ????  : paymentId={}, orderId={}",
                         payment.getId(), event.getOrderId());
                 markProcessed(event.getEventId(), "coupon-used");
                 return;
@@ -83,7 +83,7 @@ public class PaymentEventConsumer {
     }
 
     /**
-     * 관리자 취소 승인 시 주문과 무관하게 결제 상태를 즉시 반영 (order-cancelled와 중복되어도 멱등)
+     * ?  ?    ?  ???  ????    ???  ???      ???   ??   ??   ??(order-cancelled??    ???  ??    ?
      */
     @KafkaListener(topics = "cancel-approved", groupId = "payment-service")
     @Transactional
@@ -91,21 +91,21 @@ public class PaymentEventConsumer {
         if (isDuplicate(event.getEventId(), "cancel-approved"))
             return;
 
-        log.info("Received cancel-approved (결제 반영): cancelId={}, orderId={}",
+        log.info("Received cancel-approved (   ??   ??: cancelId={}, orderId={}",
                 event.getCancelId(), event.getOrderId());
 
         var paymentOp = paymentRepository.findByOrderId(event.getOrderId());
         if (paymentOp.isEmpty()) {
-            log.warn("cancel-approved 처리 불가: orderId={}에 대한 결제 레코드가 없습니다. cancelId={}",
+            log.warn("cancel-approved    ???  ?: orderId={}??????   ????  ??? ??  ??  . cancelId={}",
                     event.getOrderId(), event.getCancelId());
         }
         paymentOp.ifPresent(payment -> {
             if (applyPaymentSettlementForCancelApproved(payment, event.getRequestType())) {
-                log.info("관리자 취소 승인에 따른 결제 상태 반영: paymentId={}, status={}",
+                log.info("?  ?    ?  ???  ????       ???       ?? paymentId={}, status={}",
                         payment.getId(), payment.getStatus());
                 publishPaymentCancelledOutbox(payment);
             } else {
-                log.info("결제 이미 취소/환불됨, cancel-approved 결제 처리 생략: paymentId={}, status={}",
+                log.info("   ???? ? ?  ????  ?? cancel-approved    ??   ????  : paymentId={}, status={}",
                         payment.getId(), payment.getStatus());
             }
         });
@@ -123,11 +123,11 @@ public class PaymentEventConsumer {
 
         paymentRepository.findByOrderId(event.getOrderId()).ifPresent(payment -> {
             if (applyPaymentSettlementForOrderCancellation(payment)) {
-                log.info("주문 취소에 따른 결제 취소 반영: paymentId={}, status={}",
+                log.info("     ?  ????       ???  ??   ?? paymentId={}, status={}",
                         payment.getId(), payment.getStatus());
                 publishPaymentCancelledOutbox(payment);
             } else {
-                log.info("결제 이미 취소/환불됨, order-cancelled 결제 처리 생략: paymentId={}, status={}",
+                log.info("   ???? ? ?  ????  ?? order-cancelled    ??   ????  : paymentId={}, status={}",
                         payment.getId(), payment.getStatus());
             }
         });
@@ -136,8 +136,8 @@ public class PaymentEventConsumer {
     }
 
     /**
-     * 취소 승인 이벤트: 반품·환불은 {@link PaymentStatus#REFUNDED}, 출고 전 주문 취소는 {@link PaymentStatus#CANCELLED}.
-     * {@code order-cancelled}가 먼저 {@link PaymentStatus#CANCELLED}로 맞춘 경우에도 반품·환불이면 환불 완료로 승격한다.
+     * ?  ???  ????  ??       ??  ?? {@link PaymentStatus#REFUNDED}, ?  ????     ?  ???{@link PaymentStatus#CANCELLED}.
+     * {@code order-cancelled}    ?  ? {@link PaymentStatus#CANCELLED} ?   ??   ?? ?        ??  ?? ????   ?    ??   ??  .
      */
     private boolean applyPaymentSettlementForCancelApproved(Payment payment, String requestTypeFromEvent) {
         boolean returnRefund = requestTypeFromEvent != null
@@ -154,10 +154,10 @@ public class PaymentEventConsumer {
     }
 
     /**
-     * 주문 취소(승인/취소 이벤트) 시 결제를 {@link PaymentStatus#CANCELLED}로 맞춘다.
-     * 이미 완료된 결제도 동일하게 취소 상태로 표기해 주문 취소와 의미를 일치시킨다.
+     *      ?  ???  ???  ????  ?? ??   ?  ?{@link PaymentStatus#CANCELLED} ?   ???
+     * ?? ? ?   ??   ?????  ??   ?  ???    ???  ??     ?  ??? ???????  ??  ??
      *
-     * @return {@code true}이면 상태를 변경했으며 Outbox 이벤트 발행이 필요함
+     * @return {@code true}?? ???   ??     ? ?? ?Outbox ??  ??    ???   ??
      */
     private boolean applyPaymentSettlementForOrderCancellation(Payment payment) {
         PaymentStatus status = payment.getStatus();
@@ -184,7 +184,7 @@ public class PaymentEventConsumer {
 
     private boolean isDuplicate(String eventId, String eventType) {
         if (eventId != null && processedEventRepository.existsByEventId(eventId)) {
-            log.warn("중복 이벤트 무시: eventId={}, eventType={}", eventId, eventType);
+            log.warn("   ????  ???  ?? eventId={}, eventType={}", eventId, eventType);
             return true;
         }
         return false;

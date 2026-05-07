@@ -14,6 +14,6 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UpdatePaymentStatusRequest {
 
-    @NotNull(message = "결제 상태는 필수입니다.")
+    @NotNull(message = "   ???   ???   ??  ??")
     PaymentStatus status;
 }

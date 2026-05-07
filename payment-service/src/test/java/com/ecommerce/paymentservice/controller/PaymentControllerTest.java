@@ -1,16 +1,16 @@
 package com.ecommerce.paymentservice.controller;
 
-import com.ecommerce.paymentservice.dto.response.PageResponse;
+import com.ecommerce.common.response.PageResponse;
 import com.ecommerce.paymentservice.dto.response.PaymentResponse;
 import com.ecommerce.paymentservice.enums.PaymentMethod;
 import com.ecommerce.paymentservice.enums.PaymentStatus;
-import com.ecommerce.paymentservice.enums.UserRole;
+import com.ecommerce.common.enums.UserRole;
 import com.ecommerce.paymentservice.exception.PaymentDomainException;
 import com.ecommerce.paymentservice.exception.PaymentDomainExceptionCode;
-import com.ecommerce.paymentservice.security.CustomUserDetails;
-import com.ecommerce.paymentservice.security.jwt.JwtTokenProvider;
+import com.ecommerce.common.security.CustomUserDetails;
+import com.ecommerce.common.security.JwtTokenProvider;
 import com.ecommerce.paymentservice.service.PaymentService;
-import com.ecommerce.paymentservice.service.TokenService;
+import com.ecommerce.common.service.TokenService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -76,11 +76,11 @@ class PaymentControllerTest {
     }
 
     @Nested
-    @DisplayName("POST /api/payments - 결제 생성")
+    @DisplayName("POST /api/payments -    ????  ")
     class CreatePaymentTest {
 
         @Test
-        @DisplayName("결제 생성 성공")
+        @DisplayName("   ????   ?   ")
         void createPayment_success() throws Exception {
             // given
             PaymentResponse response = createPaymentResponse(1L, 100L, PaymentStatus.PENDING);
@@ -108,7 +108,7 @@ class PaymentControllerTest {
         }
 
         @Test
-        @DisplayName("결제 생성 실패 - 필수 값 누락")
+        @DisplayName("   ????   ??   - ?     ??   ")
         void createPayment_validation_fail() throws Exception {
             // given
             String requestBody = """
@@ -127,11 +127,11 @@ class PaymentControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/payments - 내 결제 목록 조회")
+    @DisplayName("GET /api/payments - ??   ??    ?   ??)
     class GetMyPaymentsTest {
 
         @Test
-        @DisplayName("내 결제 목록 조회 성공")
+        @DisplayName("??   ??    ?   ???   ")
         void getMyPayments_success() throws Exception {
             // given
             PaymentResponse payment = createPaymentResponse(1L, 100L, PaymentStatus.COMPLETED);
@@ -158,11 +158,11 @@ class PaymentControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/payments/{paymentId} - 결제 상세 조회")
+    @DisplayName("GET /api/payments/{paymentId} -    ???       ??)
     class GetPaymentTest {
 
         @Test
-        @DisplayName("결제 상세 조회 성공")
+        @DisplayName("   ???       ???   ")
         void getPayment_success() throws Exception {
             // given
             PaymentResponse response = createPaymentResponse(1L, 100L, PaymentStatus.COMPLETED);
@@ -177,7 +177,7 @@ class PaymentControllerTest {
         }
 
         @Test
-        @DisplayName("결제 상세 조회 실패 - 존재하지 않음")
+        @DisplayName("   ???       ????   -    ???? ??  ")
         void getPayment_notFound() throws Exception {
             // given
             when(paymentService.getPayment(999L, 200L))
@@ -190,11 +190,11 @@ class PaymentControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/payments/order/{orderId} - 주문별 결제 조회")
+    @DisplayName("GET /api/payments/order/{orderId} -      ?   ??   ??)
     class GetPaymentByOrderIdTest {
 
         @Test
-        @DisplayName("주문별 결제 조회 성공")
+        @DisplayName("     ?   ??   ???   ")
         void getPaymentByOrderId_success() throws Exception {
             // given
             PaymentResponse response = createPaymentResponse(1L, 100L, PaymentStatus.COMPLETED);
@@ -209,7 +209,7 @@ class PaymentControllerTest {
         }
 
         @Test
-        @DisplayName("주문별 결제 조회 실패 - 없음")
+        @DisplayName("     ?   ??   ????   - ??  ")
         void getPaymentByOrderId_notFound() throws Exception {
             // given
             when(paymentService.getPaymentByOrderId(999L, 200L))

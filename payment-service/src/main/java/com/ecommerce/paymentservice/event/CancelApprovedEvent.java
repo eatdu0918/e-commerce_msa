@@ -23,7 +23,7 @@ public class CancelApprovedEvent {
     String orderNumber;
     Long userId;
     BigDecimal refundAmount;
-    /** ORDER_CANCEL | RETURN_REFUND. 없으면 기존과 동일하게 결제 취소(CANCELLED) 처리 */
+    /** ORDER_CANCEL | RETURN_REFUND. ??   ?   ?  ???  ??      ???  ??CANCELLED)    ??*/
     String requestType;
     List<CancelItemEvent> items;
 
