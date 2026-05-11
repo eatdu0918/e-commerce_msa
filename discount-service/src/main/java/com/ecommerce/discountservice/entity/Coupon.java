@@ -1,6 +1,7 @@
 package com.ecommerce.discountservice.entity;
 
 import com.ecommerce.discountservice.enums.CouponType;
+import com.ecommerce.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;

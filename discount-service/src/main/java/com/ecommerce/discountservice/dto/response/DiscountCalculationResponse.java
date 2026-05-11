@@ -33,7 +33,7 @@ public class DiscountCalculationResponse {
                 .discountAmount(discountAmount)
                 .finalAmount(orderAmount.subtract(discountAmount))
                 .isApplicable(true)
-                .message("    ?     ??)
+                .message("할인 적용 가능")
                 .build();
     }
 

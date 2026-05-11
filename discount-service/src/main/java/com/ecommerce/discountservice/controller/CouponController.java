@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Tag(name = "Coupon", description = "?   ?API")
+@Tag(name = "Coupon", description = "쿠폰 서비스 API")
 @RestController
 @RequestMapping("/api/coupons")
 @RequiredArgsConstructor
@@ -26,7 +26,7 @@ public class CouponController {
     private final CouponService couponService;
     private final DiscountCalculationService discountCalculationService;
 
-    @Operation(summary = "???   ?    ?   ??)
+    @Operation(summary = "내 쿠폰 목록 조회")
     @GetMapping
     public ResponseEntity<ApiResponse<List<UserCouponResponse>>> getMyCoupons(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -34,7 +34,7 @@ public class CouponController {
         return ResponseEntity.ok(ApiResponse.success(coupons));
     }
 
-    @Operation(summary = "????   ?  ??   ?    ?   ??)
+    @Operation(summary = "사용 가능한 쿠폰 목록 조회")
     @GetMapping("/available")
     public ResponseEntity<ApiResponse<List<UserCouponResponse>>> getAvailableCoupons(
             @AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -42,16 +42,16 @@ public class CouponController {
         return ResponseEntity.ok(ApiResponse.success(coupons));
     }
 
-    @Operation(summary = "?   ?   ?  ?  ")
+    @Operation(summary = "쿠폰 코드 등록")
     @PostMapping("/claim/{code}")
     public ResponseEntity<ApiResponse<UserCouponResponse>> claimCoupon(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable String code) {
         UserCouponResponse response = couponService.claimCoupon(userDetails.getUserId(), code);
-        return ResponseEntity.ok(ApiResponse.success(response, "?   ??   ??? ???  ??"));
+        return ResponseEntity.ok(ApiResponse.success(response, "쿠폰이 성공적으로 등록되었습니다."));
     }
 
-    @Operation(summary = "?        ??   ?)
+    @Operation(summary = "할인 금액 계산")
     @PostMapping("/calculate")
     public ResponseEntity<ApiResponse<DiscountCalculationResponse>> calculateDiscount(
             @AuthenticationPrincipal CustomUserDetails userDetails,
