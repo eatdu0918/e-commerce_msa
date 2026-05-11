@@ -24,7 +24,7 @@ public class StockService {
     @Transactional(readOnly = true)
     public StockResponse getStock(Long productId, String acceptLanguage) {
         Product product = getActiveProduct(productId);
-        return StockResponse.from(product, "?    ????   ??, CatalogLocaleHelper.preferKorean(acceptLanguage));
+        return StockResponse.from(product, "재고 정보 조회 성공", CatalogLocaleHelper.preferKorean(acceptLanguage));
     }
 
     @Transactional
@@ -33,7 +33,7 @@ public class StockService {
             @CacheEvict(value = "products", allEntries = true)
     })
     public StockResponse decreaseStock(StockRequest request) {
-        log.info("????    ???  : productId={}, quantity={}", request.getProductId(), request.getQuantity());
+        log.info("재고 감소 요청 시작: productId={}, quantity={}", request.getProductId(), request.getQuantity());
 
         Product product = getActiveProduct(request.getProductId());
 
@@ -42,9 +42,7 @@ public class StockService {
         }
 
         product.decreaseStock(request.getQuantity());
-        log.info("????    ??   : productId={}, ??? ????{}", product.getId(), product.getStockQuantity());
-
-        return StockResponse.from(product, "????    ??   ");
+        return StockResponse.from(product, "재고 감소 성공");
     }
 
     @Transactional
@@ -53,14 +51,14 @@ public class StockService {
             @CacheEvict(value = "products", allEntries = true)
     })
     public StockResponse increaseStock(StockRequest request) {
-        log.info("????   ? ??  : productId={}, quantity={}", request.getProductId(), request.getQuantity());
+        log.info("재고 증가 요청 시작: productId={}, quantity={}", request.getProductId(), request.getQuantity());
 
         Product product = getActiveProduct(request.getProductId());
         product.increaseStock(request.getQuantity());
 
-        log.info("????   ? ?   : productId={}, ?    ????{}", product.getId(), product.getStockQuantity());
+        log.info("재고 증가 완료: productId={}, 남은 재고={}", product.getId(), product.getStockQuantity());
 
-        return StockResponse.from(product, "????   ? ?   ");
+        return StockResponse.from(product, "재고 증가 성공");
     }
 
     @Transactional
@@ -69,14 +67,14 @@ public class StockService {
             @CacheEvict(value = "products", allEntries = true)
     })
     public StockResponse restoreStock(StockRequest request) {
-        log.info("????   ????  : productId={}, quantity={}", request.getProductId(), request.getQuantity());
+        log.info("재고 복구 요청 시작: productId={}, quantity={}", request.getProductId(), request.getQuantity());
 
         Product product = getActiveProduct(request.getProductId());
         product.increaseStock(request.getQuantity());
 
-        log.info("????   ???   : productId={}, ?    ????{}", product.getId(), product.getStockQuantity());
+        log.info("재고 복구 완료: productId={}, 남은 재고={}", product.getId(), product.getStockQuantity());
 
-        return StockResponse.from(product, "????   ???    (     ?  ??");
+        return StockResponse.from(product, "재고 복구 성공 (주문 취소 등)");
     }
 
     @Transactional(readOnly = true)

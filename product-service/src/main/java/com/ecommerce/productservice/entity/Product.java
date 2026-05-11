@@ -1,5 +1,6 @@
 package com.ecommerce.productservice.entity;
 
+import com.ecommerce.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;

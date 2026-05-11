@@ -21,28 +21,28 @@ public class StockController {
     public ApiResponse<StockResponse> getStock(
             @PathVariable Long productId,
             @RequestHeader(value = "Accept-Language", required = false) String acceptLanguage) {
-        log.info("GET /api/stocks/{} - ????   ??, productId);
+        log.info("GET /api/stocks/{} - 재고 정보 조회", productId);
         StockResponse response = stockService.getStock(productId, acceptLanguage);
         return ApiResponse.success(response);
     }
 
     @PostMapping("/decrease")
     public ApiResponse<StockResponse> decreaseStock(@Valid @RequestBody StockRequest request) {
-        log.info("POST /api/stocks/decrease - ????    ?);
+        log.info("POST /api/stocks/decrease - 재고 감소 요청");
         StockResponse response = stockService.decreaseStock(request);
         return ApiResponse.success(response);
     }
 
     @PostMapping("/increase")
     public ApiResponse<StockResponse> increaseStock(@Valid @RequestBody StockRequest request) {
-        log.info("POST /api/stocks/increase - ????   ?");
+        log.info("POST /api/stocks/increase - 재고 증가 요청");
         StockResponse response = stockService.increaseStock(request);
         return ApiResponse.success(response);
     }
 
     @PostMapping("/restore")
     public ApiResponse<StockResponse> restoreStock(@Valid @RequestBody StockRequest request) {
-        log.info("POST /api/stocks/restore - ????   ??(     ?  ??");
+        log.info("POST /api/stocks/restore - 재고 복구 요청 (주문 취소 등)");
         StockResponse response = stockService.restoreStock(request);
         return ApiResponse.success(response);
     }
@@ -51,7 +51,7 @@ public class StockController {
     public ApiResponse<Boolean> checkStock(
             @RequestParam Long productId,
             @RequestParam Integer quantity) {
-        log.info("GET /api/stocks/check - ?????   : productId={}, quantity={}", productId, quantity);
+        log.info("GET /api/stocks/check - 재고 가용성 확인: productId={}, quantity={}", productId, quantity);
         boolean available = stockService.checkStock(productId, quantity);
         return ApiResponse.success(available);
     }

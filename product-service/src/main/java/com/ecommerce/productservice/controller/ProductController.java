@@ -24,14 +24,14 @@ public class ProductController {
 
     @PostMapping
     public ApiResponse<ProductResponse> createProduct(@Valid @RequestBody CreateProductRequest request) {
-        log.info("POST /api/products - ?  ? ?    ?   ");
+        log.info("POST /api/products - 상품 생성 요청");
         ProductResponse response = productService.createProduct(request);
         return ApiResponse.success(response);
     }
 
     @GetMapping("/{productId}")
     public ApiResponse<ProductResponse> getProduct(@PathVariable Long productId) {
-        log.info("GET /api/products/{} - ?  ?    ??, productId);
+        log.info("GET /api/products/{} - 상품 상세 정보 조회", productId);
         ProductResponse response = productService.getProduct(productId);
         return ApiResponse.success(response);
     }
@@ -41,7 +41,7 @@ public class ProductController {
             @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Long categoryId) {
-        log.info("GET /api/products - ?  ?     ?   ?? keyword={}, categoryId={}", keyword, categoryId);
+        log.info("GET /api/products - 상품 목록 검색 조회 keyword={}, categoryId={}", keyword, categoryId);
         PageResponse<ProductResponse> response = productService.getProducts(pageable, keyword, categoryId);
         return ApiResponse.success(response);
     }
@@ -50,14 +50,14 @@ public class ProductController {
     public ApiResponse<ProductResponse> updateProduct(
             @PathVariable Long productId,
             @Valid @RequestBody UpdateProductRequest request) {
-        log.info("PUT /api/products/{} - ?  ? ??  ", productId);
+        log.info("PUT /api/products/{} - 상품 정보 수정", productId);
         ProductResponse response = productService.updateProduct(productId, request);
         return ApiResponse.success(response);
     }
 
     @DeleteMapping("/{productId}")
     public ApiResponse<Void> deleteProduct(@PathVariable Long productId) {
-        log.info("DELETE /api/products/{} - ?  ? ????, productId);
+        log.info("DELETE /api/products/{} - 상품 삭제 요청", productId);
         productService.deleteProduct(productId);
         return ApiResponse.ok();
     }

@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
         info = @Info(
                 title = "Product Service API",
                 version = "1.0.0",
-                description = "?      ??  ??API"
+                description = "상품 서비스 관리 API"
         )
 )
 public class SwaggerConfig {
