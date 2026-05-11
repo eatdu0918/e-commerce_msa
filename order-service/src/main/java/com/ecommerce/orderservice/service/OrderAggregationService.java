@@ -11,6 +11,7 @@ import com.ecommerce.orderservice.dto.OrderProgressStatusResolver;
 import com.ecommerce.orderservice.dto.response.*;
 import com.ecommerce.common.response.ApiResponse;
 import com.ecommerce.orderservice.enums.OrderStatus;
+import com.ecommerce.common.response.PageResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
@@ -57,7 +58,7 @@ public class OrderAggregationService {
     }
 
     public OrderDetailResponse getOrderDetail(Long orderId, Long userId) {
-        log.info("     ?    ????    ?? orderId={}, userId={}", orderId, userId);
+        log.info("주문 상세 정보 조회 요청 orderId={}, userId={}", orderId, userId);
 
         OrderResponse order = orderService.getOrder(orderId, userId);
         PaymentInfo paymentInfo = fetchPaymentInfo(orderId);
@@ -79,7 +80,7 @@ public class OrderAggregationService {
     }
 
     public OrderDetailResponse getOrderDetailAdmin(Long orderId) {
-        log.info("?  ?         ?    ????    ?? orderId={}", orderId);
+        log.info("관리자 주문 상세 정보 조회 요청 orderId={}", orderId);
 
         OrderResponse order = orderService.getOrderById(orderId);
         PaymentInfo paymentInfo = fetchPaymentInfo(orderId);

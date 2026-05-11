@@ -2,6 +2,7 @@ package com.ecommerce.orderservice.entity;
 
 import com.ecommerce.orderservice.enums.CancelRequestKind;
 import com.ecommerce.orderservice.enums.OrderStatus;
+import com.ecommerce.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;

@@ -18,7 +18,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "Admin Order", description = "             ?API")
+@Tag(name = "Admin Order", description = "관리자 주문 관리 API")
 @RestController
 @RequestMapping("/api/admin/orders")
 @RequiredArgsConstructor
@@ -27,7 +27,7 @@ public class AdminOrderController {
     private final OrderService orderService;
     private final OrderAggregationService orderAggregationService;
 
-    @Operation(summary = "?              ")
+    @Operation(summary = "전체 주문 목록 조회")
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<OrderResponse>>> getAllOrders(
             @RequestParam(required = false) OrderStatus status,
@@ -41,26 +41,26 @@ public class AdminOrderController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @Operation(summary = "    ?      ")
+    @Operation(summary = "주문 상세 조회")
     @GetMapping("/{orderId}")
     public ResponseEntity<ApiResponse<OrderResponse>> getOrder(@PathVariable Long orderId) {
         OrderResponse response = orderAggregationService.getOrderByIdForAdmin(orderId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @Operation(summary = "    ?   ?       (?  /    ?   ?  )")
+    @Operation(summary = "주문 상세 정보 조회 (상품/배송 정보 포함)")
     @GetMapping("/{orderId}/detail")
     public ResponseEntity<ApiResponse<OrderDetailResponse>> getOrderDetail(@PathVariable Long orderId) {
         OrderDetailResponse response = orderAggregationService.getOrderDetailAdmin(orderId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @Operation(summary = "    ?      ?)
+    @Operation(summary = "주문 상태 변경")
     @PutMapping("/{orderId}/status")
     public ResponseEntity<ApiResponse<OrderResponse>> updateOrderStatus(
             @PathVariable Long orderId,
             @Valid @RequestBody UpdateOrderStatusRequest request) {
         OrderResponse response = orderService.updateOrderStatus(orderId, request.getStatus());
-        return ResponseEntity.ok(ApiResponse.success(response, "    ?          ?  ?  ."));
+        return ResponseEntity.ok(ApiResponse.success(response, "주문 상태가 성공적으로 변경되었습니다."));
     }
 }
