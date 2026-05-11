@@ -25,19 +25,19 @@ public class AdminController {
     @GetMapping("/users")
     public ApiResponse<PageResponse<UserResponse>> getAllUsers(
             @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
-        log.info("GET /api/admin/users - ?    ???     ??);
+        log.info("GET /api/admin/users - 전체 사용자 목록 조회");
         return ApiResponse.success(adminService.getAllUsers(pageable));
     }
 
     @GetMapping("/users/{userId}")
     public ApiResponse<UserResponse> getUserById(@PathVariable Long userId) {
-        log.info("GET /api/admin/users/{} - ???  ?       ??, userId);
+        log.info("GET /api/admin/users/{} - 사용자 상세 정보 조회", userId);
         return ApiResponse.success(adminService.getUserById(userId));
     }
 
     @DeleteMapping("/users/{userId}")
     public ApiResponse<Void> deleteUser(@PathVariable Long userId) {
-        log.info("DELETE /api/admin/users/{} - ???     ????  ", userId);
+        log.info("DELETE /api/admin/users/{} - 사용자 강제 탈퇴 처리", userId);
         adminService.deleteUser(userId);
         return ApiResponse.ok();
     }
@@ -46,7 +46,7 @@ public class AdminController {
     public ApiResponse<UserResponse> changeUserRole(
             @PathVariable Long userId,
             @RequestParam String role) {
-        log.info("PUT /api/admin/users/{}/role - ???      ?    ? role={}", userId, role);
+        log.info("PUT /api/admin/users/{}/role - 사용자 권한 변경 요청 role={}", userId, role);
         return ApiResponse.success(adminService.changeUserRole(userId, role));
     }
 }

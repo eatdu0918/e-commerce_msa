@@ -28,7 +28,7 @@ public class UserService {
 
     @Transactional
     public void signUp(SignUpRequest request) {
-        log.info("???    ????  : email={}", request.getEmail());
+        log.info("회원 가입 요청 시작: email={}", request.getEmail());
 
         validateDuplicateEmail(request.getEmail());
 
@@ -42,7 +42,7 @@ public class UserService {
         );
 
         User savedUser = userRepository.save(user);
-        log.info("???    ???   : userId={}, email={}", savedUser.getId(), request.getEmail());
+        log.info("회원 가입 완료: userId={}, email={}", savedUser.getId(), request.getEmail());
     }
 
     private void validateDuplicateEmail(String email) {
@@ -62,12 +62,12 @@ public class UserService {
             throw new UserDomainException(UserDomainExceptionCode.UserAlreadyWithdrawnException);
         }
 
-        // ?? ?   ???   
+        // 비밀번호 일치 여부 확인
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
             throw new UserDomainException(UserDomainExceptionCode.InvalidPasswordException);
         }
 
-        // JWT ?    ??  
+        // JWT 토큰 생성 시작
         String accessToken = jwtTokenProvider.createAccessToken(
                 user.getId(),
                 user.getEmail(),
@@ -75,10 +75,10 @@ public class UserService {
         );
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getId());
 
-        // Redis??Refresh Token ????
+        // Redis에 Refresh Token 저장
         tokenService.saveRefreshToken(user.getId(), refreshToken);
 
-        log.info("   ????   : userId={}, email={}", user.getId(), user.getEmail());
+        log.info("로그인 성공: userId={}, email={}", user.getId(), user.getEmail());
 
         return LoginResponse.builder()
                 .userId(user.getId())
@@ -90,63 +90,63 @@ public class UserService {
     }
 
     /**
-     *    ??   
+     * 로그아웃 처리
      */
     public void logout(Long userId, String accessToken) {
-        // Access Token Blacklist???  ?
+        // Access Token을 Blacklist에 등록
         long expiration = jwtTokenProvider.getExpiration(accessToken);
         tokenService.addToBlacklist(accessToken, expiration);
 
-        // Redis? ?  Refresh Token ????
+        // Redis에서 Refresh Token 삭제
         tokenService.deleteRefreshToken(userId);
 
-        log.info("   ??    ?   : userId={}", userId);
+        log.info("로그아웃 완료: userId={}", userId);
     }
 
     /**
-     * ?       ??
+     * 토큰 갱신 처리
      */
     @Transactional(readOnly = true)
     public TokenResponse refreshToken(String refreshToken) {
-        // Refresh Token ?   ??    ?
+        // Refresh Token 유효성 검증
         if (!jwtTokenProvider.validateToken(refreshToken)) {
             throw new UserDomainException(UserDomainExceptionCode.InvalidTokenException);
         }
 
-        // Refresh Token ?????   
+        // Refresh Token 타입 확인
         if (!jwtTokenProvider.isRefreshToken(refreshToken)) {
             throw new UserDomainException(UserDomainExceptionCode.InvalidTokenException);
         }
 
-        // ?????ID ?  ??
+        // 토큰에서 사용자 ID 추출
         Long userId = jwtTokenProvider.getUserId(refreshToken);
 
-        // Redis?????  ?Refresh Token???? ??
+        // Redis에 저장된 Refresh Token과 일치하는지 확인
         if (!tokenService.validateRefreshToken(userId, refreshToken)) {
             throw new UserDomainException(UserDomainExceptionCode.RefreshTokenMismatchException);
         }
 
-        // ?????   ??
+        // 사용자 정보 조회
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserDomainException(UserDomainExceptionCode.UserNotFoundException));
 
-        // ??   ???  ?   
+        // 계정 활성화 상태 확인
         if (!user.getIsActive()) {
             throw new UserDomainException(UserDomainExceptionCode.UserAlreadyWithdrawnException);
         }
 
-        // ??Access Token ??  
+        // 새 Access Token 생성
         String newAccessToken = jwtTokenProvider.createAccessToken(
                 user.getId(),
                 user.getEmail(),
                 user.getRole()
         );
 
-        // ??Refresh Token ??   (Refresh Token Rotation)
+        // 새 Refresh Token 생성 및 저장 (Refresh Token Rotation)
         String newRefreshToken = jwtTokenProvider.createRefreshToken(user.getId());
         tokenService.saveRefreshToken(userId, newRefreshToken);
 
-        log.info("?       ???   : userId={}", userId);
+        log.info("토큰 갱신 완료: userId={}", userId);
 
         return TokenResponse.builder()
                 .accessToken(newAccessToken)
@@ -163,7 +163,7 @@ public class UserService {
     public UserResponse updateProfile(Long userId, UpdateProfileRequest request) {
         User user = getActiveUserById(userId);
         user.updateProfile(request.getName(), request.getPhoneNumber(), request.getGender());
-        log.info("?   ????   ?   : userId={}", userId);
+        log.info("회원 정보 수정 완료: userId={}", userId);
         return convertToUserResponse(user);
     }
 
@@ -171,41 +171,41 @@ public class UserService {
     public void changePassword(Long userId, ChangePasswordRequest request) {
         User user = getActiveUserById(userId);
 
-        // ?    ?? ?   ???   
+        // 기존 비밀번호 일치 여부 확인
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
             throw new UserDomainException(UserDomainExceptionCode.InvalidPasswordException);
         }
 
-        // ???? ?   ?  ?    ?  ???  ??? ?   
+        // 새로운 비밀번호가 기존 비밀번호와 동일한지 확인
         if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
             throw new UserDomainException(UserDomainExceptionCode.SamePasswordException);
         }
 
         String encodedNewPassword = passwordEncoder.encode(request.getNewPassword());
         user.changePassword(encodedNewPassword);
-        log.info("?? ?   ??    ??   : userId={}", userId);
+        log.info("비밀번호 변경 완료: userId={}", userId);
     }
 
     @Transactional
     public void withdraw(Long userId, WithdrawRequest request) {
         User user = getUserById(userId);
 
-        // ?? ? ??  ????? ? ? ?   
+        // 이미 탈퇴한 회원인지 확인
         if (!user.getIsActive()) {
             throw new UserDomainException(UserDomainExceptionCode.UserAlreadyWithdrawnException);
         }
 
-        // ?? ?   ???   
+        // 비밀번호 일치 여부 확인
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new UserDomainException(UserDomainExceptionCode.InvalidPasswordException);
         }
 
         user.withdraw();
 
-        // Redis? ?  Refresh Token ????
+        // Redis에서 Refresh Token 삭제
         tokenService.deleteRefreshToken(userId);
 
-        log.info("???  ??   ?   : userId={}", userId);
+        log.info("회원 탈퇴 완료: userId={}", userId);
     }
 
     public UserResponse getMyProfile(Long userId) {
