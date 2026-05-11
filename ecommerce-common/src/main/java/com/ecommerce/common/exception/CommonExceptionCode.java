@@ -1,10 +1,8 @@
 package com.ecommerce.common.exception;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
-@Getter
 @AllArgsConstructor
 public enum CommonExceptionCode implements BaseExceptionCode {
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "??   ?? ? ??          ??  ??  ."),
@@ -16,4 +14,14 @@ public enum CommonExceptionCode implements BaseExceptionCode {
 
     private final HttpStatus status;
     private final String message;
+
+    @Override
+    public HttpStatus getStatus() {
+        return status;
+    }
+
+    @Override
+    public String getMessage() {
+        return message;
+    }
 }

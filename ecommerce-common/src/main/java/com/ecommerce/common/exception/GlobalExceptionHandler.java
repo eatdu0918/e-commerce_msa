@@ -27,7 +27,7 @@ public class GlobalExceptionHandler {
         String errorMessage = e.getBindingResult().getFieldErrors().stream()
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
                 .findFirst()
-                .orElse("?   ??   ????  ");
+                .orElse("유효성 검사 실패");
 
         log.error("Validation error: {}", errorMessage);
         return ResponseEntity
@@ -45,7 +45,7 @@ public class GlobalExceptionHandler {
                 .internalServerError()
                 .body(ApiResponse.<Void>builder()
                         .success(false)
-                        .error(ApiResponse.Error.of("INTERNAL_ERROR", "??   ??          ??  ??  ."))
+                        .error(ApiResponse.Error.of("INTERNAL_ERROR", "서버 내부 오류가 발생했습니다."))
                         .build());
     }
 }
