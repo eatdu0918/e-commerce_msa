@@ -16,7 +16,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "Admin Refund", description = "?  ?    ??   ?  ??API")
+@Tag(name = "Admin Refund", description = "관리자 환불 내역 관리 API")
 @RestController
 @RequestMapping("/api/admin/refunds")
 @RequiredArgsConstructor
@@ -24,7 +24,7 @@ public class AdminRefundController {
 
     private final RefundService refundService;
 
-    @Operation(summary = "?    ??       ?   ??)
+    @Operation(summary = "전체 환불 내역 조회")
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<RefundResponse>>> getAllRefunds(
             @RequestParam(required = false) RefundStatus status,
@@ -38,26 +38,26 @@ public class AdminRefundController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @Operation(summary = "??   ?       ??)
+    @Operation(summary = "환불 상세 조회")
     @GetMapping("/{refundId}")
     public ResponseEntity<ApiResponse<RefundResponse>> getRefund(@PathVariable Long refundId) {
         RefundResponse response = refundService.getRefundById(refundId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @Operation(summary = "??   ?????)
+    @Operation(summary = "환불 재시도")
     @PutMapping("/{refundId}/retry")
     public ResponseEntity<ApiResponse<RefundResponse>> retryRefund(@PathVariable Long refundId) {
         RefundResponse response = refundService.retryRefund(refundId);
-        return ResponseEntity.ok(ApiResponse.success(response, "??   ???? ? ?   ?? ???  ??"));
+        return ResponseEntity.ok(ApiResponse.success(response, "환불 재시도 요청이 성공적으로 접수되었습니다."));
     }
 
-    @Operation(summary = "??   ?        ?)
+    @Operation(summary = "환불 상태 변경")
     @PutMapping("/{refundId}/status")
     public ResponseEntity<ApiResponse<RefundResponse>> updateRefundStatus(
             @PathVariable Long refundId,
             @Valid @RequestBody UpdateRefundStatusRequest request) {
         RefundResponse response = refundService.updateRefundStatus(refundId, request.getStatus());
-        return ResponseEntity.ok(ApiResponse.success(response, "??   ?              ??  ??  ."));
+        return ResponseEntity.ok(ApiResponse.success(response, "환불 상태가 성공적으로 변경되었습니다."));
     }
 }

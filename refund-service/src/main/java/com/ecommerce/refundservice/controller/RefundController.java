@@ -15,7 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "Refund", description = "??   API")
+@Tag(name = "Refund", description = "환불 서비스 API")
 @RestController
 @RequestMapping("/api/refunds")
 @RequiredArgsConstructor
@@ -23,7 +23,7 @@ public class RefundController {
 
     private final RefundService refundService;
 
-    @Operation(summary = "????       ?   ??)
+    @Operation(summary = "내 환불 내역 조회")
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<RefundResponse>>> getMyRefunds(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -32,7 +32,7 @@ public class RefundController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @Operation(summary = "??   ?       ??)
+    @Operation(summary = "환불 상세 조회")
     @GetMapping("/{refundId}")
     public ResponseEntity<ApiResponse<RefundResponse>> getRefund(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -41,7 +41,7 @@ public class RefundController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @Operation(summary = "?  ?  ???      ??)
+    @Operation(summary = "취소 건별 환불 정보 조회")
     @GetMapping("/cancel/{cancelId}")
     public ResponseEntity<ApiResponse<RefundResponse>> getRefundByCancelId(
             @AuthenticationPrincipal CustomUserDetails userDetails,

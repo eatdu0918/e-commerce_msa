@@ -2,6 +2,7 @@ package com.ecommerce.refundservice.entity;
 
 import com.ecommerce.refundservice.enums.RefundReason;
 import com.ecommerce.refundservice.enums.RefundStatus;
+import com.ecommerce.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
