@@ -3,6 +3,7 @@ package com.ecommerce.cancelservice.entity;
 import com.ecommerce.cancelservice.enums.CancelReason;
 import com.ecommerce.cancelservice.enums.CancelRequestType;
 import com.ecommerce.cancelservice.enums.CancelStatus;
+import com.ecommerce.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;

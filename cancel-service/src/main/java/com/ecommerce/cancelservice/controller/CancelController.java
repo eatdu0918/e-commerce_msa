@@ -19,7 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "Cancel", description = "?  ??API")
+@Tag(name = "Cancel", description = "주문 취소 API")
 @RestController
 @RequestMapping("/api/cancels")
 @RequiredArgsConstructor
@@ -27,16 +27,16 @@ public class CancelController {
 
     private final CancelService cancelService;
 
-    @Operation(summary = "?  ???   ")
+    @Operation(summary = "취소 요청 생성")
     @PostMapping
     public ResponseEntity<ApiResponse<CancelResponse>> createCancel(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody CreateCancelRequest request) {
         CancelResponse response = cancelService.createCancel(userDetails.getUserId(), request);
-        return ResponseEntity.ok(ApiResponse.success(response, "?  ???   ????  ?? ???  ??"));
+        return ResponseEntity.ok(ApiResponse.success(response, "취소 요청이 성공적으로 접수되었습니다."));
     }
 
-    @Operation(summary = "     ?    ? ??  ???    (     ?    ??  ??")
+    @Operation(summary = "특정 주문의 활성 취소 요청 조회")
     @GetMapping("/by-order/{orderId}/active")
     public ResponseEntity<ApiResponse<OrderCancelSummaryResponse>> getActiveCancelForOrder(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -46,7 +46,7 @@ public class CancelController {
                 .orElse(ResponseEntity.ok(ApiResponse.success(null)));
     }
 
-    @Operation(summary = "     ??  ????  ??(    ? ?+ ?    ?   ???? ??")
+    @Operation(summary = "특정 주문의 취소 데이터 동기화 조회")
     @GetMapping("/by-order/{orderId}/sync")
     public ResponseEntity<ApiResponse<OrderCancelSyncResponse>> getCancelSyncForOrder(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -56,7 +56,7 @@ public class CancelController {
         return ResponseEntity.ok(ApiResponse.success(sync));
     }
 
-    @Operation(summary = "???  ??    ?   ??)
+    @Operation(summary = "내 취소 요청 목록 조회")
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<CancelResponse>>> getMyCancels(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -65,7 +65,7 @@ public class CancelController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @Operation(summary = "?  ???       ??)
+    @Operation(summary = "취소 요청 상세 조회")
     @GetMapping("/{cancelId}")
     public ResponseEntity<ApiResponse<CancelResponse>> getCancel(
             @AuthenticationPrincipal CustomUserDetails userDetails,
