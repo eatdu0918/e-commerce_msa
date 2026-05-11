@@ -6,12 +6,12 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum PaymentMethod {
-    CREDIT_CARD("?     ? ?),
-    DEBIT_CARD("      ?  ?),
-    BANK_TRANSFER("?   ??  "),
-    VIRTUAL_ACCOUNT("   ?     ?),
-    MOBILE_PAY("    ??  ??),
-    TOSSPAYMENTS("?   ??  ?  ??);
+    CREDIT_CARD("신용카드"),
+    DEBIT_CARD("체크카드"),
+    BANK_TRANSFER("계좌이체"),
+    VIRTUAL_ACCOUNT("가상계좌"),
+    MOBILE_PAY("휴대폰 결제"),
+    TOSSPAYMENTS("토스페이먼츠");
 
     private final String description;
 }

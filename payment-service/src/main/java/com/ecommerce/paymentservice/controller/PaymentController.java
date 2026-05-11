@@ -17,7 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "Payment", description = "   ??API")
+@Tag(name = "Payment", description = "결제 서비스 API")
 @RestController
 @RequestMapping("/api/payments")
 @RequiredArgsConstructor
@@ -25,16 +25,16 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
-    @Operation(summary = "   ????  ")
+    @Operation(summary = "결제 요청 생성")
     @PostMapping
     public ResponseEntity<ApiResponse<PaymentResponse>> createPayment(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody CreatePaymentRequest request) {
         PaymentResponse response = paymentService.createPayment(userDetails.getUserId(), request);
-        return ResponseEntity.ok(ApiResponse.success(response, "   ?  ? ??  ?? ???  ??"));
+        return ResponseEntity.ok(ApiResponse.success(response, "결제 요청이 성공적으로 접수되었습니다."));
     }
 
-    @Operation(summary = "??   ??    ?   ??)
+    @Operation(summary = "내 결제 내역 조회")
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<PaymentResponse>>> getMyPayments(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -43,7 +43,7 @@ public class PaymentController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @Operation(summary = "   ???       ??)
+    @Operation(summary = "결제 상세 조회")
     @GetMapping("/{paymentId}")
     public ResponseEntity<ApiResponse<PaymentResponse>> getPayment(
             @AuthenticationPrincipal CustomUserDetails userDetails,
@@ -52,7 +52,7 @@ public class PaymentController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @Operation(summary = "     ?   ??   ??)
+    @Operation(summary = "주문별 결제 정보 조회")
     @GetMapping("/order/{orderId}")
     public ResponseEntity<ApiResponse<PaymentResponse>> getPaymentByOrderId(
             @AuthenticationPrincipal CustomUserDetails userDetails,

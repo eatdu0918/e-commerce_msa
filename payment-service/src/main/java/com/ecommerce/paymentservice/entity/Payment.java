@@ -2,6 +2,7 @@ package com.ecommerce.paymentservice.entity;
 
 import com.ecommerce.paymentservice.enums.PaymentMethod;
 import com.ecommerce.paymentservice.enums.PaymentStatus;
+import com.ecommerce.common.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
