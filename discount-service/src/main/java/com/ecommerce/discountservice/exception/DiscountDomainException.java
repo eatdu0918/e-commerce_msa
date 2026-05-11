@@ -5,21 +5,13 @@ import lombok.Getter;
 import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
 
+import com.ecommerce.common.exception.BusinessException;
+
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
-public class DiscountDomainException extends RuntimeException {
-
-    HttpStatus httpStatus;
-    String code;
+public class DiscountDomainException extends BusinessException {
 
     public DiscountDomainException(DiscountDomainExceptionCode exceptionCode) {
-        super(exceptionCode.getMessage());
-        this.httpStatus = exceptionCode.getStatus();
-        this.code = exceptionCode.name();
-    }
-
-    @Override
-    public String getMessage() {
-        return super.getMessage();
+        super(exceptionCode);
     }
 }
