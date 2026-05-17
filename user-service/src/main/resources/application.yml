@@ -32,6 +32,8 @@ spring:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
+  session:
+    store-type: none   # JWT 무상태 인증 — Spring Session Redis 자동구성 비활성화
   data:
     redis:
       host: ${REDIS_HOST:localhost}
