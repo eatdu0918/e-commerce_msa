@@ -44,7 +44,7 @@ public class Refund extends BaseEntity {
     @Column(name = "cancel_id", nullable = false)
     Long cancelId;
 
-    @Column(name = "payment_id", nullable = false)
+    @Column(name = "payment_id")
     Long paymentId;
 
     @Column(name = "user_id", nullable = false)

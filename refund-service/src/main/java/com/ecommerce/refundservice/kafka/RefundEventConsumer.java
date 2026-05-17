@@ -42,10 +42,10 @@ public class RefundEventConsumer {
                         Refund refund = Refund.create(
                                         event.getOrderId(),
                                         event.getCancelId(),
-                                        0L,
+                                        event.getPaymentId(),
                                         event.getUserId(),
                                         RefundReason.ORDER_CANCEL,
-                                        "?  ???  ?????   ? ?  ??  ",
+                                        "취소 승인으로 인한 자동 환불 처리",
                                         totalAmount);
 
                         refund.process();
@@ -75,10 +75,10 @@ public class RefundEventConsumer {
                         Refund refund = Refund.create(
                                         event.getOrderId(),
                                         event.getCancelId(),
-                                        0L,
+                                        event.getPaymentId(),
                                         event.getUserId(),
                                         RefundReason.ORDER_CANCEL,
-                                        "?  ???  ?????   ? ?  ??  ",
+                                        "취소 승인으로 인한 자동 환불 처리",
                                         BigDecimal.ZERO);
                         refund.fail(e.getMessage());
                         Refund savedRefund = refundRepository.save(refund);
