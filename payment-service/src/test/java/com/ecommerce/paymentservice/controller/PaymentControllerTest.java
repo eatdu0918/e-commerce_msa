@@ -44,7 +44,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class PaymentControllerTest {
 
     private static final CustomUserDetails TEST_USER =
-            new CustomUserDetails(200L, "user@test.com", UserRole.USER);
+            new CustomUserDetails(200L, "user@test.com", "", UserRole.USER);
 
     @Autowired
     MockMvc mockMvc;
@@ -76,11 +76,11 @@ class PaymentControllerTest {
     }
 
     @Nested
-    @DisplayName("POST /api/payments -    ????  ")
+    @DisplayName("POST /api/payments - 결제 생성")
     class CreatePaymentTest {
 
         @Test
-        @DisplayName("   ????   ?   ")
+        @DisplayName("결제 생성 성공")
         void createPayment_success() throws Exception {
             // given
             PaymentResponse response = createPaymentResponse(1L, 100L, PaymentStatus.PENDING);
@@ -108,7 +108,7 @@ class PaymentControllerTest {
         }
 
         @Test
-        @DisplayName("   ????   ??   - ?     ??   ")
+        @DisplayName("결제 생성 실패 - 필수 값 누락")
         void createPayment_validation_fail() throws Exception {
             // given
             String requestBody = """
@@ -127,11 +127,11 @@ class PaymentControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/payments - ??   ??    ?   ??)
+    @DisplayName("GET /api/payments - 내 결제 목록 조회")
     class GetMyPaymentsTest {
 
         @Test
-        @DisplayName("??   ??    ?   ???   ")
+        @DisplayName("내 결제 목록 조회 성공")
         void getMyPayments_success() throws Exception {
             // given
             PaymentResponse payment = createPaymentResponse(1L, 100L, PaymentStatus.COMPLETED);
@@ -158,11 +158,11 @@ class PaymentControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/payments/{paymentId} -    ???       ??)
+    @DisplayName("GET /api/payments/{paymentId} - 결제 상세 조회")
     class GetPaymentTest {
 
         @Test
-        @DisplayName("   ???       ???   ")
+        @DisplayName("결제 상세 조회 성공")
         void getPayment_success() throws Exception {
             // given
             PaymentResponse response = createPaymentResponse(1L, 100L, PaymentStatus.COMPLETED);
@@ -177,7 +177,7 @@ class PaymentControllerTest {
         }
 
         @Test
-        @DisplayName("   ???       ????   -    ???? ??  ")
+        @DisplayName("결제 상세 조회 실패 - 존재하지 않음")
         void getPayment_notFound() throws Exception {
             // given
             when(paymentService.getPayment(999L, 200L))
@@ -190,11 +190,11 @@ class PaymentControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/payments/order/{orderId} -      ?   ??   ??)
+    @DisplayName("GET /api/payments/order/{orderId} - 주문별 결제 조회")
     class GetPaymentByOrderIdTest {
 
         @Test
-        @DisplayName("     ?   ??   ???   ")
+        @DisplayName("주문별 결제 조회 성공")
         void getPaymentByOrderId_success() throws Exception {
             // given
             PaymentResponse response = createPaymentResponse(1L, 100L, PaymentStatus.COMPLETED);
@@ -209,7 +209,7 @@ class PaymentControllerTest {
         }
 
         @Test
-        @DisplayName("     ?   ??   ????   - ??  ")
+        @DisplayName("주문별 결제 조회 실패 - 없음")
         void getPaymentByOrderId_notFound() throws Exception {
             // given
             when(paymentService.getPaymentByOrderId(999L, 200L))

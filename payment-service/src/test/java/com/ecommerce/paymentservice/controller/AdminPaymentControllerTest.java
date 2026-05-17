@@ -53,11 +53,11 @@ class AdminPaymentControllerTest {
     TokenService tokenService;
 
     @Nested
-    @DisplayName("GET /api/admin/payments - ?       ??    ?   ??)
+    @DisplayName("GET /api/admin/payments - 전체 결제 목록 조회")
     class GetAllPaymentsTest {
 
         @Test
-        @DisplayName("?       ??    ?   ???   ")
+        @DisplayName("전체 결제 목록 조회 성공")
         void getAllPayments_success() throws Exception {
             // given
             PaymentResponse payment1 = createPaymentResponse(1L, 100L, PaymentStatus.COMPLETED);
@@ -85,7 +85,7 @@ class AdminPaymentControllerTest {
         }
 
         @Test
-        @DisplayName("?    ?   ??    ?   ??)
+        @DisplayName("상태별 결제 목록 조회")
         void getPaymentsByStatus_success() throws Exception {
             // given
             PaymentResponse completedPayment = createPaymentResponse(1L, 100L, PaymentStatus.COMPLETED);
@@ -113,11 +113,11 @@ class AdminPaymentControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/admin/payments/{paymentId} -    ???       ??)
+    @DisplayName("GET /api/admin/payments/{paymentId} - 결제 상세 조회")
     class GetPaymentTest {
 
         @Test
-        @DisplayName("   ???       ???   ")
+        @DisplayName("결제 상세 조회 성공")
         void getPayment_success() throws Exception {
             // given
             PaymentResponse response = createPaymentResponse(1L, 100L, PaymentStatus.COMPLETED);
@@ -133,7 +133,7 @@ class AdminPaymentControllerTest {
         }
 
         @Test
-        @DisplayName("   ???       ????   -    ???? ??  ")
+        @DisplayName("결제 상세 조회 실패 - 존재하지 않음")
         void getPayment_notFound() throws Exception {
             // given
             when(paymentService.getPaymentById(999L))
@@ -146,11 +146,11 @@ class AdminPaymentControllerTest {
     }
 
     @Nested
-    @DisplayName("PUT /api/admin/payments/{paymentId}/status -    ???        ?)
+    @DisplayName("PUT /api/admin/payments/{paymentId}/status - 결제 상태 변경")
     class UpdatePaymentStatusTest {
 
         @Test
-        @DisplayName("   ???        ??    - COMPLETED")
+        @DisplayName("결제 상태 변경 성공 - COMPLETED")
         void updatePaymentStatus_toCompleted_success() throws Exception {
             // given
             PaymentResponse response = createPaymentResponse(1L, 100L, PaymentStatus.COMPLETED);
@@ -173,7 +173,7 @@ class AdminPaymentControllerTest {
         }
 
         @Test
-        @DisplayName("   ???        ??    - CANCELLED")
+        @DisplayName("결제 상태 변경 성공 - CANCELLED")
         void updatePaymentStatus_toCancelled_success() throws Exception {
             // given
             PaymentResponse response = createPaymentResponse(1L, 100L, PaymentStatus.CANCELLED);
@@ -196,7 +196,7 @@ class AdminPaymentControllerTest {
         }
 
         @Test
-        @DisplayName("   ???        ???   -    ???? ??  ")
+        @DisplayName("결제 상태 변경 실패 - 존재하지 않음")
         void updatePaymentStatus_notFound() throws Exception {
             // given
             when(paymentService.updatePaymentStatus(anyLong(), any(PaymentStatus.class)))
