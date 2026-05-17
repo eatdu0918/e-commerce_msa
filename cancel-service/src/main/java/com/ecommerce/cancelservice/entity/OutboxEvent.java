@@ -11,8 +11,8 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "outbox_events", indexes = {
-        @Index(name = "idx_outbox_status_created", columnList = "status, createdAt"),
-        @Index(name = "idx_outbox_aggregate", columnList = "aggregateType, aggregateId")
+        @Index(name = "idx_outbox_status_created", columnList = "status, created_at"),
+        @Index(name = "idx_outbox_aggregate", columnList = "aggregate_type, aggregate_id")
 })
 @Getter
 @DynamicInsert

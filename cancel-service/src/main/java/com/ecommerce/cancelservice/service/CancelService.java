@@ -49,6 +49,7 @@ public class CancelService {
     private final CancelRepository cancelRepository;
     private final OutboxEventPublisher outboxEventPublisher;
     private final OrderServiceClient orderServiceClient;
+    private final com.ecommerce.cancelservice.client.PaymentServiceClient paymentServiceClient;
 
     @Transactional
     public CancelResponse createCancel(Long userId, CreateCancelRequest request) {
@@ -174,6 +175,23 @@ public class CancelService {
         if ("CANCEL_REQUESTED".equals(st) && "SHIPPING".equals(before)) {
             throw new CancelDomainException(CancelDomainExceptionCode.CancelAdminActionBlockedException);
         }
+    }
+
+    /**
+     * payment-service에서 orderId로 paymentId를 조회합니다.
+     * 조회 실패 시 null을 반환합니다 (환불 처리 흐름에서 별도 처리).
+     */
+    private Long fetchPaymentIdByOrderId(Long orderId) {
+        try {
+            com.ecommerce.common.response.ApiResponse<com.ecommerce.cancelservice.client.dto.PaymentPayload> res =
+                    paymentServiceClient.getPaymentByOrderId(orderId);
+            if (res != null && res.isSuccess() && res.getData() != null) {
+                return res.getData().getId();
+            }
+        } catch (Exception e) {
+            log.warn("payment-service에서 paymentId 조회 실패: orderId={}", orderId, e);
+        }
+        return null;
     }
 
     private static String normalizeStatus(String raw) {
@@ -346,6 +364,8 @@ public class CancelService {
 
         BigDecimal refundAmount = RefundAmountCalculator.computeRefundAmount(cancel, orderSnapshot);
 
+        Long paymentId = fetchPaymentIdByOrderId(cancel.getOrderId());
+
         List<CancelApprovedEvent.CancelItemEvent> items = cancel.getCancelItems().stream()
                 .map(item -> CancelApprovedEvent.CancelItemEvent.builder()
                         .productId(item.getProductId())
@@ -362,6 +382,7 @@ public class CancelService {
                 .orderId(cancel.getOrderId())
                 .orderNumber(cancel.getOrderNumber())
                 .userId(cancel.getUserId())
+                .paymentId(paymentId)
                 .refundAmount(refundAmount)
                 .requestType(cancel.getRequestType())
                 .items(items)
