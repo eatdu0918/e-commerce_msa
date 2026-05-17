@@ -55,18 +55,18 @@ class RefundControllerTest {
 
     @BeforeEach
     void setUp() {
-        CustomUserDetails userDetails = new CustomUserDetails(400L, "test@test.com", UserRole.USER);
+        CustomUserDetails userDetails = new CustomUserDetails(400L, "test@test.com", "", UserRole.USER);
         UsernamePasswordAuthenticationToken authentication =
                 new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
     @Nested
-    @DisplayName("GET /api/refunds - ????       ?   ??)
+    @DisplayName("GET /api/refunds - 내 환불 목록 조회")
     class GetMyRefundsTest {
 
         @Test
-        @DisplayName("????       ?   ???   ")
+        @DisplayName("내 환불 목록 조회 성공")
         void getMyRefunds_success() throws Exception {
             // given
             RefundResponse refund = createRefundResponse(1L, RefundStatus.COMPLETED);
@@ -92,7 +92,7 @@ class RefundControllerTest {
         }
 
         @Test
-        @DisplayName("????       ?   ??- ??    ?)
+        @DisplayName("내 환불 목록 조회 - 빈 목록")
         void getMyRefunds_empty() throws Exception {
             // given
             PageResponse<RefundResponse> pageResponse = PageResponse.<RefundResponse>builder()
@@ -117,11 +117,11 @@ class RefundControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/refunds/{refundId} - ??   ?       ??)
+    @DisplayName("GET /api/refunds/{refundId} - 환불 상세 조회")
     class GetRefundTest {
 
         @Test
-        @DisplayName("??   ?       ???   ")
+        @DisplayName("환불 상세 조회 성공")
         void getRefund_success() throws Exception {
             // given
             RefundResponse response = createRefundResponse(1L, RefundStatus.COMPLETED);
@@ -137,7 +137,7 @@ class RefundControllerTest {
         }
 
         @Test
-        @DisplayName("??   ?       ????   -    ???? ??  ")
+        @DisplayName("환불 상세 조회 실패 - 존재하지 않음")
         void getRefund_notFound() throws Exception {
             // given
             when(refundService.getRefund(anyLong(), anyLong()))
@@ -150,11 +150,11 @@ class RefundControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/refunds/cancel/{cancelId} - ?  ?  ???      ??)
+    @DisplayName("GET /api/refunds/cancel/{cancelId} - 취소별 환불 조회")
     class GetRefundByCancelIdTest {
 
         @Test
-        @DisplayName("?  ?  ???      ???   ")
+        @DisplayName("취소별 환불 조회 성공")
         void getRefundByCancelId_success() throws Exception {
             // given
             RefundResponse response = createRefundResponse(1L, RefundStatus.COMPLETED);
@@ -169,7 +169,7 @@ class RefundControllerTest {
         }
 
         @Test
-        @DisplayName("?  ?  ???      ????   -    ???? ??  ")
+        @DisplayName("취소별 환불 조회 실패 - 존재하지 않음")
         void getRefundByCancelId_notFound() throws Exception {
             // given
             when(refundService.getRefundByCancelId(anyLong(), anyLong()))
@@ -193,7 +193,7 @@ class RefundControllerTest {
                 .statusDescription(status.getDescription())
                 .refundReason(RefundReason.ORDER_CANCEL)
                 .refundReasonDescription(RefundReason.ORDER_CANCEL.getDescription())
-                .refundDetail("     ?  ?  ??    ??  ")
+                .refundDetail("주문 취소로 인한 환불")
                 .amount(new BigDecimal("50000"))
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
