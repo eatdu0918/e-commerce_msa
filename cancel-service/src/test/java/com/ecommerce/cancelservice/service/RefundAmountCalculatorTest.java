@@ -17,7 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class RefundAmountCalculatorTest {
 
     @Test
-    @DisplayName("?    ?  ??????  ???      finalAmount??    ??)
+    @DisplayName("전체 취소 시 환불액은 주문 finalAmount와 같다")
     void fullCancel_matchesFinalAmount() {
         Cancel cancel = baseCancel();
         OrderPayload order = orderSnapshot(
@@ -32,11 +32,11 @@ class RefundAmountCalculatorTest {
     }
 
     @Test
-    @DisplayName("     finalAmount       ?   ??  ?paymentAmount    ???    ???  ??   ???   ??  ??  ")
+    @DisplayName("주문 finalAmount가 지연됐어도 paymentAmount가 더 작으면 실결제 기준으로 환불한다")
     void fullCancel_prefersPaymentAmountWhenSmallerThanTotal() {
         Cancel cancel = baseCancel();
         cancel.getCancelItems().clear();
-        cancel.addCancelItem(CancelItem.create(1L, "??? ???  ?", 1, new BigDecimal("1000")));
+        cancel.addCancelItem(CancelItem.create(1L, "테스트 상품", 1, new BigDecimal("1000")));
 
         OrderPayload order = orderSnapshot(
                 new BigDecimal("1000"),
@@ -51,7 +51,7 @@ class RefundAmountCalculatorTest {
     }
 
     @Test
-    @DisplayName("?  ???  ?????    ?? ????    ??   ??    ?   ??  ??  ")
+    @DisplayName("부분 취소 시 할인 비율에 따라 라인 비중만큼 환불한다")
     void partialCancel_appliesDiscountRatioToLinePortion() {
         Cancel cancel = baseCancel();
         cancel.getCancelItems().clear();
@@ -76,7 +76,7 @@ class RefundAmountCalculatorTest {
                 100L, "ORD-1", 1L, CancelReason.CHANGE_OF_MIND, "memo", CancelRequestType.ORDER_CANCEL
         );
         ReflectionTestUtils.setField(cancel, "id", 1L);
-        cancel.addCancelItem(CancelItem.create(1L, "??? ???  ?", 2, new BigDecimal("10000")));
+        cancel.addCancelItem(CancelItem.create(1L, "테스트 상품", 2, new BigDecimal("10000")));
         return cancel;
     }
 

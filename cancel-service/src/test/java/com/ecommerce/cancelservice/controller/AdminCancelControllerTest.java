@@ -63,18 +63,18 @@ class AdminCancelControllerTest {
 
     @BeforeEach
     void setUp() {
-        CustomUserDetails userDetails = new CustomUserDetails(1L, "admin@test.com", UserRole.ADMIN);
+        CustomUserDetails userDetails = new CustomUserDetails(1L, "admin@test.com", "", UserRole.ADMIN);
         UsernamePasswordAuthenticationToken authentication =
                 new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
     @Nested
-    @DisplayName("GET /api/admin/cancels - ?    ?  ??    ?   ??)
+    @DisplayName("GET /api/admin/cancels - 전체 취소 목록 조회")
     class GetAllCancelsTest {
 
         @Test
-        @DisplayName("?    ?  ??    ?   ???   ")
+        @DisplayName("전체 취소 목록 조회 성공")
         void getAllCancels_success() throws Exception {
             // given
             CancelResponse cancel = createCancelResponse(1L, CancelStatus.REQUESTED);
@@ -101,7 +101,7 @@ class AdminCancelControllerTest {
         }
 
         @Test
-        @DisplayName("?    ??  ??    ?   ???   ")
+        @DisplayName("상태별 취소 목록 조회 성공")
         void getAllCancels_withStatus() throws Exception {
             // given
             CancelResponse cancel = createCancelResponse(1L, CancelStatus.REQUESTED);
@@ -128,7 +128,7 @@ class AdminCancelControllerTest {
         }
 
         @Test
-        @DisplayName("?    ?    ?    ?   ???    (      ??  )")
+        @DisplayName("요청 유형별 목록 조회 성공 (반품·환불)")
         void getAllCancels_withRequestType() throws Exception {
             CancelResponse cancel = createCancelResponse(1L, CancelStatus.REQUESTED, CancelRequestType.RETURN_REFUND);
 
@@ -153,7 +153,7 @@ class AdminCancelControllerTest {
         }
 
         @Test
-        @DisplayName("?    ?  ??    ?   ??- ??    ?)
+        @DisplayName("전체 취소 목록 조회 - 빈 목록")
         void getAllCancels_empty() throws Exception {
             // given
             PageResponse<CancelResponse> pageResponse = PageResponse.<CancelResponse>builder()
@@ -179,11 +179,11 @@ class AdminCancelControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/admin/cancels/orders/{orderId}/active -      ?    ? ??  ???   ")
+    @DisplayName("GET /api/admin/cancels/orders/{orderId}/active - 주문별 진행 중 취소 요약")
     class GetActiveCancelForOrderTest {
 
         @Test
-        @DisplayName("    ? ??  ?  ? ??   ??       ??)
+        @DisplayName("진행 중 취소가 있으면 요약 반환")
         void getActiveCancel_found() throws Exception {
             OrderCancelSummaryResponse summary = OrderCancelSummaryResponse.builder()
                     .cancelId(1L)
@@ -201,7 +201,7 @@ class AdminCancelControllerTest {
         }
 
         @Test
-        @DisplayName("    ? ??  ?  ? ??   ?data ??  ")
+        @DisplayName("진행 중 취소가 없으면 data 없음")
         void getActiveCancel_empty() throws Exception {
             when(cancelService.getActiveCancelForOrderAdmin(10L)).thenReturn(Optional.empty());
 
@@ -212,7 +212,7 @@ class AdminCancelControllerTest {
         }
 
         @Test
-        @DisplayName("     ??  ????  ??(?  ?   )")
+        @DisplayName("주문별 취소 동기화 (관리자)")
         void getCancelSync_ok() throws Exception {
             OrderCancelSyncResponse sync = OrderCancelSyncResponse.builder()
                     .activeCancel(null)
@@ -230,11 +230,11 @@ class AdminCancelControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/admin/cancels/{cancelId} - ?  ???       ??)
+    @DisplayName("GET /api/admin/cancels/{cancelId} - 취소 상세 조회")
     class GetCancelTest {
 
         @Test
-        @DisplayName("?  ???       ???   ")
+        @DisplayName("취소 상세 조회 성공")
         void getCancel_success() throws Exception {
             // given
             CancelResponse response = createCancelResponse(1L, CancelStatus.REQUESTED);
@@ -250,7 +250,7 @@ class AdminCancelControllerTest {
         }
 
         @Test
-        @DisplayName("?  ???       ????   -    ???? ??  ")
+        @DisplayName("취소 상세 조회 실패 - 존재하지 않음")
         void getCancel_notFound() throws Exception {
             // given
             when(cancelService.getCancelById(999L))
@@ -263,11 +263,11 @@ class AdminCancelControllerTest {
     }
 
     @Nested
-    @DisplayName("PUT /api/admin/cancels/{cancelId}/approve - ?  ???  ??)
+    @DisplayName("PUT /api/admin/cancels/{cancelId}/approve - 취소 승인")
     class ApproveCancelTest {
 
         @Test
-        @DisplayName("?  ???  ???   ")
+        @DisplayName("취소 승인 성공")
         void approveCancel_success() throws Exception {
             // given
             CancelResponse response = createCancelResponse(1L, CancelStatus.APPROVED);
@@ -278,12 +278,12 @@ class AdminCancelControllerTest {
             mockMvc.perform(put("/api/admin/cancels/1/approve"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.message").value("?  ?  ? ?  ??? ???  ??"))
+                    .andExpect(jsonPath("$.message").value("취소가 승인되었습니다."))
                     .andExpect(jsonPath("$.data.status").value("APPROVED"));
         }
 
         @Test
-        @DisplayName("?  ???  ????   -    ???? ??  ")
+        @DisplayName("취소 승인 실패 - 존재하지 않음")
         void approveCancel_notFound() throws Exception {
             // given
             when(cancelService.approveCancel(999L))
@@ -295,7 +295,7 @@ class AdminCancelControllerTest {
         }
 
         @Test
-        @DisplayName("?  ???  ????   - ?    ?    ?   ")
+        @DisplayName("취소 승인 실패 - 요청 상태 아님")
         void approveCancel_notInRequestedStatus() throws Exception {
             // given
             when(cancelService.approveCancel(1L))
@@ -308,20 +308,20 @@ class AdminCancelControllerTest {
     }
 
     @Nested
-    @DisplayName("PUT /api/admin/cancels/{cancelId}/reject - ?  ??   ?")
+    @DisplayName("PUT /api/admin/cancels/{cancelId}/reject - 취소 거부")
     class RejectCancelTest {
 
         @Test
-        @DisplayName("?  ??   ? ?   ")
+        @DisplayName("취소 거부 성공")
         void rejectCancel_success() throws Exception {
             // given
             CancelResponse response = createCancelResponse(1L, CancelStatus.REJECTED);
 
-            when(cancelService.rejectCancel(1L, "?????   ?)).thenReturn(response);
+            when(cancelService.rejectCancel(1L, "재고 부족")).thenReturn(response);
 
             String requestBody = """
                     {
-                        "rejectedReason": "?????   ?
+                        "rejectedReason": "재고 부족"
                     }
                     """;
 
@@ -331,12 +331,12 @@ class AdminCancelControllerTest {
                             .content(requestBody))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.message").value("?  ?  ?    ??? ???  ??"))
+                    .andExpect(jsonPath("$.message").value("취소가 거부되었습니다."))
                     .andExpect(jsonPath("$.data.status").value("REJECTED"));
         }
 
         @Test
-        @DisplayName("?  ??   ? ??   - ?     ??   ")
+        @DisplayName("취소 거부 실패 - 필수 값 누락")
         void rejectCancel_validation_fail() throws Exception {
             // given
             String requestBody = """
@@ -352,15 +352,15 @@ class AdminCancelControllerTest {
         }
 
         @Test
-        @DisplayName("?  ??   ? ??   -    ???? ??  ")
+        @DisplayName("취소 거부 실패 - 존재하지 않음")
         void rejectCancel_notFound() throws Exception {
             // given
-            when(cancelService.rejectCancel(999L, "?????   ?))
+            when(cancelService.rejectCancel(999L, "재고 부족"))
                     .thenThrow(new CancelDomainException(CancelDomainExceptionCode.CancelNotFoundException));
 
             String requestBody = """
                     {
-                        "rejectedReason": "?????   ?
+                        "rejectedReason": "재고 부족"
                     }
                     """;
 
@@ -372,15 +372,15 @@ class AdminCancelControllerTest {
         }
 
         @Test
-        @DisplayName("?  ??   ? ??   - ?    ?    ?   ")
+        @DisplayName("취소 거부 실패 - 요청 상태 아님")
         void rejectCancel_notInRequestedStatus() throws Exception {
             // given
-            when(cancelService.rejectCancel(1L, "?????   ?))
+            when(cancelService.rejectCancel(1L, "재고 부족"))
                     .thenThrow(new CancelDomainException(CancelDomainExceptionCode.CancelNotInRequestedStatusException));
 
             String requestBody = """
                     {
-                        "rejectedReason": "?????   ?
+                        "rejectedReason": "재고 부족"
                     }
                     """;
 
@@ -400,7 +400,7 @@ class AdminCancelControllerTest {
         CancelItemResponse item = CancelItemResponse.builder()
                 .id(1L)
                 .productId(1L)
-                .productName("??? ???  ?")
+                .productName("테스트 상품")
                 .quantity(2)
                 .unitPrice(new BigDecimal("10000"))
                 .totalPrice(new BigDecimal("20000"))
@@ -418,7 +418,7 @@ class AdminCancelControllerTest {
                 .requestTypeDescription(requestType.getDescription())
                 .cancelReason(CancelReason.CHANGE_OF_MIND)
                 .cancelReasonDescription(CancelReason.CHANGE_OF_MIND.getDescription())
-                .cancelDetail("??      ???  ??  ???  ??")
+                .cancelDetail("단순 변심으로 취소합니다.")
                 .items(List.of(item))
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())

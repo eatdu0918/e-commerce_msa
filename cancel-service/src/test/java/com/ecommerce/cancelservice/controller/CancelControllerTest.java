@@ -63,18 +63,18 @@ class CancelControllerTest {
 
     @BeforeEach
     void setUp() {
-        CustomUserDetails userDetails = new CustomUserDetails(200L, "test@test.com", UserRole.USER);
+        CustomUserDetails userDetails = new CustomUserDetails(200L, "test@test.com", "", UserRole.USER);
         UsernamePasswordAuthenticationToken authentication =
                 new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
     @Nested
-    @DisplayName("POST /api/cancels - ?  ???    ??  ")
+    @DisplayName("POST /api/cancels - 취소 요청 생성")
     class CreateCancelTest {
 
         @Test
-        @DisplayName("?  ???    ??   ?   ")
+        @DisplayName("취소 요청 생성 성공")
         void createCancel_success() throws Exception {
             // given
             CancelResponse response = createCancelResponse(1L, CancelStatus.REQUESTED);
@@ -86,11 +86,11 @@ class CancelControllerTest {
                         "orderId": 100,
                         "orderNumber": "ORD-TEST123",
                         "cancelReason": "CHANGE_OF_MIND",
-                        "cancelDetail": "??      ???  ??  ???  ??",
+                        "cancelDetail": "단순 변심으로 취소합니다.",
                         "items": [
                             {
                                 "productId": 1,
-                                "productName": "??? ???  ?",
+                                "productName": "테스트 상품",
                                 "quantity": 2,
                                 "unitPrice": 10000
                             }
@@ -104,13 +104,13 @@ class CancelControllerTest {
                             .content(requestBody))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.message").value("?  ???   ????  ?? ???  ??"))
+                    .andExpect(jsonPath("$.message").value("취소 요청이 생성되었습니다."))
                     .andExpect(jsonPath("$.data.id").value(1))
                     .andExpect(jsonPath("$.data.status").value("REQUESTED"));
         }
 
         @Test
-        @DisplayName("     ?    ? ??  ???    - ??   ??)
+        @DisplayName("주문별 진행 중 취소 요약 - 있을 때")
         void getActiveCancelForOrder_found() throws Exception {
             OrderCancelSummaryResponse summary = OrderCancelSummaryResponse.builder()
                     .cancelId(10L)
@@ -129,7 +129,7 @@ class CancelControllerTest {
         }
 
         @Test
-        @DisplayName("     ?    ? ??  ???    - ??   ??)
+        @DisplayName("주문별 진행 중 취소 요약 - 없을 때")
         void getActiveCancelForOrder_empty() throws Exception {
             when(cancelService.getActiveCancelForOrder(100L, 200L)).thenReturn(Optional.empty());
 
@@ -140,7 +140,7 @@ class CancelControllerTest {
         }
 
         @Test
-        @DisplayName("     ??  ????  ??)
+        @DisplayName("주문별 취소 동기화")
         void getCancelSyncForOrder_ok() throws Exception {
             OrderCancelSummaryResponse active = OrderCancelSummaryResponse.builder()
                     .cancelId(10L)
@@ -164,7 +164,7 @@ class CancelControllerTest {
         }
 
         @Test
-        @DisplayName("?  ???    ??   ??   - ?     ??    (orderId)")
+        @DisplayName("취소 요청 생성 실패 - 필수 값 누락 (orderId)")
         void createCancel_validation_fail_noOrderId() throws Exception {
             // given
             String requestBody = """
@@ -174,7 +174,7 @@ class CancelControllerTest {
                         "items": [
                             {
                                 "productId": 1,
-                                "productName": "??? ???  ?",
+                                "productName": "테스트 상품",
                                 "quantity": 2,
                                 "unitPrice": 10000
                             }
@@ -190,7 +190,7 @@ class CancelControllerTest {
         }
 
         @Test
-        @DisplayName("?  ???    ??   ??   - ???  ?     ?)
+        @DisplayName("취소 요청 생성 실패 - 빈 상품 목록")
         void createCancel_validation_fail_emptyItems() throws Exception {
             // given
             String requestBody = """
@@ -210,7 +210,7 @@ class CancelControllerTest {
         }
 
         @Test
-        @DisplayName("?  ???    ??   ??   - ?  ? ?   ??    ???  ")
+        @DisplayName("취소 요청 생성 실패 - 상품 유효성 검증 실패")
         void createCancel_validation_fail_invalidItem() throws Exception {
             // given
             String requestBody = """
@@ -238,11 +238,11 @@ class CancelControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/cancels - ???  ??    ?   ??)
+    @DisplayName("GET /api/cancels - 내 취소 목록 조회")
     class GetMyCancelsTest {
 
         @Test
-        @DisplayName("???  ??    ?   ???   ")
+        @DisplayName("내 취소 목록 조회 성공")
         void getMyCancels_success() throws Exception {
             // given
             CancelResponse cancel = createCancelResponse(1L, CancelStatus.REQUESTED);
@@ -268,7 +268,7 @@ class CancelControllerTest {
         }
 
         @Test
-        @DisplayName("???  ??    ?   ??- ??    ?)
+        @DisplayName("내 취소 목록 조회 - 빈 목록")
         void getMyCancels_empty() throws Exception {
             // given
             PageResponse<CancelResponse> pageResponse = PageResponse.<CancelResponse>builder()
@@ -293,11 +293,11 @@ class CancelControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/cancels/{cancelId} - ?  ???       ??)
+    @DisplayName("GET /api/cancels/{cancelId} - 취소 상세 조회")
     class GetCancelTest {
 
         @Test
-        @DisplayName("?  ???       ???   ")
+        @DisplayName("취소 상세 조회 성공")
         void getCancel_success() throws Exception {
             // given
             CancelResponse response = createCancelResponse(1L, CancelStatus.REQUESTED);
@@ -313,7 +313,7 @@ class CancelControllerTest {
         }
 
         @Test
-        @DisplayName("?  ???       ????   -    ???? ??  ")
+        @DisplayName("취소 상세 조회 실패 - 존재하지 않음")
         void getCancel_notFound() throws Exception {
             // given
             when(cancelService.getCancel(anyLong(), anyLong()))
@@ -329,7 +329,7 @@ class CancelControllerTest {
         CancelItemResponse item = CancelItemResponse.builder()
                 .id(1L)
                 .productId(1L)
-                .productName("??? ???  ?")
+                .productName("테스트 상품")
                 .quantity(2)
                 .unitPrice(new BigDecimal("10000"))
                 .totalPrice(new BigDecimal("20000"))
@@ -347,7 +347,7 @@ class CancelControllerTest {
                 .requestTypeDescription(CancelRequestType.ORDER_CANCEL.getDescription())
                 .cancelReason(CancelReason.CHANGE_OF_MIND)
                 .cancelReasonDescription(CancelReason.CHANGE_OF_MIND.getDescription())
-                .cancelDetail("??      ???  ??  ???  ??")
+                .cancelDetail("단순 변심으로 취소합니다.")
                 .items(List.of(item))
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
