@@ -15,7 +15,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-configuration-processor'
 
     // DB
-    implementation 'mysql:mysql-connector-java:8.0.33'
+    runtimeOnly 'com.mysql:mysql-connector-j'
     implementation 'org.flywaydb:flyway-core'
     implementation 'org.flywaydb:flyway-mysql'
 

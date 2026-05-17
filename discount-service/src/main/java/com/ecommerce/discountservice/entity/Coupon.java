@@ -10,6 +10,7 @@ import org.hibernate.annotations.DynamicUpdate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 
 @Entity
@@ -136,7 +137,7 @@ public class Coupon extends BaseEntity {
 
         BigDecimal discount;
         if (couponType == CouponType.PERCENTAGE) {
-            discount = orderAmount.multiply(discountValue).divide(BigDecimal.valueOf(100));
+            discount = orderAmount.multiply(discountValue).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
         } else {
             discount = discountValue;
         }
