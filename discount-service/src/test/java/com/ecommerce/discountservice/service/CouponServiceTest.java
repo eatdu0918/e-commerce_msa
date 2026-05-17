@@ -53,7 +53,7 @@ class CouponServiceTest {
     private static final Long COUPON_ID = 1L;
     private static final Long USER_ID = 100L;
     private static final String COUPON_CODE = "SAVE10";
-    private static final String COUPON_NAME = "10% ?    ?   ?;
+    private static final String COUPON_NAME = "10% 할인 쿠폰";
 
     private Coupon testCoupon;
     private UserCoupon testUserCoupon;
@@ -66,15 +66,15 @@ class CouponServiceTest {
     }
 
     @Nested
-    @DisplayName("?   ???  ")
+    @DisplayName("쿠폰 생성")
     class CreateCouponTest {
 
         @Test
-        @DisplayName("?   ???   ?   ")
+        @DisplayName("쿠폰 생성 성공")
         void createCoupon_success() {
             // given
             CreateCouponRequest request = new CreateCouponRequest(
-                    COUPON_CODE, COUPON_NAME, "10% ?   ", CouponType.PERCENTAGE,
+                    COUPON_CODE, COUPON_NAME, "10% 할인", CouponType.PERCENTAGE,
                     new BigDecimal("10"), new BigDecimal("10000"), new BigDecimal("5000"),
                     100, LocalDateTime.now(), LocalDateTime.now().plusDays(30)
             );
@@ -98,11 +98,11 @@ class CouponServiceTest {
         }
 
         @Test
-        @DisplayName("?   ???   ??   -    ???   ?)
+        @DisplayName("쿠폰 생성 실패 - 중복 코드")
         void createCoupon_duplicateCode_throwsException() {
             // given
             CreateCouponRequest request = new CreateCouponRequest(
-                    COUPON_CODE, COUPON_NAME, "10% ?   ", CouponType.PERCENTAGE,
+                    COUPON_CODE, COUPON_NAME, "10% 할인", CouponType.PERCENTAGE,
                     new BigDecimal("10"), null, null,
                     100, LocalDateTime.now(), LocalDateTime.now().plusDays(30)
             );
@@ -112,16 +112,16 @@ class CouponServiceTest {
             // when & then
             assertThatThrownBy(() -> couponService.createCoupon(request))
                     .isInstanceOf(DiscountDomainException.class)
-                    .hasMessageContaining("?? ?    ???   ?   ??   ?);
+                    .hasMessageContaining("이미 존재하는 쿠폰 코드");
         }
     }
 
     @Nested
-    @DisplayName("?   ?   ??)
+    @DisplayName("쿠폰 조회")
     class GetCouponTest {
 
         @Test
-        @DisplayName("?   ???      ???   ")
+        @DisplayName("쿠폰 단건 조회 성공")
         void getCoupon_success() {
             // given
             when(couponRepository.findById(COUPON_ID)).thenReturn(Optional.of(testCoupon));
@@ -136,7 +136,7 @@ class CouponServiceTest {
         }
 
         @Test
-        @DisplayName("?   ?   ????   -    ???? ??  ")
+        @DisplayName("쿠폰 조회 실패 - 존재하지 않음")
         void getCoupon_notFound_throwsException() {
             // given
             when(couponRepository.findById(999L)).thenReturn(Optional.empty());
@@ -144,11 +144,11 @@ class CouponServiceTest {
             // when & then
             assertThatThrownBy(() -> couponService.getCoupon(999L))
                     .isInstanceOf(DiscountDomainException.class)
-                    .hasMessageContaining("?   ??   ??????  ??  ");
+                    .hasMessageContaining("쿠폰을 찾을 수 없습니다");
         }
 
         @Test
-        @DisplayName("?    ?   ?    ?   ??)
+        @DisplayName("전체 쿠폰 목록 조회")
         void getAllCoupons_success() {
             // given
             Pageable pageable = PageRequest.of(0, 10);
@@ -165,7 +165,7 @@ class CouponServiceTest {
         }
 
         @Test
-        @DisplayName("??   ?   ?    ?   ??)
+        @DisplayName("활성 쿠폰 목록 조회")
         void getActiveCoupons_success() {
             // given
             Pageable pageable = PageRequest.of(0, 10);
@@ -183,15 +183,15 @@ class CouponServiceTest {
     }
 
     @Nested
-    @DisplayName("?   ???  ")
+    @DisplayName("쿠폰 수정")
     class UpdateCouponTest {
 
         @Test
-        @DisplayName("?   ???   ?   ")
+        @DisplayName("쿠폰 수정 성공")
         void updateCoupon_success() {
             // given
             UpdateCouponRequest request = new UpdateCouponRequest(
-                    "??  ??  ???   ?, "??  ????  ", CouponType.FIXED_AMOUNT,
+                    "업데이트된 쿠폰", "수정된 설명", CouponType.FIXED_AMOUNT,
                     new BigDecimal("3000"), new BigDecimal("10000"), new BigDecimal("3000"),
                     200, LocalDateTime.now(), LocalDateTime.now().plusDays(60), true
             );
@@ -203,16 +203,16 @@ class CouponServiceTest {
 
             // then
             assertThat(response).isNotNull();
-            assertThat(testCoupon.getName()).isEqualTo("??  ??  ???   ?);
+            assertThat(testCoupon.getName()).isEqualTo("업데이트된 쿠폰");
             assertThat(testCoupon.getCouponType()).isEqualTo(CouponType.FIXED_AMOUNT);
         }
 
         @Test
-        @DisplayName("?   ???   ??   -    ???? ??  ")
+        @DisplayName("쿠폰 수정 실패 - 존재하지 않음")
         void updateCoupon_notFound_throwsException() {
             // given
             UpdateCouponRequest request = new UpdateCouponRequest(
-                    "??  ??  ", "??  ", CouponType.PERCENTAGE,
+                    "업데이트", "설명", CouponType.PERCENTAGE,
                     new BigDecimal("10"), null, null,
                     100, LocalDateTime.now(), LocalDateTime.now().plusDays(30), true
             );
@@ -222,16 +222,16 @@ class CouponServiceTest {
             // when & then
             assertThatThrownBy(() -> couponService.updateCoupon(999L, request))
                     .isInstanceOf(DiscountDomainException.class)
-                    .hasMessageContaining("?   ??   ??????  ??  ");
+                    .hasMessageContaining("쿠폰을 찾을 수 없습니다");
         }
     }
 
     @Nested
-    @DisplayName("?   ?????)
+    @DisplayName("쿠폰 삭제")
     class DeleteCouponTest {
 
         @Test
-        @DisplayName("?   ??????? ??   ) ?   ")
+        @DisplayName("쿠폰 삭제(비활성화) 성공")
         void deleteCoupon_success() {
             // given
             when(couponRepository.findById(COUPON_ID)).thenReturn(Optional.of(testCoupon));
@@ -244,7 +244,7 @@ class CouponServiceTest {
         }
 
         @Test
-        @DisplayName("?   ???????   -    ???? ??  ")
+        @DisplayName("쿠폰 삭제 실패 - 존재하지 않음")
         void deleteCoupon_notFound_throwsException() {
             // given
             when(couponRepository.findById(999L)).thenReturn(Optional.empty());
@@ -252,16 +252,16 @@ class CouponServiceTest {
             // when & then
             assertThatThrownBy(() -> couponService.deleteCoupon(999L))
                     .isInstanceOf(DiscountDomainException.class)
-                    .hasMessageContaining("?   ??   ??????  ??  ");
+                    .hasMessageContaining("쿠폰을 찾을 수 없습니다");
         }
     }
 
     @Nested
-    @DisplayName("?   ?   ??)
+    @DisplayName("쿠폰 발급")
     class ClaimCouponTest {
 
         @Test
-        @DisplayName("?   ?   ???   ")
+        @DisplayName("쿠폰 발급 성공")
         void claimCoupon_success() {
             // given
             when(couponRepository.findByCodeAndIsActiveTrue(COUPON_CODE)).thenReturn(Optional.of(testCoupon));
@@ -283,7 +283,7 @@ class CouponServiceTest {
         }
 
         @Test
-        @DisplayName("?   ?   ????   - ?   ???  ")
+        @DisplayName("쿠폰 발급 실패 - 쿠폰 없음")
         void claimCoupon_notFound_throwsException() {
             // given
             when(couponRepository.findByCodeAndIsActiveTrue("INVALID")).thenReturn(Optional.empty());
@@ -291,11 +291,11 @@ class CouponServiceTest {
             // when & then
             assertThatThrownBy(() -> couponService.claimCoupon(USER_ID, "INVALID"))
                     .isInstanceOf(DiscountDomainException.class)
-                    .hasMessageContaining("?   ??   ??????  ??  ");
+                    .hasMessageContaining("쿠폰을 찾을 수 없습니다");
         }
 
         @Test
-        @DisplayName("?   ?   ????   - ?   ??? ??? ?   ?)
+        @DisplayName("쿠폰 발급 실패 - 유효하지 않은 쿠폰")
         void claimCoupon_notValid_throwsException() {
             // given
             Coupon expiredCoupon = createTestCoupon(2L, "EXPIRED", "         ", CouponType.PERCENTAGE,
@@ -308,14 +308,14 @@ class CouponServiceTest {
             // when & then
             assertThatThrownBy(() -> couponService.claimCoupon(USER_ID, "EXPIRED"))
                     .isInstanceOf(DiscountDomainException.class)
-                    .hasMessageContaining("????   ?  ??   ???   ??  ");
+                    .hasMessageContaining("사용 가능한 쿠폰이 아닙니다");
         }
 
         @Test
-        @DisplayName("?   ?   ????   - ??   ??? ")
+        @DisplayName("쿠폰 발급 실패 - 수량 소진")
         void claimCoupon_outOfStock_throwsException() {
             // given
-            Coupon soldOutCoupon = createTestCoupon(3L, "SOLDOUT", "??  ?   ?, CouponType.PERCENTAGE,
+            Coupon soldOutCoupon = createTestCoupon(3L, "SOLDOUT", "품절쿠폰", CouponType.PERCENTAGE,
                     new BigDecimal("10"), 10, true);
             ReflectionTestUtils.setField(soldOutCoupon, "issuedQuantity", 10);
 
@@ -324,11 +324,11 @@ class CouponServiceTest {
             // when & then
             assertThatThrownBy(() -> couponService.claimCoupon(USER_ID, "SOLDOUT"))
                     .isInstanceOf(DiscountDomainException.class)
-                    .hasMessageContaining("?   ???  ????? ");
+                    .hasMessageContaining("쿠폰 수량이 소진");
         }
 
         @Test
-        @DisplayName("?   ?   ????   - ?? ?    ?  ?  ")
+        @DisplayName("쿠폰 발급 실패 - 이미 발급받음")
         void claimCoupon_alreadyClaimed_throwsException() {
             // given
             when(couponRepository.findByCodeAndIsActiveTrue(COUPON_CODE)).thenReturn(Optional.of(testCoupon));
@@ -337,16 +337,16 @@ class CouponServiceTest {
             // when & then
             assertThatThrownBy(() -> couponService.claimCoupon(USER_ID, COUPON_CODE))
                     .isInstanceOf(DiscountDomainException.class)
-                    .hasMessageContaining("?? ?    ?  ?? ?   ?);
+                    .hasMessageContaining("이미 발급받은 쿠폰");
         }
     }
 
     @Nested
-    @DisplayName("?   ???      ??)
+    @DisplayName("쿠폰 일괄 발급")
     class BulkGrantCouponTest {
 
         @Test
-        @DisplayName("??      ???   ")
+        @DisplayName("일괄 발급 성공")
         void bulkGrantCoupon_success() {
             Long userId2 = 101L;
             BulkGrantCouponRequest request = new BulkGrantCouponRequest(
@@ -367,7 +367,7 @@ class CouponServiceTest {
         }
 
         @Test
-        @DisplayName("??      ??- ?? ?    ? ?????? ?    ? ??")
+        @DisplayName("일괄 발급 - 이미 보유한 사용자는 건너뜀")
         void bulkGrantCoupon_skipsAlreadyGranted() {
             Long userId2 = 101L;
             BulkGrantCouponRequest request = new BulkGrantCouponRequest(
@@ -387,23 +387,23 @@ class CouponServiceTest {
         }
 
         @Test
-        @DisplayName("??      ????   - ?   ???  ")
+        @DisplayName("일괄 발급 실패 - 쿠폰 없음")
         void bulkGrantCoupon_notFound() {
             BulkGrantCouponRequest request = new BulkGrantCouponRequest("NONE", List.of(USER_ID));
             when(couponRepository.findByCodeAndIsActiveTrue("NONE")).thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> couponService.bulkGrantCoupon(request))
                     .isInstanceOf(DiscountDomainException.class)
-                    .hasMessageContaining("?   ??   ??????  ??  ");
+                    .hasMessageContaining("쿠폰을 찾을 수 없습니다");
         }
     }
 
     @Nested
-    @DisplayName("??????   ?   ??)
+    @DisplayName("사용자 쿠폰 조회")
     class GetUserCouponsTest {
 
         @Test
-        @DisplayName("??????   ?    ?   ??)
+        @DisplayName("사용자 쿠폰 목록 조회")
         void getUserCoupons_success() {
             // given
             when(userCouponRepository.findByUserId(USER_ID)).thenReturn(List.of(testUserCoupon));
@@ -417,7 +417,7 @@ class CouponServiceTest {
         }
 
         @Test
-        @DisplayName("?????????   ???   ?    ?   ??)
+        @DisplayName("사용자 사용 가능 쿠폰 목록 조회")
         void getAvailableUserCoupons_success() {
             // given
             when(userCouponRepository.findByUserIdAndStatusWithCoupon(USER_ID, CouponStatus.AVAILABLE))
@@ -433,11 +433,11 @@ class CouponServiceTest {
     }
 
     @Nested
-    @DisplayName("?   ?????)
+    @DisplayName("쿠폰 사용")
     class UseCouponTest {
 
         @Test
-        @DisplayName("?   ??????   ")
+        @DisplayName("쿠폰 사용 성공")
         void useCoupon_success() {
             // given
             Long userCouponId = 1L;
@@ -454,7 +454,7 @@ class CouponServiceTest {
         }
 
         @Test
-        @DisplayName("?   ???????   -    ???? ??  ")
+        @DisplayName("쿠폰 사용 실패 - 존재하지 않음")
         void useCoupon_notFound_throwsException() {
             // given
             when(userCouponRepository.findById(999L)).thenReturn(Optional.empty());
@@ -462,11 +462,11 @@ class CouponServiceTest {
             // when & then
             assertThatThrownBy(() -> couponService.useCoupon(999L, 500L))
                     .isInstanceOf(DiscountDomainException.class)
-                    .hasMessageContaining("??????   ??   ??????  ??  ");
+                    .hasMessageContaining("사용자 쿠폰을 찾을 수 없습니다");
         }
 
         @Test
-        @DisplayName("?   ???????   - ?? ? ?????)
+        @DisplayName("쿠폰 사용 실패 - 이미 사용됨")
         void useCoupon_alreadyUsed_throwsException() {
             // given
             testUserCoupon.use(100L);
@@ -475,16 +475,16 @@ class CouponServiceTest {
             // when & then
             assertThatThrownBy(() -> couponService.useCoupon(1L, 500L))
                     .isInstanceOf(DiscountDomainException.class)
-                    .hasMessageContaining("????   ?  ??   ???   ??  ");
+                    .hasMessageContaining("사용 가능한 쿠폰이 아닙니다");
         }
     }
 
     @Nested
-    @DisplayName("?   ?   ??)
+    @DisplayName("쿠폰 복원")
     class RestoreCouponTest {
 
         @Test
-        @DisplayName("?   ?   ???   ")
+        @DisplayName("쿠폰 복원 성공")
         void restoreCoupon_success() {
             // given
             Long orderId = 500L;
@@ -501,7 +501,7 @@ class CouponServiceTest {
         }
 
         @Test
-        @DisplayName("?   ?   ??- ?? ??     ?   ???   (?  ??")
+        @DisplayName("쿠폰 복원 - 해당 주문 쿠폰 없음 (무시)")
         void restoreCoupon_noUserCoupon_ignored() {
             // given
             when(userCouponRepository.findByOrderId(999L)).thenReturn(Optional.empty());
@@ -515,7 +515,7 @@ class CouponServiceTest {
     private Coupon createTestCoupon(Long id, String code, String name, CouponType type,
                                      BigDecimal discountValue, Integer totalQuantity, boolean isActive) {
         Coupon coupon = Coupon.create(
-                code, name, "??? ???   ???  ", type, discountValue,
+                code, name, "테스트 쿠폰 설명", type, discountValue,
                 new BigDecimal("10000"), new BigDecimal("5000"),
                 totalQuantity, LocalDateTime.now().minusDays(1), LocalDateTime.now().plusDays(30)
         );
