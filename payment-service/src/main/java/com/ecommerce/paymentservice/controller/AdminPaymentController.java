@@ -45,6 +45,13 @@ public class AdminPaymentController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
+    @Operation(summary = "주문별 결제 정보 조회 (내부 서비스용)")
+    @GetMapping("/order/{orderId}")
+    public ResponseEntity<ApiResponse<PaymentResponse>> getPaymentByOrderId(@PathVariable Long orderId) {
+        PaymentResponse response = paymentService.getPaymentByOrderIdAdmin(orderId);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
     @Operation(summary = "결제 상태 변경")
     @PutMapping("/{paymentId}/status")
     public ResponseEntity<ApiResponse<PaymentResponse>> updatePaymentStatus(

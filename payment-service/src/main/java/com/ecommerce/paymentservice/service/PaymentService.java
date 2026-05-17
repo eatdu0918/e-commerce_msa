@@ -97,7 +97,7 @@ public class PaymentService {
 
     @Transactional(readOnly = true)
     public PaymentResponse getPaymentByOrderId(Long orderId, Long userId) {
-        Payment payment = paymentRepository.findByOrderId(orderId)
+        Payment payment = paymentRepository.findByOrderIdAndUserId(orderId, userId)
                 .orElseThrow(() -> new PaymentDomainException(PaymentDomainExceptionCode.PaymentNotFoundException));
         return PaymentResponse.from(payment);
     }
@@ -114,6 +114,13 @@ public class PaymentService {
         Page<Payment> payments = paymentRepository.findByStatus(status, pageable);
         Page<PaymentResponse> responsePage = payments.map(PaymentResponse::from);
         return PageResponse.from(responsePage);
+    }
+
+    @Transactional(readOnly = true)
+    public PaymentResponse getPaymentByOrderIdAdmin(Long orderId) {
+        Payment payment = paymentRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new PaymentDomainException(PaymentDomainExceptionCode.PaymentNotFoundException));
+        return PaymentResponse.from(payment);
     }
 
     @Transactional(readOnly = true)
