@@ -61,18 +61,18 @@ class OrderControllerTest {
 
     @BeforeEach
     void setUp() {
-        CustomUserDetails userDetails = new CustomUserDetails(100L, "test@test.com", UserRole.USER);
+        CustomUserDetails userDetails = new CustomUserDetails(100L, "test@test.com", "", UserRole.USER);
         UsernamePasswordAuthenticationToken authentication =
                 new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 
     @Nested
-    @DisplayName("POST /api/orders -      ??  ")
+    @DisplayName("POST /api/orders - 주문 생성")
     class CreateOrderTest {
 
         @Test
-        @DisplayName("     ??   ?   ")
+        @DisplayName("주문 생성 성공")
         void createOrder_success() throws Exception {
             // given
             OrderResponse response = createOrderResponse(1L, OrderStatus.PENDING);
@@ -84,13 +84,13 @@ class OrderControllerTest {
                         "items": [
                             {
                                 "productId": 1,
-                                "productName": "??? ???  ?",
+                                "productName": "테스트 상품",
                                 "unitPrice": 10000,
                                 "quantity": 2
                             }
                         ],
-                        "shippingAddress": "??  ??      ?,
-                        "recipientName": "??  ??,
+                        "shippingAddress": "서울시 강남구",
+                        "recipientName": "홍길동",
                         "recipientPhone": "010-1234-5678"
                     }
                     """;
@@ -101,20 +101,20 @@ class OrderControllerTest {
                             .content(requestBody))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.message").value("    ????  ?? ???  ??"))
+                    .andExpect(jsonPath("$.message").value("주문이 생성되었습니다."))
                     .andExpect(jsonPath("$.data.id").value(1))
                     .andExpect(jsonPath("$.data.status").value("PENDING"));
         }
 
         @Test
-        @DisplayName("     ??   ??   - ?     ??    (items)")
+        @DisplayName("주문 생성 실패 - 필수 값 누락 (items)")
         void createOrder_validation_fail_emptyItems() throws Exception {
             // given
             String requestBody = """
                     {
                         "items": [],
-                        "shippingAddress": "??  ??      ?,
-                        "recipientName": "??  ??,
+                        "shippingAddress": "서울시 강남구",
+                        "recipientName": "홍길동",
                         "recipientPhone": "010-1234-5678"
                     }
                     """;
@@ -127,7 +127,7 @@ class OrderControllerTest {
         }
 
         @Test
-        @DisplayName("     ??   ??   - ?     ??    (   ?  ?)")
+        @DisplayName("주문 생성 실패 - 필수 값 누락 (배송지)")
         void createOrder_validation_fail_noAddress() throws Exception {
             // given
             String requestBody = """
@@ -135,12 +135,12 @@ class OrderControllerTest {
                         "items": [
                             {
                                 "productId": 1,
-                                "productName": "??? ???  ?",
+                                "productName": "테스트 상품",
                                 "unitPrice": 10000,
                                 "quantity": 2
                             }
                         ],
-                        "recipientName": "??  ??,
+                        "recipientName": "홍길동",
                         "recipientPhone": "010-1234-5678"
                     }
                     """;
@@ -153,7 +153,7 @@ class OrderControllerTest {
         }
 
         @Test
-        @DisplayName("     ??   ??   - ?  ? ?   ??    ???  ")
+        @DisplayName("주문 생성 실패 - 상품 유효성 검증 실패")
         void createOrder_validation_fail_invalidItem() throws Exception {
             // given
             String requestBody = """
@@ -166,8 +166,8 @@ class OrderControllerTest {
                                 "quantity": 0
                             }
                         ],
-                        "shippingAddress": "??  ??      ?,
-                        "recipientName": "??  ??,
+                        "shippingAddress": "서울시 강남구",
+                        "recipientName": "홍길동",
                         "recipientPhone": "010-1234-5678"
                     }
                     """;
@@ -180,20 +180,20 @@ class OrderControllerTest {
         }
 
         @Test
-        @DisplayName("     ??   ??   -    ????  ???   ???   ?   ")
+        @DisplayName("주문 생성 실패 - 배송 단계 생략만 단독 선택")
         void createOrder_validation_fail_skipShippingWithoutSkipConfirm() throws Exception {
             String requestBody = """
                     {
                         "items": [
                             {
                                 "productId": 1,
-                                "productName": "??? ???  ?",
+                                "productName": "테스트 상품",
                                 "unitPrice": 10000,
                                 "quantity": 1
                             }
                         ],
-                        "shippingAddress": "??  ??      ?,
-                        "recipientName": "??  ??,
+                        "shippingAddress": "서울시 강남구",
+                        "recipientName": "홍길동",
                         "recipientPhone": "010-1234-5678",
                         "skipConfirmAndPreparing": false,
                         "skipShippingAndDelivered": true
@@ -208,11 +208,11 @@ class OrderControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/orders - ??         ?   ??)
+    @DisplayName("GET /api/orders - 내 주문 목록 조회")
     class GetMyOrdersTest {
 
         @Test
-        @DisplayName("??         ?   ???   ")
+        @DisplayName("내 주문 목록 조회 성공")
         void getMyOrders_success() throws Exception {
             // given
             OrderResponse order = createOrderResponse(1L, OrderStatus.CONFIRMED);
@@ -238,7 +238,7 @@ class OrderControllerTest {
         }
 
         @Test
-        @DisplayName("??         ?   ???    - ??    ?)
+        @DisplayName("내 주문 목록 조회 성공 - 빈 목록")
         void getMyOrders_empty() throws Exception {
             // given
             PageResponse<OrderResponse> pageResponse = PageResponse.<OrderResponse>builder()
@@ -263,11 +263,11 @@ class OrderControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/orders/{orderId} -      ?       ??)
+    @DisplayName("GET /api/orders/{orderId} - 주문 상세 조회")
     class GetOrderTest {
 
         @Test
-        @DisplayName("     ?       ???   ")
+        @DisplayName("주문 상세 조회 성공")
         void getOrder_success() throws Exception {
             // given
             OrderResponse response = createOrderResponse(1L, OrderStatus.CONFIRMED);
@@ -283,7 +283,7 @@ class OrderControllerTest {
         }
 
         @Test
-        @DisplayName("     ?       ????   -    ???? ??  ")
+        @DisplayName("주문 상세 조회 실패 - 존재하지 않음")
         void getOrder_notFound() throws Exception {
             // given
             when(orderAggregationService.getMyOrderEnriched(anyLong(), anyLong()))
@@ -295,7 +295,7 @@ class OrderControllerTest {
         }
 
         @Test
-        @DisplayName("     ?       ????   - ??   ???? ?      ")
+        @DisplayName("주문 상세 조회 실패 - 다른 사용자의 주문")
         void getOrder_accessDenied() throws Exception {
             // given
             when(orderAggregationService.getMyOrderEnriched(anyLong(), anyLong()))
@@ -308,11 +308,11 @@ class OrderControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/orders/{orderId}/detail -      ?    ????    ??)
+    @DisplayName("GET /api/orders/{orderId}/detail - 주문 상세 통합 조회")
     class GetOrderDetailTest {
 
         @Test
-        @DisplayName("     ?    ????    ???   ")
+        @DisplayName("주문 상세 통합 조회 성공")
         void getOrderDetail_success() throws Exception {
             // given
             OrderDetailResponse response = createOrderDetailResponse(1L, OrderStatus.CONFIRMED);
@@ -328,7 +328,7 @@ class OrderControllerTest {
         }
 
         @Test
-        @DisplayName("     ?    ????    ????   -    ???? ??  ")
+        @DisplayName("주문 상세 통합 조회 실패 - 존재하지 않음")
         void getOrderDetail_notFound() throws Exception {
             // given
             when(orderAggregationService.getOrderDetail(anyLong(), anyLong()))
@@ -341,11 +341,11 @@ class OrderControllerTest {
     }
 
     @Nested
-    @DisplayName("PUT /api/orders/{orderId}/cancel -      ?  ??)
+    @DisplayName("PUT /api/orders/{orderId}/cancel - 주문 취소")
     class CancelOrderTest {
 
         @Test
-        @DisplayName("     ?  ???   ")
+        @DisplayName("주문 취소 성공")
         void cancelOrder_success() throws Exception {
             // given
             OrderResponse response = createOrderResponse(1L, OrderStatus.CANCELLED);
@@ -356,12 +356,12 @@ class OrderControllerTest {
             mockMvc.perform(put("/api/orders/1/cancel"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.message").value("    ???  ??? ???  ??"))
+                    .andExpect(jsonPath("$.message").value("주문이 취소되었습니다."))
                     .andExpect(jsonPath("$.data.status").value("CANCELLED"));
         }
 
         @Test
-        @DisplayName("     ?  ????   -    ???? ??  ")
+        @DisplayName("주문 취소 실패 - 존재하지 않음")
         void cancelOrder_notFound() throws Exception {
             // given
             when(orderService.cancelOrder(anyLong(), anyLong()))
@@ -373,7 +373,7 @@ class OrderControllerTest {
         }
 
         @Test
-        @DisplayName("     ?  ????   - ?  ???  ? ?   ")
+        @DisplayName("주문 취소 실패 - 취소 불가 상태")
         void cancelOrder_cannotCancel() throws Exception {
             // given
             when(orderService.cancelOrder(anyLong(), anyLong()))
@@ -385,7 +385,7 @@ class OrderControllerTest {
         }
 
         @Test
-        @DisplayName("     ?  ????   - ?? ? ?  ???)
+        @DisplayName("주문 취소 실패 - 이미 취소됨")
         void cancelOrder_alreadyCancelled() throws Exception {
             // given
             when(orderService.cancelOrder(anyLong(), anyLong()))
@@ -401,7 +401,7 @@ class OrderControllerTest {
         OrderItemResponse item = OrderItemResponse.builder()
                 .id(1L)
                 .productId(1L)
-                .productName("??? ???  ?")
+                .productName("테스트 상품")
                 .unitPrice(new BigDecimal("10000"))
                 .quantity(2)
                 .totalPrice(new BigDecimal("20000"))
@@ -416,8 +416,8 @@ class OrderControllerTest {
                 .totalAmount(new BigDecimal("20000"))
                 .discountAmount(BigDecimal.ZERO)
                 .finalAmount(new BigDecimal("20000"))
-                .shippingAddress("??  ??      ?)
-                .recipientName("??  ??)
+                .shippingAddress("서울시 강남구")
+                .recipientName("홍길동")
                 .recipientPhone("010-1234-5678")
                 .items(List.of(item))
                 .createdAt(LocalDateTime.now())
@@ -436,8 +436,8 @@ class OrderControllerTest {
                 .totalAmount(new BigDecimal("20000"))
                 .discountAmount(BigDecimal.ZERO)
                 .finalAmount(new BigDecimal("20000"))
-                .shippingAddress("??  ??      ?)
-                .recipientName("??  ??)
+                .shippingAddress("서울시 강남구")
+                .recipientName("홍길동")
                 .recipientPhone("010-1234-5678")
                 .items(List.of())
                 .createdAt(LocalDateTime.now())

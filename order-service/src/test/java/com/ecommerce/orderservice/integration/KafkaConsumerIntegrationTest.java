@@ -54,7 +54,7 @@ class KafkaConsumerIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    @DisplayName("coupon-used ??  ????   ??     ?       CONFIRMED ?    ?)
+    @DisplayName("coupon-used 이벤트 수신 시 주문 상태가 CONFIRMED로 변경")
     void handleCouponUsed_confirmsOrder() throws Exception {
         // given -      ??  
         OrderResponse order = createTestOrder(1L);
@@ -68,7 +68,7 @@ class KafkaConsumerIntegrationTest extends IntegrationTestBase {
                 .userCouponId(100L)
                 .couponId(10L)
                 .discountAmount(new BigDecimal("5000"))
-                .couponName("?   ???   ")
+                .couponName("봄맞이 할인")
                 .couponCode("SPRING")
                 .couponType("PERCENTAGE")
                 .couponRuleValue(new BigDecimal("10"))
@@ -83,7 +83,7 @@ class KafkaConsumerIntegrationTest extends IntegrationTestBase {
             assertThat(updatedOrder.getStatus()).isEqualTo(OrderStatus.CONFIRMED);
             assertThat(updatedOrder.getDiscountAmount()).isEqualByComparingTo(new BigDecimal("5000"));
             assertThat(updatedOrder.getFinalAmount()).isEqualByComparingTo(new BigDecimal("25000")); // 30000 - 5000
-            assertThat(updatedOrder.getAppliedCouponName()).isEqualTo("?   ???   ");
+            assertThat(updatedOrder.getAppliedCouponName()).isEqualTo("봄맞이 할인");
             assertThat(updatedOrder.getAppliedCouponCode()).isEqualTo("SPRING");
             assertThat(updatedOrder.getAppliedCouponType()).isEqualTo("PERCENTAGE");
             assertThat(updatedOrder.getAppliedCouponRuleValue()).isEqualByComparingTo(new BigDecimal("10"));
@@ -96,7 +96,7 @@ class KafkaConsumerIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    @DisplayName("stock-decrease-failed ??  ????   ??     ?  ??)
+    @DisplayName("stock-decrease-failed 이벤트 수신 시 주문 취소")
     void handleStockDecreaseFailed_cancelsOrder() throws Exception {
         // given -      ??  
         OrderResponse order = createTestOrder(2L);
@@ -106,7 +106,7 @@ class KafkaConsumerIntegrationTest extends IntegrationTestBase {
                 .eventId(UUID.randomUUID().toString())
                 .orderId(orderId)
                 .orderNumber(order.getOrderNumber())
-                .reason("?????   ?)
+                .reason("재고 부족")
                 .build();
 
         // when - stock-decrease-failed ??  ??    ?
@@ -120,7 +120,7 @@ class KafkaConsumerIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    @DisplayName("payment-completed ??  ????   ??PENDING     ??CONFIRMED ?    ?)
+    @DisplayName("payment-completed 이벤트 수신 시 PENDING 주문이 CONFIRMED로 변경")
     void handlePaymentCompleted_confirmsPendingOrder() throws Exception {
         OrderResponse order = createTestOrder(5L);
         Long orderId = order.getId();
@@ -149,7 +149,7 @@ class KafkaConsumerIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    @DisplayName("payment-completed: ??  ??  ???  ???  ???    ??      ?      ?   ??coupon-used    ??????")
+    @DisplayName("payment-completed: 실결제액이 상품합보다 작으면 할인·최종금액 보정(coupon-used 지연 대비)")
     void handlePaymentCompleted_reconcilesDiscountWhenPaidLessThanTotal() throws Exception {
         OrderResponse order = createTestOrder(8L);
         Long orderId = order.getId();
@@ -176,7 +176,7 @@ class KafkaConsumerIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    @DisplayName("payment-failed ??  ????   ??     ?  ??)
+    @DisplayName("payment-failed 이벤트 수신 시 주문 취소")
     void handlePaymentFailed_cancelsOrder() throws Exception {
         // given -      ??  
         OrderResponse order = createTestOrder(3L);
@@ -186,7 +186,7 @@ class KafkaConsumerIntegrationTest extends IntegrationTestBase {
                 .eventId(UUID.randomUUID().toString())
                 .orderId(orderId)
                 .orderNumber(order.getOrderNumber())
-                .reason("   ????  ")
+                .reason("결제 실패")
                 .build();
 
         // when - payment-failed ??  ??    ?
@@ -200,7 +200,7 @@ class KafkaConsumerIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    @DisplayName("cancel-requested ??  ????   ??    ???  ???     ??    ?    ?)
+    @DisplayName("cancel-requested 이벤트 수신 시 주문이 취소 요청 중 상태로 변경")
     void handleCancelRequested_setsCancelRequested() throws Exception {
         OrderResponse order = createTestOrder(6L);
         Long orderId = order.getId();
@@ -225,7 +225,7 @@ class KafkaConsumerIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    @DisplayName("cancel-requested ??  ?       ?? ?    ??   ???? ??  ")
+    @DisplayName("cancel-requested 이벤트는 배송 중 주문에 반영되지 않음")
     void handleCancelRequested_ignoredWhenShipping() throws Exception {
         OrderResponse order = createTestOrder(8L);
         Long orderId = order.getId();
@@ -254,7 +254,7 @@ class KafkaConsumerIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    @DisplayName("cancel-rejected ??  ????   ???  ???       ??     ?    ?   ?")
+    @DisplayName("cancel-rejected 이벤트 수신 시 취소 요청 직전 주문 상태로 복귀")
     void handleCancelRejected_restoresPreviousStatus() throws Exception {
         OrderResponse order = createTestOrder(7L);
         Long orderId = order.getId();
@@ -283,7 +283,7 @@ class KafkaConsumerIntegrationTest extends IntegrationTestBase {
                 .orderId(orderId)
                 .orderNumber(order.getOrderNumber())
                 .userId(7L)
-                .rejectedReason("?  ???  ?")
+                .rejectedReason("승인 불가")
                 .build();
         kafkaTemplate.send("cancel-rejected", rejected.getOrderNumber(), rejected).get();
 
@@ -294,7 +294,7 @@ class KafkaConsumerIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    @DisplayName("   ????  ??   ??   ? (    ??")
+    @DisplayName("중복 이벤트 처리 방지 (멱등성)")
     void handleDuplicateEvent_ignoresSecondEvent() throws Exception {
         // given -      ??  
         OrderResponse order = createTestOrder(4L);
@@ -334,15 +334,15 @@ class KafkaConsumerIntegrationTest extends IntegrationTestBase {
     private OrderResponse createTestOrder(Long userId) {
         OrderItemRequest itemRequest = OrderItemRequest.builder()
                 .productId((long) (Math.random() * 1000))
-                .productName("??? ???  ?")
+                .productName("테스트 상품")
                 .unitPrice(new BigDecimal("30000"))
                 .quantity(1)
                 .build();
         CreateOrderRequest request = new CreateOrderRequest(
                 List.of(itemRequest),
                 null,
-                "??? ??   ??,
-                "??? ????  ??,
+                "테스트 주소",
+                "테스트 주소",
                 "010-0000-0000",
                 null,
                 null

@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class OutboxEventTest {
 
     @Test
-    @DisplayName("OutboxEvent ??   ?   ")
+    @DisplayName("OutboxEvent 생성 성공")
     void create_success() {
         // given
         String aggregateType = "Order";
@@ -32,7 +32,7 @@ class OutboxEventTest {
     }
 
     @Test
-    @DisplayName("markAsProcessed - ?   ??PROCESSED ?    ?)
+    @DisplayName("markAsProcessed - 상태를 PROCESSED로 변경")
     void markAsProcessed_changesStatusToProcessed() {
         // given
         OutboxEvent event = createTestEvent();
@@ -46,7 +46,7 @@ class OutboxEventTest {
     }
 
     @Test
-    @DisplayName("markAsFailed - ?   ??FAILED ?     ? ? ?retryCount    ?")
+    @DisplayName("markAsFailed - 상태를 FAILED로 변경하고 retryCount 증가")
     void markAsFailed_changesStatusToFailedAndIncrementsRetryCount() {
         // given
         OutboxEvent event = createTestEvent();
@@ -61,7 +61,7 @@ class OutboxEventTest {
     }
 
     @Test
-    @DisplayName("retry - ?   ??PENDING??       ?)
+    @DisplayName("retry - 상태를 PENDING으로 변경")
     void retry_changesStatusToPending() {
         // given
         OutboxEvent event = createTestEvent();
@@ -76,7 +76,7 @@ class OutboxEventTest {
     }
 
     @Test
-    @DisplayName("canRetry - retryCount    maxRetryCount     ?? ??true")
+    @DisplayName("canRetry - retryCount가 maxRetryCount 미만이면 true")
     void canRetry_returnsTrueWhenBelowMaxRetry() {
         // given
         OutboxEvent event = createTestEvent();
@@ -87,7 +87,7 @@ class OutboxEventTest {
     }
 
     @Test
-    @DisplayName("canRetry - retryCount    maxRetryCount ??  ?? ??false")
+    @DisplayName("canRetry - retryCount가 maxRetryCount 이상이면 false")
     void canRetry_returnsFalseWhenAtOrAboveMaxRetry() {
         // given
         OutboxEvent event = createTestEvent();
@@ -103,7 +103,7 @@ class OutboxEventTest {
     }
 
     @Test
-    @DisplayName("???? ???   ???????   ????? ?   ")
+    @DisplayName("여러 번 실패 후 재시도 가능 여부 확인")
     void canRetry_afterMultipleFailures() {
         // given
         OutboxEvent event = createTestEvent();
