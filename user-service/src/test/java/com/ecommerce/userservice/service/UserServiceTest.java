@@ -10,6 +10,7 @@ import com.ecommerce.common.enums.UserRole;
 import com.ecommerce.userservice.exception.UserDomainException;
 import com.ecommerce.userservice.repository.UserRepository;
 import com.ecommerce.common.security.JwtTokenProvider;
+import com.ecommerce.common.service.TokenService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -60,17 +61,17 @@ class UserServiceTest {
     }
 
     @Nested
-    @DisplayName("???    ????? ??)
+    @DisplayName("회원가입 테스트")
     class SignUpTest {
 
         @Test
-        @DisplayName("???    ???   ")
+        @DisplayName("회원가입 성공")
         void signUp_success() {
             // given
             SignUpRequest request = SignUpRequest.builder()
                     .email(EMAIL)
                     .password(PASSWORD)
-                    .name("??? ?  ???")
+                    .name("테스트유저")
                     .phoneNumber("010-1234-5678")
                     .gender(Gender.MALE)
                     .build();
@@ -93,13 +94,13 @@ class UserServiceTest {
         }
 
         @Test
-        @DisplayName("???    ????   -    ????  ??)
+        @DisplayName("회원가입 실패 - 중복 이메일")
         void signUp_duplicateEmail_throwsException() {
             // given
             SignUpRequest request = SignUpRequest.builder()
                     .email(EMAIL)
                     .password(PASSWORD)
-                    .name("??? ?  ???")
+                    .name("테스트유저")
                     .phoneNumber("010-1234-5678")
                     .gender(Gender.MALE)
                     .build();
@@ -109,7 +110,7 @@ class UserServiceTest {
             // when & then
             assertThatThrownBy(() -> userService.signUp(request))
                     .isInstanceOf(UserDomainException.class)
-                    .hasMessageContaining("?? ? ????   ????  ??  ??  ");
+                    .hasMessageContaining("이미 사용 중인 이메일입니다");
 
             verify(userRepository).existsByEmail(EMAIL);
             verify(userRepository, never()).save(any(User.class));
@@ -117,11 +118,11 @@ class UserServiceTest {
     }
 
     @Nested
-    @DisplayName("   ?????? ??)
+    @DisplayName("로그인 테스트")
     class LoginTest {
 
         @Test
-        @DisplayName("   ????   ")
+        @DisplayName("로그인 성공")
         void login_success() {
             // given
             LoginRequest request = LoginRequest.builder()
@@ -147,7 +148,7 @@ class UserServiceTest {
         }
 
         @Test
-        @DisplayName("   ?????   -    ???? ??   ??  ??)
+        @DisplayName("로그인 실패 - 존재하지 않는 이메일")
         void login_emailNotFound_throwsException() {
             // given
             LoginRequest request = LoginRequest.builder()
@@ -160,11 +161,11 @@ class UserServiceTest {
             // when & then
             assertThatThrownBy(() -> userService.login(request))
                     .isInstanceOf(UserDomainException.class)
-                    .hasMessageContaining("??  ??   ??  ??   ??  ??  ");
+                    .hasMessageContaining("일치하는 이메일이 없습니다");
         }
 
         @Test
-        @DisplayName("   ?????   - ?? ?   ???  ?  ?)
+        @DisplayName("로그인 실패 - 비밀번호 불일치")
         void login_invalidPassword_throwsException() {
             // given
             LoginRequest request = LoginRequest.builder()
@@ -178,11 +179,11 @@ class UserServiceTest {
             // when & then
             assertThatThrownBy(() -> userService.login(request))
                     .isInstanceOf(UserDomainException.class)
-                    .hasMessageContaining("?    ?? ?   ?  ? ??  ??? ??  ??  ");
+                    .hasMessageContaining("현재 비밀번호가 일치하지 않습니다");
         }
 
         @Test
-        @DisplayName("   ?????   - ??  ????? ")
+        @DisplayName("로그인 실패 - 탈퇴한 회원")
         void login_withdrawnUser_throwsException() {
             // given
             User withdrawnUser = createTestUser(USER_ID, EMAIL, ENCODED_PASSWORD, false);
@@ -196,16 +197,16 @@ class UserServiceTest {
             // when & then
             assertThatThrownBy(() -> userService.login(request))
                     .isInstanceOf(UserDomainException.class)
-                    .hasMessageContaining("?? ? ??  ????? ??  ??);
+                    .hasMessageContaining("이미 탈퇴한 회원입니다");
         }
     }
 
     @Nested
-    @DisplayName("   ??    ??? ??)
+    @DisplayName("로그아웃 테스트")
     class LogoutTest {
 
         @Test
-        @DisplayName("   ??    ?   ")
+        @DisplayName("로그아웃 성공")
         void logout_success() {
             // given
             long expiration = 3600000L;
@@ -222,11 +223,11 @@ class UserServiceTest {
     }
 
     @Nested
-    @DisplayName("?       ????? ??)
+    @DisplayName("토큰 갱신 테스트")
     class RefreshTokenTest {
 
         @Test
-        @DisplayName("?       ???   ")
+        @DisplayName("토큰 갱신 성공")
         void refreshToken_success() {
             // given
             String newAccessToken = "newAccessToken";
@@ -251,7 +252,7 @@ class UserServiceTest {
         }
 
         @Test
-        @DisplayName("?       ????   - ?   ??? ??? ?   ")
+        @DisplayName("토큰 갱신 실패 - 유효하지 않은 토큰")
         void refreshToken_invalidToken_throwsException() {
             // given
             when(jwtTokenProvider.validateToken(REFRESH_TOKEN)).thenReturn(false);
@@ -259,11 +260,11 @@ class UserServiceTest {
             // when & then
             assertThatThrownBy(() -> userService.refreshToken(REFRESH_TOKEN))
                     .isInstanceOf(UserDomainException.class)
-                    .hasMessageContaining("?   ??? ??? ?   ??  ??);
+                    .hasMessageContaining("유효하지 않은 토큰입니다");
         }
 
         @Test
-        @DisplayName("?       ????   - ???  ??   ???  ?  ?)
+        @DisplayName("토큰 갱신 실패 - 저장된 토큰과 불일치")
         void refreshToken_mismatch_throwsException() {
             // given
             when(jwtTokenProvider.validateToken(REFRESH_TOKEN)).thenReturn(true);
@@ -274,11 +275,11 @@ class UserServiceTest {
             // when & then
             assertThatThrownBy(() -> userService.refreshToken(REFRESH_TOKEN))
                     .isInstanceOf(UserDomainException.class)
-                    .hasMessageContaining("Refresh Token????  ??? ??  ??  ");
+                    .hasMessageContaining("Refresh Token이 일치하지 않습니다");
         }
 
         @Test
-        @DisplayName("?       ????   - ??  ????? ")
+        @DisplayName("토큰 갱신 실패 - 탈퇴한 회원")
         void refreshToken_withdrawnUser_throwsException() {
             // given
             User withdrawnUser = createTestUser(USER_ID, EMAIL, ENCODED_PASSWORD, false);
@@ -292,20 +293,20 @@ class UserServiceTest {
             // when & then
             assertThatThrownBy(() -> userService.refreshToken(REFRESH_TOKEN))
                     .isInstanceOf(UserDomainException.class)
-                    .hasMessageContaining("?? ? ??  ????? ??  ??);
+                    .hasMessageContaining("이미 탈퇴한 회원입니다");
         }
     }
 
     @Nested
-    @DisplayName("?   ????   ??? ??)
+    @DisplayName("프로필 수정 테스트")
     class UpdateProfileTest {
 
         @Test
-        @DisplayName("?   ????   ?   ")
+        @DisplayName("프로필 수정 성공")
         void updateProfile_success() {
             // given
             UpdateProfileRequest request = UpdateProfileRequest.builder()
-                    .name("??  ??)
+                    .name("새이름")
                     .phoneNumber("010-9999-9999")
                     .gender(Gender.FEMALE)
                     .build();
@@ -317,16 +318,16 @@ class UserServiceTest {
 
             // then
             assertThat(response).isNotNull();
-            assertThat(response.getName()).isEqualTo("??  ??);
+            assertThat(response.getName()).isEqualTo("새이름");
             assertThat(response.getPhoneNumber()).isEqualTo("010-9999-9999");
         }
 
         @Test
-        @DisplayName("?   ????   ??   - ???????  ")
+        @DisplayName("프로필 수정 실패 - 사용자 없음")
         void updateProfile_userNotFound_throwsException() {
             // given
             UpdateProfileRequest request = UpdateProfileRequest.builder()
-                    .name("??  ??)
+                    .name("새이름")
                     .phoneNumber("010-9999-9999")
                     .gender(Gender.FEMALE)
                     .build();
@@ -336,16 +337,16 @@ class UserServiceTest {
             // when & then
             assertThatThrownBy(() -> userService.updateProfile(USER_ID, request))
                     .isInstanceOf(UserDomainException.class)
-                    .hasMessageContaining("???? ?    ??????  ??  ");
+                    .hasMessageContaining("사용자를 찾을 수 없습니다");
         }
     }
 
     @Nested
-    @DisplayName("?? ?   ??    ???? ??)
+    @DisplayName("비밀번호 변경 테스트")
     class ChangePasswordTest {
 
         @Test
-        @DisplayName("?? ?   ??    ??   ")
+        @DisplayName("비밀번호 변경 성공")
         void changePassword_success() {
             // given
             ChangePasswordRequest request = ChangePasswordRequest.builder()
@@ -366,7 +367,7 @@ class UserServiceTest {
         }
 
         @Test
-        @DisplayName("?? ?   ??    ???   - ?    ?? ?   ???  ?  ?)
+        @DisplayName("비밀번호 변경 실패 - 현재 비밀번호 불일치")
         void changePassword_wrongCurrentPassword_throwsException() {
             // given
             ChangePasswordRequest request = ChangePasswordRequest.builder()
@@ -380,11 +381,11 @@ class UserServiceTest {
             // when & then
             assertThatThrownBy(() -> userService.changePassword(USER_ID, request))
                     .isInstanceOf(UserDomainException.class)
-                    .hasMessageContaining("?    ?? ?   ?  ? ??  ??? ??  ??  ");
+                    .hasMessageContaining("현재 비밀번호가 일치하지 않습니다");
         }
 
         @Test
-        @DisplayName("?? ?   ??    ???   - ???? ?   ?  ?    ?  ???  ")
+        @DisplayName("비밀번호 변경 실패 - 새 비밀번호가 기존과 동일")
         void changePassword_samePassword_throwsException() {
             // given
             ChangePasswordRequest request = ChangePasswordRequest.builder()
@@ -398,16 +399,16 @@ class UserServiceTest {
             // when & then
             assertThatThrownBy(() -> userService.changePassword(USER_ID, request))
                     .isInstanceOf(UserDomainException.class)
-                    .hasMessageContaining("???? ?   ????    ?? ?   ??? ???????  ??);
+                    .hasMessageContaining("새 비밀번호는 현재 비밀번호와 달라야 합니다");
         }
     }
 
     @Nested
-    @DisplayName("???  ??   ??? ??)
+    @DisplayName("회원 탈퇴 테스트")
     class WithdrawTest {
 
         @Test
-        @DisplayName("???  ??   ?   ")
+        @DisplayName("회원 탈퇴 성공")
         void withdraw_success() {
             // given
             WithdrawRequest request = WithdrawRequest.builder()
@@ -426,7 +427,7 @@ class UserServiceTest {
         }
 
         @Test
-        @DisplayName("???  ??   ??   - ?? ? ??  ????? ")
+        @DisplayName("회원 탈퇴 실패 - 이미 탈퇴한 회원")
         void withdraw_alreadyWithdrawn_throwsException() {
             // given
             User withdrawnUser = createTestUser(USER_ID, EMAIL, ENCODED_PASSWORD, false);
@@ -439,11 +440,11 @@ class UserServiceTest {
             // when & then
             assertThatThrownBy(() -> userService.withdraw(USER_ID, request))
                     .isInstanceOf(UserDomainException.class)
-                    .hasMessageContaining("?? ? ??  ????? ??  ??);
+                    .hasMessageContaining("이미 탈퇴한 회원입니다");
         }
 
         @Test
-        @DisplayName("???  ??   ??   - ?? ?   ???  ?  ?)
+        @DisplayName("회원 탈퇴 실패 - 비밀번호 불일치")
         void withdraw_wrongPassword_throwsException() {
             // given
             WithdrawRequest request = WithdrawRequest.builder()
@@ -456,16 +457,16 @@ class UserServiceTest {
             // when & then
             assertThatThrownBy(() -> userService.withdraw(USER_ID, request))
                     .isInstanceOf(UserDomainException.class)
-                    .hasMessageContaining("?    ?? ?   ?  ? ??  ??? ??  ??  ");
+                    .hasMessageContaining("현재 비밀번호가 일치하지 않습니다");
         }
     }
 
     @Nested
-    @DisplayName("???       ????? ??)
+    @DisplayName("내 정보 조회 테스트")
     class GetMyProfileTest {
 
         @Test
-        @DisplayName("???       ???   ")
+        @DisplayName("내 정보 조회 성공")
         void getMyProfile_success() {
             // given
             when(userRepository.findById(USER_ID)).thenReturn(Optional.of(testUser));
@@ -481,7 +482,7 @@ class UserServiceTest {
         }
 
         @Test
-        @DisplayName("???       ????   - ???????  ")
+        @DisplayName("내 정보 조회 실패 - 사용자 없음")
         void getMyProfile_userNotFound_throwsException() {
             // given
             when(userRepository.findById(USER_ID)).thenReturn(Optional.empty());
@@ -489,16 +490,16 @@ class UserServiceTest {
             // when & then
             assertThatThrownBy(() -> userService.getMyProfile(USER_ID))
                     .isInstanceOf(UserDomainException.class)
-                    .hasMessageContaining("???? ?    ??????  ??  ");
+                    .hasMessageContaining("사용자를 찾을 수 없습니다");
         }
     }
 
     @Nested
-    @DisplayName("??  ??   ?????   ????? ??)
+    @DisplayName("이메일로 사용자 조회 테스트")
     class FindUserByEmailTest {
 
         @Test
-        @DisplayName("??  ??   ?????   ???   ")
+        @DisplayName("이메일로 사용자 조회 성공")
         void findUserByEmail_success() {
             // given
             when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(testUser));
@@ -512,7 +513,7 @@ class UserServiceTest {
         }
 
         @Test
-        @DisplayName("??  ??   ?????   ????   -    ???? ??   ??  ??)
+        @DisplayName("이메일로 사용자 조회 실패 - 존재하지 않는 이메일")
         void findUserByEmail_notFound_throwsException() {
             // given
             when(userRepository.findByEmail("notexist@example.com")).thenReturn(Optional.empty());
@@ -520,12 +521,12 @@ class UserServiceTest {
             // when & then
             assertThatThrownBy(() -> userService.findUserByEmail("notexist@example.com"))
                     .isInstanceOf(UserDomainException.class)
-                    .hasMessageContaining("??  ??   ??  ??   ??  ??  ");
+                    .hasMessageContaining("일치하는 이메일이 없습니다");
         }
     }
 
     private User createTestUser(Long id, String email, String password, boolean isActive) {
-        User user = User.create(email, password, "??? ?  ???", "010-1234-5678", Gender.MALE);
+        User user = User.create(email, password, "테스트유저", "010-1234-5678", Gender.MALE);
         ReflectionTestUtils.setField(user, "id", id);
         ReflectionTestUtils.setField(user, "isActive", isActive);
         return user;

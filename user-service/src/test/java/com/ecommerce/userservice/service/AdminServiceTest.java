@@ -7,6 +7,7 @@ import com.ecommerce.userservice.enums.Gender;
 import com.ecommerce.common.enums.UserRole;
 import com.ecommerce.userservice.exception.UserDomainException;
 import com.ecommerce.userservice.repository.UserRepository;
+import com.ecommerce.common.service.TokenService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -50,11 +51,11 @@ class AdminServiceTest {
     }
 
     @Nested
-    @DisplayName("?    ???     ????? ??)
+    @DisplayName("전체 회원 조회 테스트")
     class GetAllUsersTest {
 
         @Test
-        @DisplayName("?    ???     ???   ")
+        @DisplayName("전체 회원 조회 성공")
         void getAllUsers_success() {
             // given
             Pageable pageable = PageRequest.of(0, 10);
@@ -75,7 +76,7 @@ class AdminServiceTest {
         }
 
         @Test
-        @DisplayName("?????      ?   ??)
+        @DisplayName("빈 회원 목록 조회")
         void getAllUsers_empty() {
             // given
             Pageable pageable = PageRequest.of(0, 10);
@@ -94,11 +95,11 @@ class AdminServiceTest {
     }
 
     @Nested
-    @DisplayName("???  ?       ????? ??)
+    @DisplayName("회원 상세 조회 테스트")
     class GetUserByIdTest {
 
         @Test
-        @DisplayName("???  ?       ???   ")
+        @DisplayName("회원 상세 조회 성공")
         void getUserById_success() {
             // given
             when(userRepository.findById(USER_ID)).thenReturn(Optional.of(testUser));
@@ -113,7 +114,7 @@ class AdminServiceTest {
         }
 
         @Test
-        @DisplayName("???  ?       ????   -    ???? ??   ??? ")
+        @DisplayName("회원 상세 조회 실패 - 존재하지 않는 회원")
         void getUserById_notFound_throwsException() {
             // given
             when(userRepository.findById(999L)).thenReturn(Optional.empty());
@@ -121,16 +122,16 @@ class AdminServiceTest {
             // when & then
             assertThatThrownBy(() -> adminService.getUserById(999L))
                     .isInstanceOf(UserDomainException.class)
-                    .hasMessageContaining("???? ?    ??????  ??  ");
+                    .hasMessageContaining("사용자를 찾을 수 없습니다");
         }
     }
 
     @Nested
-    @DisplayName("???     ????   ??? ??)
+    @DisplayName("회원 강제 탈퇴 테스트")
     class DeleteUserTest {
 
         @Test
-        @DisplayName("???     ????   ?   ")
+        @DisplayName("회원 강제 탈퇴 성공")
         void deleteUser_success() {
             // given
             when(userRepository.findById(USER_ID)).thenReturn(Optional.of(testUser));
@@ -144,7 +145,7 @@ class AdminServiceTest {
         }
 
         @Test
-        @DisplayName("???     ????   ??   -    ???? ??   ??? ")
+        @DisplayName("회원 강제 탈퇴 실패 - 존재하지 않는 회원")
         void deleteUser_notFound_throwsException() {
             // given
             when(userRepository.findById(999L)).thenReturn(Optional.empty());
@@ -152,11 +153,11 @@ class AdminServiceTest {
             // when & then
             assertThatThrownBy(() -> adminService.deleteUser(999L))
                     .isInstanceOf(UserDomainException.class)
-                    .hasMessageContaining("???? ?    ??????  ??  ");
+                    .hasMessageContaining("사용자를 찾을 수 없습니다");
         }
 
         @Test
-        @DisplayName("???     ????   ??   - ?? ? ??  ????? ")
+        @DisplayName("회원 강제 탈퇴 실패 - 이미 탈퇴한 회원")
         void deleteUser_alreadyWithdrawn_throwsException() {
             // given
             User withdrawnUser = createTestUser(USER_ID, EMAIL, false, UserRole.USER);
@@ -165,16 +166,16 @@ class AdminServiceTest {
             // when & then
             assertThatThrownBy(() -> adminService.deleteUser(USER_ID))
                     .isInstanceOf(UserDomainException.class)
-                    .hasMessageContaining("?? ? ??  ????? ??  ??);
+                    .hasMessageContaining("이미 탈퇴한 회원입니다");
         }
     }
 
     @Nested
-    @DisplayName("???      ?    ???? ??)
+    @DisplayName("회원 권한 변경 테스트")
     class ChangeUserRoleTest {
 
         @Test
-        @DisplayName("???      ?    ??    - USER to ADMIN")
+        @DisplayName("회원 권한 변경 성공 - USER to ADMIN")
         void changeUserRole_toAdmin_success() {
             // given
             when(userRepository.findById(USER_ID)).thenReturn(Optional.of(testUser));
@@ -189,7 +190,7 @@ class AdminServiceTest {
         }
 
         @Test
-        @DisplayName("???      ?    ??    - ADMIN to USER")
+        @DisplayName("회원 권한 변경 성공 - ADMIN to USER")
         void changeUserRole_toUser_success() {
             // given
             User adminUser = createTestUser(USER_ID, EMAIL, true, UserRole.ADMIN);
@@ -204,7 +205,7 @@ class AdminServiceTest {
         }
 
         @Test
-        @DisplayName("???      ?    ??    - ???????   ?)
+        @DisplayName("회원 권한 변경 성공 - 소문자 역할명")
         void changeUserRole_lowercaseRole_success() {
             // given
             when(userRepository.findById(USER_ID)).thenReturn(Optional.of(testUser));
@@ -218,7 +219,7 @@ class AdminServiceTest {
         }
 
         @Test
-        @DisplayName("???      ?    ???   -    ???? ??   ??? ")
+        @DisplayName("회원 권한 변경 실패 - 존재하지 않는 회원")
         void changeUserRole_userNotFound_throwsException() {
             // given
             when(userRepository.findById(999L)).thenReturn(Optional.empty());
@@ -226,11 +227,11 @@ class AdminServiceTest {
             // when & then
             assertThatThrownBy(() -> adminService.changeUserRole(999L, "ADMIN"))
                     .isInstanceOf(UserDomainException.class)
-                    .hasMessageContaining("???? ?    ??????  ??  ");
+                    .hasMessageContaining("사용자를 찾을 수 없습니다");
         }
 
         @Test
-        @DisplayName("???      ?    ???   - ??  ????? ")
+        @DisplayName("회원 권한 변경 실패 - 탈퇴한 회원")
         void changeUserRole_withdrawnUser_throwsException() {
             // given
             User withdrawnUser = createTestUser(USER_ID, EMAIL, false, UserRole.USER);
@@ -239,11 +240,11 @@ class AdminServiceTest {
             // when & then
             assertThatThrownBy(() -> adminService.changeUserRole(USER_ID, "ADMIN"))
                     .isInstanceOf(UserDomainException.class)
-                    .hasMessageContaining("?? ? ??  ????? ??  ??);
+                    .hasMessageContaining("이미 탈퇴한 회원입니다");
         }
 
         @Test
-        @DisplayName("???      ?    ???   - ?   ??? ??? ??   ?)
+        @DisplayName("회원 권한 변경 실패 - 유효하지 않은 역할명")
         void changeUserRole_invalidRole_throwsException() {
             // given
             when(userRepository.findById(USER_ID)).thenReturn(Optional.of(testUser));
@@ -255,7 +256,7 @@ class AdminServiceTest {
     }
 
     private User createTestUser(Long id, String email, boolean isActive, UserRole role) {
-        User user = User.create(email, "encodedPassword", "??? ?  ???", "010-1234-5678", Gender.MALE);
+        User user = User.create(email, "encodedPassword", "테스트유저", "010-1234-5678", Gender.MALE);
         ReflectionTestUtils.setField(user, "id", id);
         ReflectionTestUtils.setField(user, "isActive", isActive);
         ReflectionTestUtils.setField(user, "role", role);

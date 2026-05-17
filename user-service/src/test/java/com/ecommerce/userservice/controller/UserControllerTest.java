@@ -50,17 +50,17 @@ class UserControllerTest {
     ObjectMapper objectMapper;
 
     @Nested
-    @DisplayName("POST /api/auth/signup - ???    ??)
+    @DisplayName("POST /api/auth/signup - 회원가입")
     class SignUpTest {
 
         @Test
-        @DisplayName("???    ???   ")
+        @DisplayName("회원가입 성공")
         void signUp_success() throws Exception {
             // given
             SignUpRequest request = SignUpRequest.builder()
                     .email("test@example.com")
                     .password("Password123!")
-                    .name("??? ?  ???")
+                    .name("테스트유저")
                     .phoneNumber("010-1234-5678")
                     .gender(Gender.MALE)
                     .build();
@@ -76,13 +76,13 @@ class UserControllerTest {
         }
 
         @Test
-        @DisplayName("???    ????   - ??  ???    ??  ")
+        @DisplayName("회원가입 실패 - 이메일 형식 오류")
         void signUp_invalidEmail_fail() throws Exception {
             // given
             SignUpRequest request = SignUpRequest.builder()
                     .email("invalid-email")
                     .password("Password123!")
-                    .name("??? ?  ???")
+                    .name("테스트유저")
                     .phoneNumber("010-1234-5678")
                     .gender(Gender.MALE)
                     .build();
@@ -95,13 +95,13 @@ class UserControllerTest {
         }
 
         @Test
-        @DisplayName("???    ????   - ?? ?   ???    ??  ")
+        @DisplayName("회원가입 실패 - 비밀번호 형식 오류")
         void signUp_invalidPassword_fail() throws Exception {
             // given
             SignUpRequest request = SignUpRequest.builder()
                     .email("test@example.com")
                     .password("weak")
-                    .name("??? ?  ???")
+                    .name("테스트유저")
                     .phoneNumber("010-1234-5678")
                     .gender(Gender.MALE)
                     .build();
@@ -114,13 +114,13 @@ class UserControllerTest {
         }
 
         @Test
-        @DisplayName("???    ????   -    ????  ??)
+        @DisplayName("회원가입 실패 - 중복 이메일")
         void signUp_duplicateEmail_fail() throws Exception {
             // given
             SignUpRequest request = SignUpRequest.builder()
                     .email("test@example.com")
                     .password("Password123!")
-                    .name("??? ?  ???")
+                    .name("테스트유저")
                     .phoneNumber("010-1234-5678")
                     .gender(Gender.MALE)
                     .build();
@@ -137,11 +137,11 @@ class UserControllerTest {
     }
 
     @Nested
-    @DisplayName("POST /api/auth/login -    ???)
+    @DisplayName("POST /api/auth/login - 로그인")
     class LoginTest {
 
         @Test
-        @DisplayName("   ????   ")
+        @DisplayName("로그인 성공")
         void login_success() throws Exception {
             // given
             LoginRequest request = LoginRequest.builder()
@@ -171,7 +171,7 @@ class UserControllerTest {
         }
 
         @Test
-        @DisplayName("   ?????   -    ???? ??   ??  ??)
+        @DisplayName("로그인 실패 - 존재하지 않는 이메일")
         void login_emailNotFound_fail() throws Exception {
             // given
             LoginRequest request = LoginRequest.builder()
@@ -190,7 +190,7 @@ class UserControllerTest {
         }
 
         @Test
-        @DisplayName("   ?????   - ?? ?   ???  ?  ?)
+        @DisplayName("로그인 실패 - 비밀번호 불일치")
         void login_invalidPassword_fail() throws Exception {
             // given
             LoginRequest request = LoginRequest.builder()
@@ -210,11 +210,11 @@ class UserControllerTest {
     }
 
     @Nested
-    @DisplayName("POST /api/auth/refresh - ?       ??)
+    @DisplayName("POST /api/auth/refresh - 토큰 갱신")
     class RefreshTokenTest {
 
         @Test
-        @DisplayName("?       ???   ")
+        @DisplayName("토큰 갱신 성공")
         void refreshToken_success() throws Exception {
             // given
             String requestBody = "{\"refreshToken\":\"validRefreshToken\"}";
@@ -237,7 +237,7 @@ class UserControllerTest {
         }
 
         @Test
-        @DisplayName("?       ????   - ?   ??? ??? ?   ")
+        @DisplayName("토큰 갱신 실패 - 유효하지 않은 토큰")
         void refreshToken_invalidToken_fail() throws Exception {
             // given
             String requestBody = "{\"refreshToken\":\"invalidToken\"}";
@@ -254,17 +254,17 @@ class UserControllerTest {
     }
 
     @Nested
-    @DisplayName("GET /api/auth/findUser/{email} - ??  ??   ?????   ??)
+    @DisplayName("GET /api/auth/findUser/{email} - 이메일로 사용자 조회")
     class FindUserByEmailTest {
 
         @Test
-        @DisplayName("??  ??   ?????   ???   ")
+        @DisplayName("이메일로 사용자 조회 성공")
         void findUserByEmail_success() throws Exception {
             // given
             UserResponse response = UserResponse.builder()
                     .id(1L)
                     .email("test@example.com")
-                    .name("??? ?  ???")
+                    .name("테스트유저")
                     .phoneNumber("010-1234-5678")
                     .role("USER")
                     .isActive(true)
@@ -281,7 +281,7 @@ class UserControllerTest {
         }
 
         @Test
-        @DisplayName("??  ??   ?????   ????   -    ???? ??  ")
+        @DisplayName("이메일로 사용자 조회 실패 - 존재하지 않음")
         void findUserByEmail_notFound_fail() throws Exception {
             // given
             when(userService.findUserByEmail("notexist@example.com"))

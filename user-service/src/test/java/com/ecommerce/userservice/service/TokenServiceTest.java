@@ -1,6 +1,7 @@
 package com.ecommerce.userservice.service;
 
 import com.ecommerce.common.security.JwtProperties;
+import com.ecommerce.common.service.TokenService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -45,11 +46,11 @@ class TokenServiceTest {
     }
 
     @Nested
-    @DisplayName("Refresh Token ??????? ??)
+    @DisplayName("Refresh Token 저장 테스트")
     class SaveRefreshTokenTest {
 
         @Test
-        @DisplayName("Refresh Token ?????   ")
+        @DisplayName("Refresh Token 저장 성공")
         void saveRefreshToken_success() {
             // given
             when(jwtProperties.getRefreshTokenExpirationSeconds()).thenReturn(EXPIRATION_SECONDS);
@@ -68,11 +69,11 @@ class TokenServiceTest {
     }
 
     @Nested
-    @DisplayName("Refresh Token    ????? ??)
+    @DisplayName("Refresh Token 조회 테스트")
     class GetRefreshTokenTest {
 
         @Test
-        @DisplayName("Refresh Token    ???   ")
+        @DisplayName("Refresh Token 조회 성공")
         void getRefreshToken_success() {
             // given
             when(valueOperations.get(REFRESH_TOKEN_PREFIX + USER_ID)).thenReturn(REFRESH_TOKEN);
@@ -85,7 +86,7 @@ class TokenServiceTest {
         }
 
         @Test
-        @DisplayName("Refresh Token    ????   -    ???? ??  ")
+        @DisplayName("Refresh Token 조회 실패 - 존재하지 않음")
         void getRefreshToken_notFound_returnsNull() {
             // given
             when(valueOperations.get(REFRESH_TOKEN_PREFIX + USER_ID)).thenReturn(null);
@@ -99,11 +100,11 @@ class TokenServiceTest {
     }
 
     @Nested
-    @DisplayName("Refresh Token ??????? ??)
+    @DisplayName("Refresh Token 삭제 테스트")
     class DeleteRefreshTokenTest {
 
         @Test
-        @DisplayName("Refresh Token ?????   ")
+        @DisplayName("Refresh Token 삭제 성공")
         void deleteRefreshToken_success() {
             // when
             tokenService.deleteRefreshToken(USER_ID);
@@ -114,11 +115,11 @@ class TokenServiceTest {
     }
 
     @Nested
-    @DisplayName("Access Token ?  ?  ??????? ??)
+    @DisplayName("Access Token 블랙리스트 테스트")
     class BlacklistTest {
 
         @Test
-        @DisplayName("Access Token ?  ?  ?????  ? ?   ")
+        @DisplayName("Access Token 블랙리스트 추가 성공")
         void addToBlacklist_success() {
             // given
             long expirationSeconds = 3600L;
@@ -136,7 +137,7 @@ class TokenServiceTest {
         }
 
         @Test
-        @DisplayName("Access Token ?  ?  ?????  ? -     ???   ?? ?  ? ??  ")
+        @DisplayName("Access Token 블랙리스트 추가 - 만료된 토큰은 추가 안함")
         void addToBlacklist_expiredToken_noAction() {
             // given
             long expirationSeconds = 0L;
@@ -149,7 +150,7 @@ class TokenServiceTest {
         }
 
         @Test
-        @DisplayName("Access Token ?  ?  ?????  ? - ???      ???  ")
+        @DisplayName("Access Token 블랙리스트 추가 - 음수 만료 시간")
         void addToBlacklist_negativeExpiration_noAction() {
             // given
             long expirationSeconds = -100L;
@@ -162,7 +163,7 @@ class TokenServiceTest {
         }
 
         @Test
-        @DisplayName("?  ?  ?????    -    ???)
+        @DisplayName("블랙리스트 확인 - 존재함")
         void isBlacklisted_exists_returnsTrue() {
             // given
             when(redisTemplate.hasKey(BLACKLIST_PREFIX + ACCESS_TOKEN)).thenReturn(true);
@@ -175,7 +176,7 @@ class TokenServiceTest {
         }
 
         @Test
-        @DisplayName("?  ?  ?????    -    ???? ??  ")
+        @DisplayName("블랙리스트 확인 - 존재하지 않음")
         void isBlacklisted_notExists_returnsFalse() {
             // given
             when(redisTemplate.hasKey(BLACKLIST_PREFIX + ACCESS_TOKEN)).thenReturn(false);
@@ -188,7 +189,7 @@ class TokenServiceTest {
         }
 
         @Test
-        @DisplayName("?  ?  ?????    - null    ???false")
+        @DisplayName("블랙리스트 확인 - null 반환시 false")
         void isBlacklisted_null_returnsFalse() {
             // given
             when(redisTemplate.hasKey(BLACKLIST_PREFIX + ACCESS_TOKEN)).thenReturn(null);
@@ -202,11 +203,11 @@ class TokenServiceTest {
     }
 
     @Nested
-    @DisplayName("Refresh Token     ???? ??)
+    @DisplayName("Refresh Token 검증 테스트")
     class ValidateRefreshTokenTest {
 
         @Test
-        @DisplayName("Refresh Token     ??    - ??  ")
+        @DisplayName("Refresh Token 검증 성공 - 일치")
         void validateRefreshToken_matches_returnsTrue() {
             // given
             when(valueOperations.get(REFRESH_TOKEN_PREFIX + USER_ID)).thenReturn(REFRESH_TOKEN);
@@ -219,7 +220,7 @@ class TokenServiceTest {
         }
 
         @Test
-        @DisplayName("Refresh Token     ???   - ?  ?  ?)
+        @DisplayName("Refresh Token 검증 실패 - 불일치")
         void validateRefreshToken_mismatch_returnsFalse() {
             // given
             when(valueOperations.get(REFRESH_TOKEN_PREFIX + USER_ID)).thenReturn("differentToken");
@@ -232,7 +233,7 @@ class TokenServiceTest {
         }
 
         @Test
-        @DisplayName("Refresh Token     ???   - ???  ??    ??  ")
+        @DisplayName("Refresh Token 검증 실패 - 저장된 토큰 없음")
         void validateRefreshToken_notStored_returnsFalse() {
             // given
             when(valueOperations.get(REFRESH_TOKEN_PREFIX + USER_ID)).thenReturn(null);

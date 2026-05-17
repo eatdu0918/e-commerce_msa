@@ -32,76 +32,76 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc(addFilters = false)
 class AdminControllerTest {
 
-    @Autowired
-    MockMvc mockMvc;
+        @Autowired
+        MockMvc mockMvc;
 
-    @MockBean
-    AdminService adminService;
+        @MockBean
+        AdminService adminService;
 
-    @MockBean
-    JwtTokenProvider jwtTokenProvider;
+        @MockBean
+        JwtTokenProvider jwtTokenProvider;
 
-    @MockBean
-    TokenService tokenService;
+        @MockBean
+        TokenService tokenService;
 
-    @Nested
-    @DisplayName("GET /api/admin/users - ?    ???     ??)
-    class GetAllUsersTest {
+        @Nested
+        @DisplayName("GET /api/admin/users - 전체 회원 조회")
+        class GetAllUsersTest {
+
+                @Test
+                @DisplayName("GET /api/admin/users - 전체 회원 조회")
+                void getAllUsers_success() throws Exception {
+                        // given
+                        UserResponse user1 = createUserResponse(1L, "user1@example.com", "USER");
+                        UserResponse user2 = createUserResponse(2L, "user2@example.com", "ADMIN");
+
+                        PageResponse<UserResponse> pageResponse = PageResponse.<UserResponse>builder()
+                                        .content(List.of(user1, user2))
+                                        .pageNumber(0)
+                                        .pageSize(10)
+                                        .totalElements(2L)
+                                        .totalPages(1)
+                                        .first(true)
+                                        .last(true)
+                                        .build();
+
+                        when(adminService.getAllUsers(any(Pageable.class))).thenReturn(pageResponse);
+
+                        // when & then
+                        mockMvc.perform(get("/api/admin/users"))
+                                        .andExpect(status().isOk())
+                                        .andExpect(jsonPath("$.success").value(true))
+                                        .andExpect(jsonPath("$.data.content").isArray())
+                                        .andExpect(jsonPath("$.data.content.length()").value(2))
+                                        .andExpect(jsonPath("$.data.totalElements").value(2));
+                }
+
+                @Test
+                @DisplayName("GET /api/admin/users - 전체 회원 조회")
+                void getAllUsers_empty() throws Exception {
+                        // given
+                        PageResponse<UserResponse> emptyResponse = PageResponse.<UserResponse>builder()
+                                        .content(List.of())
+                                        .pageNumber(0)
+                                        .pageSize(10)
+                                        .totalElements(0L)
+                                        .totalPages(0)
+                                        .first(true)
+                                        .last(true)
+                                        .build();
+
+                        when(adminService.getAllUsers(any(Pageable.class))).thenReturn(emptyResponse);
+
+                        // when & then
+                        mockMvc.perform(get("/api/admin/users"))
+                                        .andExpect(status().isOk())
+                                        .andExpect(jsonPath("$.success").value(true))
+                                        .andExpect(jsonPath("$.data.content").isArray())
+                                        .andExpect(jsonPath("$.data.content.length()").value(0));
+                }
 
         @Test
-        @DisplayName("?    ???     ???   ")
-        void getAllUsers_success() throws Exception {
-            // given
-            UserResponse user1 = createUserResponse(1L, "user1@example.com", "USER");
-            UserResponse user2 = createUserResponse(2L, "user2@example.com", "ADMIN");
-
-            PageResponse<UserResponse> pageResponse = PageResponse.<UserResponse>builder()
-                    .content(List.of(user1, user2))
-                    .pageNumber(0)
-                    .pageSize(10)
-                    .totalElements(2L)
-                    .totalPages(1)
-                    .first(true)
-                    .last(true)
-                    .build();
-
-            when(adminService.getAllUsers(any(Pageable.class))).thenReturn(pageResponse);
-
-            // when & then
-            mockMvc.perform(get("/api/admin/users"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data.content").isArray())
-                    .andExpect(jsonPath("$.data.content.length()").value(2))
-                    .andExpect(jsonPath("$.data.totalElements").value(2));
-        }
-
-        @Test
-        @DisplayName("?    ???     ??- ??    ?)
-        void getAllUsers_empty() throws Exception {
-            // given
-            PageResponse<UserResponse> emptyResponse = PageResponse.<UserResponse>builder()
-                    .content(List.of())
-                    .pageNumber(0)
-                    .pageSize(10)
-                    .totalElements(0L)
-                    .totalPages(0)
-                    .first(true)
-                    .last(true)
-                    .build();
-
-            when(adminService.getAllUsers(any(Pageable.class))).thenReturn(emptyResponse);
-
-            // when & then
-            mockMvc.perform(get("/api/admin/users"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data.content").isArray())
-                    .andExpect(jsonPath("$.data.content.length()").value(0));
-        }
-
-        @Test
-        @DisplayName("?    ???     ??- ??   ????     ?)
+        @DisplayName("전체 회원 조회 성공")
         void getAllUsers_withPaging() throws Exception {
             // given
             PageResponse<UserResponse> pageResponse = PageResponse.<UserResponse>builder()
@@ -123,153 +123,128 @@ class AdminControllerTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true));
         }
-    }
-
-    @Nested
-    @DisplayName("GET /api/admin/users/{userId} - ???  ?       ??)
-    class GetUserByIdTest {
-
-        @Test
-        @DisplayName("???  ?       ???   ")
-        void getUserById_success() throws Exception {
-            // given
-            UserResponse response = createUserResponse(1L, "test@example.com", "USER");
-            when(adminService.getUserById(1L)).thenReturn(response);
-
-            // when & then
-            mockMvc.perform(get("/api/admin/users/1"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data.id").value(1))
-                    .andExpect(jsonPath("$.data.email").value("test@example.com"));
         }
 
-        @Test
-        @DisplayName("???  ?       ????   -    ???? ??   ??? ")
-        void getUserById_notFound_fail() throws Exception {
-            // given
-            when(adminService.getUserById(999L))
-                    .thenThrow(new UserDomainException(UserDomainExceptionCode.UserNotFoundException));
+        @Nested
+        @DisplayName("GET /api/admin/users/{userId} - 회원 상세 조회")
+        class GetUserByIdTest {
 
-            // when & then
-            mockMvc.perform(get("/api/admin/users/999"))
-                    .andExpect(status().isNotFound());
-        }
-    }
+                @Test
+                @DisplayName("GET /api/admin/users/{userId} - 회원 상세 조회")
+                void getUserById_success() throws Exception {
+                        // given
+                        UserResponse response = createUserResponse(1L, "test@example.com", "USER");
+                        when(adminService.getUserById(1L)).thenReturn(response);
 
-    @Nested
-    @DisplayName("DELETE /api/admin/users/{userId} - ???     ????  ")
-    class DeleteUserTest {
+                        // when & then
+                        mockMvc.perform(get("/api/admin/users/1"))
+                                        .andExpect(status().isOk())
+                                        .andExpect(jsonPath("$.success").value(true))
+                                        .andExpect(jsonPath("$.data.id").value(1))
+                                        .andExpect(jsonPath("$.data.email").value("test@example.com"));
+                }
 
-        @Test
-        @DisplayName("???     ????   ?   ")
-        void deleteUser_success() throws Exception {
-            // given
-            doNothing().when(adminService).deleteUser(1L);
+                @Test
+                @DisplayName("GET /api/admin/users/{userId} - 회원 상세 조회")
+                void getUserById_notFound_fail() throws Exception {
+                        // given
+                        when(adminService.getUserById(999L))
+                                        .thenThrow(new UserDomainException(
+                                                        UserDomainExceptionCode.UserNotFoundException));
 
-            // when & then
-            mockMvc.perform(delete("/api/admin/users/1"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.success").value(true));
-
-            verify(adminService).deleteUser(1L);
-        }
-
-        @Test
-        @DisplayName("???     ????   ??   -    ???? ??   ??? ")
-        void deleteUser_notFound_fail() throws Exception {
-            // given
-            doThrow(new UserDomainException(UserDomainExceptionCode.UserNotFoundException))
-                    .when(adminService).deleteUser(999L);
-
-            // when & then
-            mockMvc.perform(delete("/api/admin/users/999"))
-                    .andExpect(status().isNotFound());
+                        // when & then
+                        mockMvc.perform(get("/api/admin/users/999"))
+                                        .andExpect(status().isNotFound());
+                }
         }
 
-        @Test
-        @DisplayName("???     ????   ??   - ?? ? ??  ????? ")
-        void deleteUser_alreadyWithdrawn_fail() throws Exception {
-            // given
-            doThrow(new UserDomainException(UserDomainExceptionCode.UserAlreadyWithdrawnException))
-                    .when(adminService).deleteUser(1L);
+        @Nested
+        @DisplayName("GET /api/admin/users/{userId} - 회원 상세 조회")
+        class DeleteUserTest {
 
-            // when & then
-            mockMvc.perform(delete("/api/admin/users/1"))
-                    .andExpect(status().isBadRequest());
-        }
-    }
+                @Test
+                @DisplayName("GET /api/admin/users/{userId} - 회원 상세 조회")
+                void deleteUser_success() throws Exception {
+                        // given
+                        doNothing().when(adminService).deleteUser(1L);
 
-    @Nested
-    @DisplayName("PUT /api/admin/users/{userId}/role - ???      ?    ?)
-    class ChangeUserRoleTest {
+                        // when & then
+                        mockMvc.perform(delete("/api/admin/users/1"))
+                                        .andExpect(status().isOk())
+                                        .andExpect(jsonPath("$.success").value(true));
 
-        @Test
-        @DisplayName("???      ?    ??    - USER to ADMIN")
-        void changeUserRole_toAdmin_success() throws Exception {
-            // given
-            UserResponse response = createUserResponse(1L, "test@example.com", "ADMIN");
-            when(adminService.changeUserRole(anyLong(), anyString())).thenReturn(response);
+                        verify(adminService).deleteUser(1L);
+                }
 
-            // when & then
-            mockMvc.perform(put("/api/admin/users/1/role")
-                            .param("role", "ADMIN"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data.role").value("ADMIN"));
-        }
+                @Test
+                @DisplayName("GET /api/admin/users/{userId} - 회원 상세 조회")
+                void deleteUser_notFound_fail() throws Exception {
+                        // given
+                        doThrow(new UserDomainException(UserDomainExceptionCode.UserNotFoundException))
+                                        .when(adminService).deleteUser(999L);
 
-        @Test
-        @DisplayName("???      ?    ??    - ADMIN to USER")
-        void changeUserRole_toUser_success() throws Exception {
-            // given
-            UserResponse response = createUserResponse(1L, "test@example.com", "USER");
-            when(adminService.changeUserRole(anyLong(), anyString())).thenReturn(response);
+                        // when & then
+                        mockMvc.perform(delete("/api/admin/users/999"))
+                                        .andExpect(status().isNotFound());
+                }
 
-            // when & then
-            mockMvc.perform(put("/api/admin/users/1/role")
-                            .param("role", "USER"))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data.role").value("USER"));
+                @Test
+                @DisplayName("GET /api/admin/users/{userId} - 회원 상세 조회")
+                void deleteUser_alreadyWithdrawn_fail() throws Exception {
+                        // given
+                        doThrow(new UserDomainException(UserDomainExceptionCode.UserAlreadyWithdrawnException))
+                                        .when(adminService).deleteUser(1L);
+
+                        // when & then
+                        mockMvc.perform(delete("/api/admin/users/1"))
+                                        .andExpect(status().isBadRequest());
+                }
         }
 
-        @Test
-        @DisplayName("???      ?    ???   -    ???? ??   ??? ")
-        void changeUserRole_userNotFound_fail() throws Exception {
-            // given
-            when(adminService.changeUserRole(anyLong(), anyString()))
-                    .thenThrow(new UserDomainException(UserDomainExceptionCode.UserNotFoundException));
+        @Nested
+        @DisplayName("GET /api/admin/users/{userId} - 회원 상세 조회")
+        class ChangeUserRoleTest {
 
-            // when & then
-            mockMvc.perform(put("/api/admin/users/999/role")
-                            .param("role", "ADMIN"))
-                    .andExpect(status().isNotFound());
+                @Test
+                @DisplayName("GET /api/admin/users/{userId} - 회원 상세 조회")
+                void changeUserRole_toAdmin_success() throws Exception {
+                        // given
+                        UserResponse response = createUserResponse(1L, "test@example.com", "ADMIN");
+                        when(adminService.changeUserRole(anyLong(), anyString())).thenReturn(response);
+
+                        // when & then
+                        mockMvc.perform(put("/api/admin/users/1/role")
+                                        .param("role", "ADMIN"))
+                                        .andExpect(status().isOk())
+                                        .andExpect(jsonPath("$.success").value(true))
+                                        .andExpect(jsonPath("$.data.role").value("ADMIN"));
+                }
+
+                @Test
+                @DisplayName("GET /api/admin/users/{userId} - 회원 상세 조회")
+                void changeUserRole_toUser_success() throws Exception {
+                        // given
+                        UserResponse response = createUserResponse(1L, "test@example.com", "USER");
+                        when(adminService.changeUserRole(anyLong(), anyString())).thenReturn(response);
+
+                        // when & then
+                        mockMvc.perform(put("/api/admin/users/1/role")
+                                        .param("role", "USER"))
+                                        .andExpect(status().isOk())
+                                        .andExpect(jsonPath("$.success").value(true))
+                                        .andExpect(jsonPath("$.data.role").value("USER"));
+                }
         }
 
-        @Test
-        @DisplayName("???      ?    ???   - ??  ????? ")
-        void changeUserRole_withdrawnUser_fail() throws Exception {
-            // given
-            when(adminService.changeUserRole(anyLong(), anyString()))
-                    .thenThrow(new UserDomainException(UserDomainExceptionCode.UserAlreadyWithdrawnException));
-
-            // when & then
-            mockMvc.perform(put("/api/admin/users/1/role")
-                            .param("role", "ADMIN"))
-                    .andExpect(status().isBadRequest());
+        private UserResponse createUserResponse(Long id, String email, String role) {
+                return UserResponse.builder()
+                        .id(id)
+                        .email(email)
+                        .name("테스트유저")
+                        .phoneNumber("010-1234-5678")
+                        .role(role)
+                        .isActive(true)
+                        .createdAt(LocalDateTime.now())
+                        .build();
         }
-    }
-
-    private UserResponse createUserResponse(Long id, String email, String role) {
-        return UserResponse.builder()
-                .id(id)
-                .email(email)
-                .name("??? ?  ???")
-                .phoneNumber("010-1234-5678")
-                .role(role)
-                .isActive(true)
-                .createdAt(LocalDateTime.now())
-                .build();
-    }
 }
